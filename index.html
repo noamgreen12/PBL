@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>לוח אירועים שכבתי</title>
-    
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    
     <style>
         :root {
             --primary: #3f51b5;
@@ -62,12 +60,9 @@
             color: white; border: none; border-radius: 15px;
             font-size: 1.1rem; font-weight: 600; cursor: pointer;
             box-shadow: 0 4px 10px rgba(63, 81, 181, 0.3);
-            transition: background 0.3s;
         }
 
-        .btn-save:disabled { background: #ccc; cursor: not-allowed; }
-
-        /* לוח שנה */
+        /* לוח שנה - תמיד נראה לעין */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
         .weekday-label { font-weight: 700; color: var(--text-muted); font-size: 0.75rem; padding-bottom: 10px; }
@@ -75,24 +70,23 @@
         .calendar-day {
             aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
             font-size: 0.95rem; cursor: pointer; border-radius: 50%; position: relative;
+            min-height: 40px;
         }
         .calendar-day.selected { background-color: var(--primary); color: white; }
         .calendar-day.today { border: 1.5px solid var(--primary); color: var(--primary); }
         .event-marker { height: 5px; width: 5px; background: var(--accent-red); border-radius: 50%; position: absolute; bottom: 4px; }
         .calendar-day.selected .event-marker { background: white; }
 
-        /* רשימה */
+        /* רשימת אירועים */
+        .list-header { font-size: 1.1rem; font-weight: 700; margin: 10px 5px; }
         .event-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-right: 4px solid var(--primary);
         }
-        .event-details strong { display: block; font-size: 1rem; }
-        .event-details span { font-size: 0.8rem; color: var(--text-muted); }
         .delete-btn { color: var(--accent-red); background: none; border: none; cursor: pointer; }
 
         #otherTypeContainer { display: none; margin-top: 10px; }
-
         #toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: #333; color: white; padding: 12px 25px; border-radius: 30px;
@@ -112,7 +106,6 @@
             <label>נושא האירוע</label>
             <input type="text" id="title" class="material-input" placeholder="הקלד נושא...">
         </div>
-
         <div class="input-row">
             <div class="input-group">
                 <label>קהל יעד</label>
@@ -129,12 +122,10 @@
                 </select>
             </div>
         </div>
-
         <div id="otherTypeContainer" class="input-group">
             <label>פרט סוג פעילות</label>
             <input type="text" id="otherType" class="material-input" placeholder="כתוב כאן...">
         </div>
-
         <button class="btn-save" id="saveBtn" onclick="addEvent()">שמור אירוע</button>
     </div>
 
@@ -147,99 +138,50 @@
         <div class="calendar-grid" id="calendarGrid"></div>
     </div>
 
+    <div class="list-header">אירועים ביום שנבחר:</div>
     <div id="eventList"></div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-    // חובה: הדביקי כאן את ה-URL שקיבלת מגוגל אחרי ה-Deploy
+    // --- חובה: הלינק שלך מגוגל שיטס ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjUOZw7k1RUW9HArAZPEpdX7L1HP5jpMGasjeFC0jwNSylvDLUEyYQUqIq46YhEpTu/exec";
 
     let events = [];
     let selectedDate = new Date();
     let currentMonthView = new Date();
 
-    function normalizeDate(d) { 
+    function normalizeDate(d) {
         const date = new Date(d);
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate()); 
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     }
-    
     selectedDate = normalizeDate(selectedDate);
 
-    // פונקציה שטוענת את כל האירועים מהגוגל שיטס
+    // 1. הפונקציה הראשונה שרצה - מציירת את הלוח הריק מיד
+    function init() {
+        renderCalendar();
+        displayDailyEvents();
+        loadEvents(); // רק עכשיו מתחילה למשוך נתונים מהאינטרנט
+    }
+
     async function loadEvents() {
         if (SCRIPT_URL.includes("כאן_מדביקים")) return;
         try {
             const response = await fetch(SCRIPT_URL);
             events = await response.json();
-            renderCalendar(); // זה יצייר את הנקודות על הלוח
-            displayDailyEvents(); // זה יראה את הרשימה למטה
+            renderCalendar(); // מעדכן את הלוח עם הנקודות האדומות
+            displayDailyEvents(); // מעדכן את רשימת האירועים
         } catch (e) {
-            console.error("שגיאה בטעינת נתונים", e);
+            console.error("שגיאה בטעינה", e);
         }
-    }
-
-    function toggleOtherField() {
-        const type = document.getElementById('type').value;
-        document.getElementById('otherTypeContainer').style.display = (type === 'אחר') ? 'block' : 'none';
-    }
-
-    async function addEvent() {
-        const titleInput = document.getElementById('title');
-        const title = titleInput.value;
-        const classId = document.getElementById('classId').value;
-        let type = document.getElementById('type').value;
-        if (type === 'אחר') type = document.getElementById('otherType').value || 'אחר';
-
-        if (!title) return showToast("נא להזין נושא");
-
-        showToast("שומר בשיטס...");
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.disabled = true;
-
-        try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({
-                    action: "add",
-                    title: title,
-                    date: selectedDate.toISOString(),
-                    classId: classId,
-                    type: type
-                })
-            });
-
-            // בגלל no-cors אנחנו לא מקבלים תשובה ישירה, אז נחכה רגע ונרענן
-            setTimeout(() => {
-                titleInput.value = '';
-                document.getElementById('otherType').value = '';
-                toggleOtherField();
-                saveBtn.disabled = false;
-                showToast("נשמר וסונכרן!");
-                loadEvents(); // טעינה מחדש מהשיטס
-            }, 1500);
-        } catch (e) {
-            showToast("שגיאה בשמירה");
-            saveBtn.disabled = false;
-        }
-    }
-
-    async function deleteEvent(id) {
-        if(!confirm("למחוק מהגליון המשותף?")) return;
-        showToast("מוחק...");
-        await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify({ action: "delete", id: id })
-        });
-        setTimeout(loadEvents, 1500);
     }
 
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
         const label = document.getElementById('monthYearLabel');
+        if (!grid) return;
+        
         grid.innerHTML = '';
         label.innerText = currentMonthView.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
 
@@ -257,7 +199,7 @@
             const isSelected = normalizeDate(date).getTime() === selectedDate.getTime();
             const isToday = normalizeDate(date).getTime() === normalizeDate(new Date()).getTime();
             
-            // בדיקה אם יש אירוע בתאריך זה כדי לשים נקודה אדומה
+            // נקודה אדומה
             const hasEvent = events.some(e => normalizeDate(e.date).getTime() === normalizeDate(date).getTime());
 
             grid.innerHTML += `
@@ -282,25 +224,65 @@
 
     function displayDailyEvents() {
         const list = document.getElementById('eventList');
+        if (!list) return;
         list.innerHTML = '';
         const dailyEvents = events.filter(e => normalizeDate(e.date).getTime() === selectedDate.getTime());
 
         if (dailyEvents.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">אין אירועים רשומים ליום זה</div>';
+            list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">אין אירועים רשומים</div>';
             return;
         }
 
         dailyEvents.forEach(ev => {
             const div = document.createElement('div');
             div.className = 'event-item';
-            div.innerHTML = `
-                <div class="event-details">
-                    <strong>${ev.title}</strong>
-                    <span>📍 ${ev.classId} | 🏷️ ${ev.type}</span>
-                </div>
-                <button class="delete-btn" onclick="deleteEvent('${ev.id}')"><span class="material-icons-round">delete</span></button>`;
+            div.innerHTML = `<div><strong>${ev.title}</strong><span>📍 ${ev.classId} | 🏷️ ${ev.type}</span></div>
+                             <button class="delete-btn" onclick="deleteEvent('${ev.id}')"><span class="material-icons-round">delete</span></button>`;
             list.appendChild(div);
         });
+    }
+
+    async function addEvent() {
+        const titleInput = document.getElementById('title');
+        const title = titleInput.value;
+        if (!title) return showToast("נא להזין נושא");
+
+        showToast("שומר...");
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({
+                    action: "add",
+                    title: title,
+                    date: selectedDate.toISOString(),
+                    classId: document.getElementById('classId').value,
+                    type: document.getElementById('type').value === 'אחר' ? document.getElementById('otherType').value : document.getElementById('type').value
+                })
+            });
+            setTimeout(() => {
+                titleInput.value = '';
+                saveBtn.disabled = false;
+                showToast("נשמר!");
+                loadEvents();
+            }, 1500);
+        } catch (e) {
+            saveBtn.disabled = false;
+        }
+    }
+
+    async function deleteEvent(id) {
+        if(!confirm("למחוק מהלוח המשותף?")) return;
+        showToast("מוחק...");
+        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "delete", id: id }) });
+        setTimeout(loadEvents, 1500);
+    }
+
+    function toggleOtherField() {
+        document.getElementById('otherTypeContainer').style.display = (document.getElementById('type').value === 'אחר') ? 'block' : 'none';
     }
 
     function showToast(msg) {
@@ -308,9 +290,8 @@
         setTimeout(() => t.style.display = 'none', 3000);
     }
 
-    // טעינה ראשונית של הנתונים ברגע שהדף עולה
-    window.onload = loadEvents;
+    // הפעלה מיידית
+    init();
 </script>
-
 </body>
 </html>
