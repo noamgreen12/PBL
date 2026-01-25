@@ -2,336 +2,239 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ניהול מבחנים - גרסה מקומית</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         :root {
-            /* פלטת צבעים מעודכנת לפי התמונה */
-            --primary: #3f51b5;     /* אינדיגו עמוק */
-            --bg-app: #f5f6fa;      /* רקע אפור בהיר מאוד */
-            --bg-card: #ffffff;     /* לבן לכרטיסים */
-            --text-dark: #333333;   /* טקסט ראשי */
-            --text-muted: #757575;  /* טקסט משני */
-            --accent-red: #e74c3c;  /* אדום לנקודות ומחיקה */
-            --border-light: #e0e0e0; /* צבע קו תחתון לשדות */
+            --primary: #3f51b5;
+            --bg-app: #f5f6fa;
+            --bg-card: #ffffff;
+            --text-dark: #333333;
+            --text-muted: #757575;
+            --accent-red: #e74c3c;
+            --border-light: #e0e0e0;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-app);
             color: var(--text-dark);
             margin: 0;
-            padding: 0; /* ביטול פדינג כללי כדי שההדר ייצמד למעלה */
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* כותרת עליונה בסגנון באנר */
         header {
             width: 100%;
             background-color: var(--bg-card);
-            padding: 20px 0;
+            padding: 15px 0;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 500;
-            color: var(--text-dark);
-        }
+        h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
 
         .app-container {
-            max-width: 800px; /* הרחבתי מעט את הקונטיינר */
-            width: 95%;
-            padding-bottom: 30px;
+            width: 92%;
+            max-width: 600px;
+            padding: 15px 0 100px 0;
         }
 
-        /* כרטיסים כלליים */
         .card {
             background: var(--bg-card);
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
             margin-bottom: 20px;
         }
 
-        /* --- עיצוב שדות הקלט (Inputs) --- */
-        .input-row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
+        .input-group { margin-bottom: 20px; position: relative; }
+        label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
 
-        .input-group {
-            flex: 1;
-            position: relative;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* שדות קלט עם קו תחתון בלבד */
         .material-input {
             width: 100%;
-            padding: 10px 5px;
+            padding: 12px 5px;
             border: none;
             border-bottom: 2px solid var(--border-light);
             background: transparent;
             font-size: 1rem;
             color: var(--text-dark);
             outline: none;
-            transition: border-color 0.3s;
-            border-radius: 0; /* ביטול רדיוס */
+            transition: all 0.3s;
+            box-sizing: border-box;
         }
 
-        .material-input:focus {
-            border-bottom-color: var(--primary);
-        }
-        
-        /* אייקון עיפרון בתוך השדה */
-        .input-icon-wrapper { position: relative; }
-        .input-icon-wrapper .material-icons-round {
-            position: absolute;
-            left: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 20px;
-        }
+        .material-input:focus { border-bottom-color: var(--primary); }
 
-        /* כפתור שמירה */
+        .input-row { display: flex; gap: 15px; }
+        .input-row .input-group { flex: 1; }
+
         .btn-save {
             width: 100%;
-            padding: 15px;
+            padding: 16px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-save:hover { background: #303f9f; }
-
-        /* --- לוח שנה --- */
-        .calendar-header {
-            text-align: center;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            display: flex; justify-content: space-between; align-items: center; padding: 0 10px;
-        }
-        .calendar-nav-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            text-align: center;
+            box-shadow: 0 4px 10px rgba(63, 81, 181, 0.3);
         }
 
-        .weekday-label {
-            font-weight: 600; color: var(--text-muted); font-size: 0.9rem; padding-bottom: 15px;
-        }
-
+        /* לוח שנה מותאם לנייד */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+        .weekday-label { font-weight: 700; color: var(--text-muted); font-size: 0.75rem; padding-bottom: 10px; }
         .calendar-day {
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 50%; /* עיגול */
-            position: relative;
-            height: 40px; width: 40px;
+            aspect-ratio: 1;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            margin: auto;
-            font-weight: 500;
+            font-size: 0.95rem; cursor: pointer; border-radius: 50%; position: relative;
         }
+        .calendar-day.selected { background-color: var(--primary); color: white; }
+        .calendar-day.today { border: 1.5px solid var(--primary); color: var(--primary); }
+        .calendar-day.selected.today { border: none; }
+        .event-marker { height: 4px; width: 4px; background: var(--accent-red); border-radius: 50%; position: absolute; bottom: 4px; }
+        .calendar-day.selected .event-marker { background: white; }
 
-        .calendar-day:hover { background-color: #f0f0f0; }
-        .calendar-day.empty { cursor: default; pointer-events: none; }
-
-        /* יום נבחר - עיגול כחול */
-        .calendar-day.selected {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        /* יום הנוכחי (היום) */
-        .calendar-day.today { font-weight: 700; color: var(--primary); }
-        .calendar-day.selected.today { color: white; } /* אם היום נבחר, הטקסט לבן */
-
-        /* נקודה אדומה לאירוע */
-        .event-marker {
-            height: 5px; width: 5px;
-            background-color: var(--accent-red);
-            border-radius: 50%;
-            position: absolute;
-            bottom: 5px;
-        }
-        /* אם היום נבחר, הנקודה לבנה */
-        .calendar-day.selected .event-marker { background-color: white; }
-
-
-        /* --- רשימת אירועים --- */
-        .list-header { font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; color: var(--text-dark); }
-
+        /* רשימת אירועים */
+        .list-header { font-size: 1.1rem; font-weight: 700; margin: 10px 5px; }
         .event-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            background: var(--bg-app); /* רקע אפור בהיר כמו בתמונה */
-            border-radius: 12px;
-            margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
+        .event-details strong { display: block; font-size: 1rem; color: var(--text-dark); }
+        .event-details span { font-size: 0.8rem; color: var(--text-muted); }
+        .delete-btn { color: var(--accent-red); background: none; border: none; padding: 5px; cursor: pointer; }
 
-        .event-details strong { display: block; font-size: 1.1rem; margin-bottom: 4px; }
-        .event-details span { color: var(--text-muted); font-size: 0.9rem; }
+        /* שדה "אחר" מוסתר */
+        #otherTypeContainer { display: none; margin-top: 10px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .delete-btn {
-            background: none; border: none; cursor: pointer;
-            color: var(--accent-red);
-            padding: 8px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .delete-btn:hover { background-color: rgba(231, 76, 60, 0.1); border-radius: 50%; }
-
-        /* טוסט שגיאה */
         #toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: var(--accent-red); color: white; padding: 12px 24px;
-            border-radius: 25px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            font-weight: 500;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 12px 25px; border-radius: 30px;
+            display: none; z-index: 1000; font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>ניהול מבחנים - גרסה מקומית</h1>
+    <h1>לוח אירועים שכבתי</h1>
 </header>
 
 <div class="app-container">
     <div class="card">
-        <div class="input-group" style="margin-bottom: 25px;">
-            <label>נושא המבחן/אירוע</label>
-            <div class="input-icon-wrapper">
-                <input type="text" id="title" class="material-input" placeholder="לדוגמה: ספרות">
-                <span class="material-icons-round">edit</span>
-            </div>
+        <div class="input-group">
+            <label>נושא האירוע</label>
+            <input type="text" id="title" class="material-input" placeholder="הקלד נושא...">
         </div>
 
         <div class="input-row">
             <div class="input-group">
-                <label>כיתה</label>
+                <label>קהל יעד</label>
                 <select id="classId" class="material-input">
-                    <option>י'1</option><option>י'2</option><option>י'3</option><option>י'4</option><option>י'5</option>
+                    <option value="כל השכבה">כל השכבה ⭐</option>
+                    <option>י'1</option><option>י'2</option><option>י'3</option><option>י'4</option>
                 </select>
             </div>
             <div class="input-group">
-                <label>סוג</label>
-                <select id="type" class="material-input">
-                    <option>מבחן</option><option>בוחן</option><option>טיול</option><option>יום עיון</option>
+                <label>סוג פעילות</label>
+                <select id="type" class="material-input" onchange="toggleOtherField()">
+                    <option>מבחן</option>
+                    <option>בוחן</option>
+                    <option>פעילות בית ספרית</option>
+                    <option>הרצאה/שיחה</option>
+                    <option>טיול</option>
+                    <option value="אחר">אחר...</option>
                 </select>
             </div>
         </div>
+
+        <div id="otherTypeContainer" class="input-group">
+            <label>פרט סוג פעילות</label>
+            <input type="text" id="otherType" class="material-input" placeholder="כתוב כאן...">
+        </div>
+
         <button class="btn-save" onclick="addEvent()">שמור בלוח</button>
     </div>
 
     <div class="card">
         <div class="calendar-header">
-            <button class="calendar-nav-btn" onclick="changeMonth(-1)"><span class="material-icons-round">chevron_right</span></button>
+            <button class="delete-btn" onclick="changeMonth(-1)"><span class="material-icons-round">chevron_right</span></button>
             <span id="monthYearLabel"></span>
-            <button class="calendar-nav-btn" onclick="changeMonth(1)"><span class="material-icons-round">chevron_left</span></button>
+            <button class="delete-btn" onclick="changeMonth(1)"><span class="material-icons-round">chevron_left</span></button>
         </div>
-        <div class="calendar-grid" id="calendarGrid">
-            </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
     </div>
 
-    <div>
-        <div class="list-header">אירועים להיום:</div>
-        <div id="eventList"></div>
-    </div>
+    <div class="list-header">אירועים בלו"ז:</div>
+    <div id="eventList"></div>
 </div>
 
-<div id="toast">התראה</div>
+<div id="toast"></div>
 
 <script>
-    // --- לוגיקה (JavaScript) ---
-    let events = JSON.parse(localStorage.getItem('myEvents_v3')) || [];
-    let selectedDate = new Date(); // התאריך שנבחר
-    let currentMonthView = new Date(); // החודש שמוצג כרגע בלוח
+    let events = JSON.parse(localStorage.getItem('myEvents_v4')) || [];
+    let selectedDate = new Date();
+    let currentMonthView = new Date();
 
-    // איפוס שעות לתאריך נקי
     function normalizeDate(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
     selectedDate = normalizeDate(selectedDate);
-    currentMonthView = normalizeDate(currentMonthView);
 
-    function showToast(msg) {
-        const toast = document.getElementById('toast'); toast.innerText = msg; toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 3000);
+    function toggleOtherField() {
+        const type = document.getElementById('type').value;
+        document.getElementById('otherTypeContainer').style.display = (type === 'אחר') ? 'block' : 'none';
     }
 
-    // --- פונקציות לוח שנה ---
+    function showToast(msg) {
+        const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
         const label = document.getElementById('monthYearLabel');
         grid.innerHTML = '';
+        label.innerText = currentMonthView.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
 
-        // כותרת חודש ושנה (למשל: ינואר 2026)
-        label.innerText = currentMonthView.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].forEach(d => grid.innerHTML += `<div class="weekday-label">${d}</div>`);
 
-        // כותרות ימי השבוע
-        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        weekdays.forEach(day => grid.innerHTML += `<div class="weekday-label">${day}</div>`);
-
-        // חישובים ללוח
         const year = currentMonthView.getFullYear();
         const month = currentMonthView.getMonth();
-        const firstDayOfMonth = new Date(year, month, 1).getDay(); // באיזה יום מתחיל החודש
-        const daysInMonth = new Date(year, month + 1, 0).getDate(); // כמה ימים בחודש
-        const today = normalizeDate(new Date());
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // הוספת תאים ריקים לפני תחילת החודש
-        for (let i = 0; i < firstDayOfMonth; i++) {
-            grid.innerHTML += `<div class="calendar-day empty"></div>`;
-        }
+        for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="calendar-day"></div>`;
 
-        // הוספת ימי החודש
         for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = new Date(year, month, day).toISOString();
-            const isSelected = normalizeDate(new Date(year, month, day)).getTime() === selectedDate.getTime();
-            const isToday = normalizeDate(new Date(year, month, day)).getTime() === today.getTime();
-            
-            // בדיקה אם יש אירוע בתאריך זה (לצורך הנקודה האדומה)
-            const hasEvent = events.some(e => normalizeDate(new Date(e.date)).getTime() === normalizeDate(new Date(year, month, day)).getTime());
-
-            let classes = 'calendar-day';
-            if (isSelected) classes += ' selected';
-            if (isToday) classes += ' today';
+            const date = new Date(year, month, day);
+            const isSelected = normalizeDate(date).getTime() === selectedDate.getTime();
+            const isToday = normalizeDate(date).getTime() === normalizeDate(new Date()).getTime();
+            const hasEvent = events.some(e => normalizeDate(new Date(e.date)).getTime() === normalizeDate(date).getTime());
 
             grid.innerHTML += `
-                <div class="${classes}" onclick="selectDate(${year}, ${month}, ${day})">
+                <div class="calendar-day ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}" 
+                     onclick="selectDate(${year}, ${month}, ${day})">
                     ${day}
                     ${hasEvent ? '<div class="event-marker"></div>' : ''}
-                </div>
-            `;
+                </div>`;
         }
     }
 
     function selectDate(y, m, d) {
         selectedDate = new Date(y, m, d);
-        renderCalendar(); // ריענון הלוח כדי להציג את הבחירה
-        displayDailyEvents(); // ריענון הרשימה היומית
+        renderCalendar();
+        displayDailyEvents();
     }
 
     function changeMonth(delta) {
@@ -339,32 +242,25 @@
         renderCalendar();
     }
 
-    // --- פונקציות אירועים ---
     function displayDailyEvents() {
         const list = document.getElementById('eventList');
         list.innerHTML = '';
-        
-        // סינון אירועים רק ליום הנבחר
         const dailyEvents = events.filter(e => normalizeDate(new Date(e.date)).getTime() === selectedDate.getTime());
 
         if (dailyEvents.length === 0) {
-            list.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">אין אירועים בתאריך זה</div>';
+            list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">אין פעילות ביום זה</div>';
             return;
         }
 
         dailyEvents.forEach(ev => {
             const div = document.createElement('div');
             div.className = 'event-item';
-            // שים לב: אייקון המחיקה בצד שמאל (order בגלל RTL)
             div.innerHTML = `
-                <button class="delete-btn" onclick="deleteEvent('${ev.id}')">
-                    <span class="material-icons-round">delete</span>
-                </button>
                 <div class="event-details">
                     <strong>${ev.title}</strong>
-                    <span>כיתה ${ev.classId} | ${ev.type}</span>
+                    <span>📍 ${ev.classId} | 🏷️ ${ev.type}</span>
                 </div>
-            `;
+                <button class="delete-btn" onclick="deleteEvent('${ev.id}')"><span class="material-icons-round">delete</span></button>`;
             list.appendChild(div);
         });
     }
@@ -372,38 +268,33 @@
     function addEvent() {
         const title = document.getElementById('title').value;
         const classId = document.getElementById('classId').value;
-        const type = document.getElementById('type').value;
+        let type = document.getElementById('type').value;
+        
+        if (type === 'אחר') {
+            type = document.getElementById('otherType').value || 'אחר';
+        }
 
         if (!title) return showToast("נא להזין נושא");
 
-        // בדיקת עומס (48 שעות)
-        const conflict = events.some(ev => {
-            if (ev.classId !== classId) return false;
-            const diffDays = Math.abs(new Date(ev.date) - selectedDate) / (1000 * 60 * 60 * 24);
-            return diffDays < 2;
-        });
-
-        if (conflict) return showToast("אזהרה: יש אירוע קרוב מדי לכיתה זו!");
-
         events.push({ id: Date.now().toString(), title, date: selectedDate.toISOString(), classId, type });
+        localStorage.setItem('myEvents_v4', JSON.stringify(events));
         
-        // שמירה וריענון
-        localStorage.setItem('myEvents_v3', JSON.stringify(events));
         document.getElementById('title').value = '';
-        renderCalendar(); // כדי להוסיף את הנקודה האדומה
+        document.getElementById('otherType').value = '';
+        toggleOtherField();
+        
+        renderCalendar();
         displayDailyEvents();
-        showToast("האירוע נשמר בהצלחה!");
+        showToast("נשמר בלוח!");
     }
 
     function deleteEvent(id) {
         events = events.filter(e => e.id !== id);
-        localStorage.setItem('myEvents_v3', JSON.stringify(events));
+        localStorage.setItem('myEvents_v4', JSON.stringify(events));
         renderCalendar();
         displayDailyEvents();
-        showToast("האירוע נמחק");
     }
 
-    // אתחול ראשוני
     renderCalendar();
     displayDailyEvents();
 </script>
