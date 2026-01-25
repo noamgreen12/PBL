@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>לוח אירועים שכבתי</title>
+    
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
     <style>
         :root {
             --primary: #3f51b5;
@@ -60,9 +62,10 @@
             color: white; border: none; border-radius: 15px;
             font-size: 1.1rem; font-weight: 600; cursor: pointer;
             box-shadow: 0 4px 10px rgba(63, 81, 181, 0.3);
+            transition: background 0.3s;
         }
 
-        .btn-save:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+        .btn-save:disabled { background: #ccc; cursor: not-allowed; }
 
         /* לוח שנה */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -75,7 +78,7 @@
         }
         .calendar-day.selected { background-color: var(--primary); color: white; }
         .calendar-day.today { border: 1.5px solid var(--primary); color: var(--primary); }
-        .event-marker { height: 4px; width: 4px; background: var(--accent-red); border-radius: 50%; position: absolute; bottom: 4px; }
+        .event-marker { height: 5px; width: 5px; background: var(--accent-red); border-radius: 50%; position: absolute; bottom: 4px; }
         .calendar-day.selected .event-marker { background: white; }
 
         /* רשימה */
@@ -85,6 +88,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-right: 4px solid var(--primary);
         }
         .event-details strong { display: block; font-size: 1rem; }
+        .event-details span { font-size: 0.8rem; color: var(--text-muted); }
         .delete-btn { color: var(--accent-red); background: none; border: none; cursor: pointer; }
 
         #otherTypeContainer { display: none; margin-top: 10px; }
@@ -92,7 +96,7 @@
         #toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: #333; color: white; padding: 12px 25px; border-radius: 30px;
-            display: none; z-index: 1000; font-size: 0.9rem; text-align: center; width: 200px;
+            display: none; z-index: 1000; font-size: 0.9rem;
         }
     </style>
 </head>
@@ -149,25 +153,30 @@
 <div id="toast"></div>
 
 <script>
-    // --- הלינק שלך מגוגל (חובה לעדכן!) ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZy8pPZFHCCBx_DAakVZQWEFPbYyXkS_11fl_Gh4SIhqHjHEW6WvMmu8MU60YR46JE/exec";
+    // חובה: הדביקי כאן את ה-URL שקיבלת מגוגל אחרי ה-Deploy
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjUOZw7k1RUW9HArAZPEpdX7L1HP5jpMGasjeFC0jwNSylvDLUEyYQUqIq46YhEpTu/exec";
 
     let events = [];
     let selectedDate = new Date();
     let currentMonthView = new Date();
-    function normalizeDate(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+    function normalizeDate(d) { 
+        const date = new Date(d);
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate()); 
+    }
+    
     selectedDate = normalizeDate(selectedDate);
 
+    // פונקציה שטוענת את כל האירועים מהגוגל שיטס
     async function loadEvents() {
         if (SCRIPT_URL.includes("כאן_מדביקים")) return;
         try {
             const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
-            events = data;
-            renderCalendar();
-            displayDailyEvents();
+            events = await response.json();
+            renderCalendar(); // זה יצייר את הנקודות על הלוח
+            displayDailyEvents(); // זה יראה את הרשימה למטה
         } catch (e) {
-            console.error("שגיאה בטעינה", e);
+            console.error("שגיאה בטעינת נתונים", e);
         }
     }
 
@@ -184,19 +193,15 @@
         if (type === 'אחר') type = document.getElementById('otherType').value || 'אחר';
 
         if (!title) return showToast("נא להזין נושא");
-        if (SCRIPT_URL.includes("כאן_מדביקים")) return showToast("חסר קישור לגוגל!");
 
-        showToast("שומר...");
+        showToast("שומר בשיטס...");
         const saveBtn = document.getElementById('saveBtn');
         saveBtn.disabled = true;
 
         try {
-            // שליחת נתונים בפורמט שגוגל אוהב
             await fetch(SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors", // חשוב מאוד כדי למנוע שגיאות CORS
-                cache: "no-cache",
-                headers: { "Content-Type": "application/json" },
+                mode: "no-cors",
                 body: JSON.stringify({
                     action: "add",
                     title: title,
@@ -205,15 +210,16 @@
                     type: type
                 })
             });
-            
-            // בגלל no-cors אנחנו לא מקבלים תשובה, אז נחכה שנייה ונרענן
+
+            // בגלל no-cors אנחנו לא מקבלים תשובה ישירה, אז נחכה רגע ונרענן
             setTimeout(() => {
                 titleInput.value = '';
-                showToast("נשמר!");
+                document.getElementById('otherType').value = '';
+                toggleOtherField();
                 saveBtn.disabled = false;
-                loadEvents();
+                showToast("נשמר וסונכרן!");
+                loadEvents(); // טעינה מחדש מהשיטס
             }, 1500);
-
         } catch (e) {
             showToast("שגיאה בשמירה");
             saveBtn.disabled = false;
@@ -221,7 +227,7 @@
     }
 
     async function deleteEvent(id) {
-        if(!confirm("למחוק מהלוח המשותף?")) return;
+        if(!confirm("למחוק מהגליון המשותף?")) return;
         showToast("מוחק...");
         await fetch(SCRIPT_URL, {
             method: "POST",
@@ -236,35 +242,63 @@
         const label = document.getElementById('monthYearLabel');
         grid.innerHTML = '';
         label.innerText = currentMonthView.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+
         ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].forEach(d => grid.innerHTML += `<div class="weekday-label">${d}</div>`);
+
         const year = currentMonthView.getFullYear();
         const month = currentMonthView.getMonth();
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
+
         for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="calendar-day"></div>`;
+
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const isSelected = normalizeDate(date).getTime() === selectedDate.getTime();
-            const hasEvent = events.some(e => normalizeDate(new Date(e.date)).getTime() === normalizeDate(date).getTime());
-            grid.innerHTML += `<div class="calendar-day ${isSelected ? 'selected' : ''}" onclick="selectDate(${year}, ${month}, ${day})">${day}${hasEvent ? '<div class="event-marker"></div>' : ''}</div>`;
+            const isToday = normalizeDate(date).getTime() === normalizeDate(new Date()).getTime();
+            
+            // בדיקה אם יש אירוע בתאריך זה כדי לשים נקודה אדומה
+            const hasEvent = events.some(e => normalizeDate(e.date).getTime() === normalizeDate(date).getTime());
+
+            grid.innerHTML += `
+                <div class="calendar-day ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}" 
+                     onclick="selectDate(${year}, ${month}, ${day})">
+                    ${day}
+                    ${hasEvent ? '<div class="event-marker"></div>' : ''}
+                </div>`;
         }
     }
 
-    function selectDate(y, m, d) { selectedDate = new Date(y, m, d); renderCalendar(); displayDailyEvents(); }
-    function changeMonth(delta) { currentMonthView.setMonth(currentMonthView.getMonth() + delta); renderCalendar(); }
+    function selectDate(y, m, d) {
+        selectedDate = new Date(y, m, d);
+        renderCalendar();
+        displayDailyEvents();
+    }
+
+    function changeMonth(delta) {
+        currentMonthView.setMonth(currentMonthView.getMonth() + delta);
+        renderCalendar();
+    }
 
     function displayDailyEvents() {
         const list = document.getElementById('eventList');
         list.innerHTML = '';
-        const dailyEvents = events.filter(e => normalizeDate(new Date(e.date)).getTime() === selectedDate.getTime());
+        const dailyEvents = events.filter(e => normalizeDate(e.date).getTime() === selectedDate.getTime());
+
         if (dailyEvents.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">אין אירועים רשומים</div>';
+            list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">אין אירועים רשומים ליום זה</div>';
             return;
         }
+
         dailyEvents.forEach(ev => {
             const div = document.createElement('div');
             div.className = 'event-item';
-            div.innerHTML = `<div class="event-details"><strong>${ev.title}</strong><span>📍 ${ev.classId} | 🏷️ ${ev.type}</span></div><button class="delete-btn" onclick="deleteEvent('${ev.id}')"><span class="material-icons-round">delete</span></button>`;
+            div.innerHTML = `
+                <div class="event-details">
+                    <strong>${ev.title}</strong>
+                    <span>📍 ${ev.classId} | 🏷️ ${ev.type}</span>
+                </div>
+                <button class="delete-btn" onclick="deleteEvent('${ev.id}')"><span class="material-icons-round">delete</span></button>`;
             list.appendChild(div);
         });
     }
@@ -274,7 +308,9 @@
         setTimeout(() => t.style.display = 'none', 3000);
     }
 
-    loadEvents();
+    // טעינה ראשונית של הנתונים ברגע שהדף עולה
+    window.onload = loadEvents;
 </script>
+
 </body>
 </html>
