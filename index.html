@@ -3,247 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>מתכנן אירועים שכבתי</title>
+    <title>ניהול זמן חכם - תלמידים</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         :root {
             --primary: #3f51b5;
-            --bg-app: #f5f6fa;
-            --bg-card: #ffffff;
-            --text-dark: #333333;
-            --text-muted: #757575;
-            --accent-red: #e74c3c;
-            --border-light: #e0e0e0;
+            --secondary: #10ac84;
+            --bg: #f8f9fc;
+            --card: #ffffff;
+            --text: #2d3436;
+            --muted: #636e72;
+            --exam: #ee5253;
+            --study: #f1c40f;
+            --activity: #00cec9;
+            --border: #dfe6e9;
         }
 
         body {
             font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-app);
-            color: var(--text-dark);
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0; padding: 0;
             display: flex; flex-direction: column; align-items: center;
             -webkit-tap-highlight-color: transparent;
         }
 
         header {
-            width: 100%; background-color: var(--bg-card);
+            width: 100%; background: var(--card);
             padding: 15px 0; text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 1000;
         }
 
-        .app-container { width: 92%; max-width: 600px; padding: 20px 0 100px 0; }
+        .app-container { width: 94%; max-width: 600px; padding: 20px 0 100px 0; }
 
         .card {
-            background: var(--bg-card); padding: 20px;
-            border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            margin-bottom: 25px;
+            background: var(--card); padding: 20px;
+            border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            margin-bottom: 20px; border: 1px solid var(--border);
         }
 
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        h2 { font-size: 1.1rem; margin-top: 0; display: flex; align-items: center; gap: 8px; }
 
-        .material-input {
-            width: 100%; padding: 12px 5px; border: none;
-            border-bottom: 2px solid var(--border-light);
-            background: transparent; font-size: 1rem; outline: none;
+        /* טופס הוספה */
+        .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .full-width { grid-column: span 2; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+        input, select, textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border);
+            border-radius: 12px; font-size: 0.95rem; outline: none; box-sizing: border-box;
         }
+        input:focus { border-color: var(--primary); }
 
-        .btn-save {
-            width: 100%; padding: 16px; background: var(--primary);
-            color: white; border: none; border-radius: 15px;
-            font-size: 1.1rem; font-weight: 600; cursor: pointer;
-            box-shadow: 0 4px 10px rgba(63, 81, 181, 0.3);
+        .btn {
+            width: 100%; padding: 15px; border: none; border-radius: 16px;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s;
         }
+        .btn-primary { background: var(--primary); color: white; margin-top: 10px; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); margin-top: 8px; }
 
         /* לוח שנה */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
-        .weekday-label { font-weight: 700; color: var(--text-muted); font-size: 0.75rem; padding-bottom: 10px; }
-        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; cursor: pointer; border-radius: 50%; position: relative; }
-        .calendar-day.today { border: 1.5px solid var(--primary); color: var(--primary); }
-        .marker { height: 4px; width: 4px; border-radius: 50%; background: var(--accent-red); margin: auto; position: absolute; bottom: 4px;}
-
-        /* סרגל סינון זמן */
-        .time-filters {
-            display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px;
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .weekday { font-size: 0.75rem; color: var(--muted); font-weight: 800; padding-bottom: 8px; }
+        .day {
+            aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 50%; cursor: pointer; font-size: 0.9rem; position: relative;
         }
-        .time-chip {
-            padding: 8px 16px; background: #e2e8f0; border-radius: 20px;
-            font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap;
-            transition: all 0.2s; color: var(--text-muted); border: none;
-        }
-        .time-chip.active { background: var(--primary); color: white; box-shadow: 0 4px 8px rgba(63, 81, 181, 0.2); }
+        .day.selected { background: var(--primary); color: white; }
+        .day.today { border: 2px solid var(--primary); }
+        .dot-container { display: flex; gap: 2px; position: absolute; bottom: 4px; }
+        .dot { width: 4px; height: 4px; border-radius: 50%; }
 
-        /* רשימת אירועים */
-        .section-title { font-size: 1.2rem; font-weight: 700; margin: 10px 5px 15px 5px; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
-        .event-card {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px; background: white; border-radius: 18px; margin-bottom: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.04); border-right: 5px solid var(--primary);
+        /* אירועים */
+        .event-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            background: #fff; border-radius: 16px; margin-bottom: 10px;
+            border-right: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .event-date-box { text-align: center; background: var(--bg-app); padding: 8px; border-radius: 12px; min-width: 50px; }
-        .event-date-box .day { font-size: 1.1rem; font-weight: 700; display: block; color: var(--primary); }
-        .event-date-box .month { font-size: 0.7rem; font-weight: 600; }
-        .delete-btn { color: var(--accent-red); background: none; border: none; cursor: pointer; padding: 10px; }
+        .event-item.מבחן { border-right-color: var(--exam); }
+        .event-item.למידה { border-right-color: var(--study); background: #fffdf2; }
+        .event-time { font-size: 0.75rem; color: var(--muted); font-weight: 700; min-width: 45px; }
+        .event-info strong { display: block; font-size: 0.95rem; }
 
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; display: none; z-index: 1000; }
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; display: none; z-index: 2000; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>לוח אירועים שכבתי</h1>
+    <h1>היומן החכם שלי</h1>
 </header>
 
 <div class="app-container">
-    <div class="card">
-        <div class="input-group">
-            <label>נושא האירוע</label>
-            <input type="text" id="title" class="material-input" placeholder="הקלד נושא...">
-        </div>
-        <div style="display:flex; gap:15px; margin-bottom:20px;">
-            <div class="input-group" style="flex:1;">
-                <label>כיתה</label>
-                <select id="classId" class="material-input">
-                    <option>כל השכבה ⭐</option><option>י'1</option><option>י'2</option><option>י'3</option><option>י'4</option><option>י'5</option>
-                </select>
-            </div>
-            <div class="input-group" style="flex:1;">
-                <label>סוג</label>
-                <select id="type" class="material-input">
-                    <option>מבחן</option><option>בוחן</option><option>פעילות</option>
-                </select>
-            </div>
-        </div>
-        <button class="btn-save" onclick="addEvent()">שמור אירוע</button>
-    </div>
-
-    <div class="card">
-        <div class="calendar-grid" id="calendarGrid"></div>
-    </div>
-
-    <div class="section-title">
-        <span class="material-icons-round">schedule</span>
-        אירועים קרובים
-    </div>
     
-    <div class="time-filters">
-        <button class="time-chip" id="filter-week" onclick="setTimeFilter(7, this)">השבוע</button>
-        <button class="time-chip" id="filter-month" onclick="setTimeFilter(30, this)">החודש</button>
-        <button class="time-chip" id="filter-year" onclick="setTimeFilter(365, this)">השנה</button>
-        <button class="time-chip active" id="filter-all" onclick="setTimeFilter(0, this)">הכל</button>
+    <div class="card">
+        <h2><span class="material-icons-round">add_circle</span> הוספת פעילות</h2>
+        <div class="grid-form">
+            <div class="full-width">
+                <label>כותרת</label>
+                <input type="text" id="title" placeholder="מה עושים?">
+            </div>
+            <div>
+                <label>סוג</label>
+                <select id="type">
+                    <option value="מבחן">מבחן</option>
+                    <option value="שיעורים">שיעורי בית</option>
+                    <option value="עבודה">עבודה</option>
+                    <option value="פעילות">חוג/פעילות</option>
+                </select>
+            </div>
+            <div>
+                <label>עדיפות</label>
+                <select id="priority">
+                    <option>גבוהה</option><option>בינונית</option><option>נמוכה</option>
+                </select>
+            </div>
+            <div>
+                <label>שעה</label>
+                <input type="time" id="time" value="16:00">
+            </div>
+            <div>
+                <label>משך (דקות)</label>
+                <input type="number" id="duration" value="60">
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="addEvent()">שמור בלו"ז</button>
     </div>
 
-    <div id="fullEventList"></div>
+    <div class="card">
+        <div class="cal-header">
+            <button onclick="changeMonth(-1)" style="border:none;background:none;cursor:pointer"><i class="material-icons-round">chevron_right</i></button>
+            <strong id="monthLabel"></strong>
+            <button onclick="changeMonth(1)" style="border:none;background:none;cursor:pointer"><i class="material-icons-round">chevron_left</i></button>
+        </div>
+        <div class="cal-grid" id="calendarGrid"></div>
+    </div>
+
+    <div class="card">
+        <h2><span class="material-icons-round">today</span> היום שלי: <span id="currentDateLabel"></span></h2>
+        <div id="dailyList"></div>
+        <button class="btn btn-outline" onclick="organizeMyDay()">
+            <span class="material-icons-round" style="vertical-align: middle; font-size: 1.2rem;">auto_fix_high</span>
+            סדר לי את היום
+        </button>
+    </div>
+
 </div>
 
 <div id="toast"></div>
 
 <script>
-    // --- חובה: הלינק שלך מגוגל שיטס ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjUOZw7k1RUW9HArAZPEpdX7L1HP5jpMGasjeFC0jwNSylvDLUEyYQUqIq46YhEpTu/exec";
+    // הגדרות - ניתן לחבר כאן את ה-SCRIPT_URL מהגוגל שיטס שלך
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjUOZw7k1RUW9HArAZPEpdX7L1HP5jpMGasjeFC0jwNSylvDLUEyYQUqIq46YhEpTu/exec"; 
 
     let events = [];
-    let currentTimeFilter = 0; // 0 = הכל
+    let selectedDate = new Date();
+    let viewDate = new Date();
 
-    function normalizeDate(d) { 
-        const date = new Date(d); 
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate()); 
+    function normalizeDate(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+    selectedDate = normalizeDate(selectedDate);
+
+    // --- ליבת ניהול הזמן האוטומטי ---
+
+    async function addEvent() {
+        const title = document.getElementById('title').value;
+        const type = document.getElementById('type').value;
+        const time = document.getElementById('time').value;
+        const duration = parseInt(document.getElementById('duration').value);
+
+        if (!title) return showToast("נא להזין כותרת");
+
+        const newEvent = {
+            id: Date.now().toString(),
+            title, type, time, duration,
+            date: selectedDate.toISOString(),
+            isAuto: false
+        };
+
+        events.push(newEvent);
+
+        // אם זה מבחן - צור בלוקים ללמידה אוטומטיים
+        if (type === 'מבחן') {
+            createStudyBlocks(title, selectedDate);
+        }
+
+        renderCalendar();
+        displayDailyEvents();
+        showToast("האירוע נשמר!");
+        document.getElementById('title').value = '';
     }
 
-    async function loadEvents() {
-        if (SCRIPT_URL.includes("כאן_מדביקים")) return;
-        try {
-            const response = await fetch(SCRIPT_URL);
-            events = await response.json();
-            renderCalendar();
-            displayFullEventList();
-        } catch (e) { console.error(e); }
-    }
-
-    // הגדרת סינון זמן
-    function setTimeFilter(days, el) {
-        currentTimeFilter = days;
-        // עדכון עיצוב הכפתורים
-        document.querySelectorAll('.time-chip').forEach(btn => btn.classList.remove('active'));
-        el.classList.add('active');
-        displayFullEventList();
-    }
-
-    function displayFullEventList() {
-        const list = document.getElementById('fullEventList');
-        list.innerHTML = '';
-
-        const today = normalizeDate(new Date());
-        
-        // סינון לפי טווח זמן
-        let filtered = events.filter(ev => {
-            const evDate = new Date(ev.date);
-            if (currentTimeFilter === 0) return true; // הכל
+    function createStudyBlocks(examTitle, examDate) {
+        // יוצר 3 בלוקים של 90 דקות ב-3 הימים שלפני המבחן
+        for (let i = 1; i <= 3; i++) {
+            let studyDate = new Date(examDate);
+            studyDate.setDate(studyDate.getDate() - i);
             
-            const diffTime = evDate - today;
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-            return diffDays >= 0 && diffDays <= currentTimeFilter;
-        });
+            if (studyDate < normalizeDate(new Date())) continue;
 
-        if (filtered.length === 0) {
-            list.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">אין אירועים בטווח הזמן שנבחר</div>';
+            // חיפוש שעה פנויה (ברירת מחדל 17:00, אם תפוס מחפש שעה אחרת)
+            let studyTime = "17:00";
+            if (isTimeOccupied(studyDate, studyTime)) studyTime = "19:00";
+
+            events.push({
+                id: "auto-" + Date.now() + i,
+                title: "למידה: " + examTitle,
+                type: "למידה",
+                time: studyTime,
+                duration: 90,
+                date: studyDate.toISOString(),
+                isAuto: true
+            });
+        }
+    }
+
+    function isTimeOccupied(date, time) {
+        return events.some(e => normalizeDate(new Date(e.date)).getTime() === date.getTime() && e.time === time);
+    }
+
+    function organizeMyDay() {
+        // פונקציית "סדר לי את היום" - מוסיפה בלוקי הכנה למטלות פתוחות
+        const hasHomework = events.filter(e => e.type === 'שיעורים' && normalizeDate(new Date(e.date)).getTime() === selectedDate.getTime());
+        if (hasHomework.length > 0 && !isTimeOccupied(selectedDate, "16:00")) {
+            events.push({
+                id: "fix-" + Date.now(),
+                title: "הכנת שיעורי בית",
+                type: "למידה",
+                time: "16:00",
+                duration: 45,
+                date: selectedDate.toISOString(),
+                isAuto: true
+            });
+            showToast("שיבצתי לך זמן לשיעורי בית!");
+            displayDailyEvents();
+        } else {
+            showToast("הלוז שלך נראה מצוין!");
+        }
+    }
+
+    // --- תצוגה ו-UI ---
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        const label = document.getElementById('monthLabel');
+        grid.innerHTML = '';
+        
+        label.innerText = viewDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+        ['א','ב','ג','ד','ה','ו','ש'].forEach(d => grid.innerHTML += `<div class="weekday">${d}</div>`);
+
+        const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
+            const isSelected = normalizeDate(date).getTime() === selectedDate.getTime();
+            const dailyEvents = events.filter(e => normalizeDate(new Date(e.date)).getTime() === normalizeDate(date).getTime());
+
+            let dots = dailyEvents.map(e => `<div class="dot" style="background:${e.type === 'מבחן' ? 'var(--exam)' : 'var(--primary)'}"></div>`).join('');
+
+            grid.innerHTML += `
+                <div class="day ${isSelected ? 'selected' : ''} ${normalizeDate(date).getTime() === normalizeDate(new Date()).getTime() ? 'today' : ''}" 
+                     onclick="selectDate(${viewDate.getFullYear()}, ${viewDate.getMonth()}, ${d})">
+                    ${d}
+                    <div class="dot-container">${dots}</div>
+                </div>`;
+        }
+    }
+
+    function displayDailyEvents() {
+        const list = document.getElementById('dailyList');
+        document.getElementById('currentDateLabel').innerText = selectedDate.toLocaleDateString('he-IL');
+        list.innerHTML = '';
+        
+        const daily = events.filter(e => normalizeDate(new Date(e.date)).getTime() === selectedDate.getTime());
+        daily.sort((a,b) => a.time.localeCompare(b.time));
+
+        if (daily.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:var(--muted); font-size:0.9rem;">אין משימות מתוכננות להיום</p>';
             return;
         }
 
-        filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-        filtered.forEach(ev => {
-            const dateObj = new Date(ev.date);
+        daily.forEach(e => {
             list.innerHTML += `
-                <div class="event-card">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div class="event-date-box">
-                            <span class="day">${dateObj.getDate()}</span>
-                            <span class="month">${dateObj.toLocaleDateString('he-IL', { month: 'short' })}</span>
-                        </div>
-                        <div class="event-info">
-                            <strong>${ev.title}</strong>
-                            <span>📍 ${ev.classId} | 🏷️ ${ev.type}</span>
-                        </div>
+                <div class="event-item ${e.type}">
+                    <div class="event-time">${e.time}</div>
+                    <div class="event-info">
+                        <strong>${e.title}</strong>
+                        <span style="font-size:0.75rem; color:var(--muted)">${e.type} | ${e.duration} דק׳</span>
                     </div>
-                    <button class="delete-btn" onclick="deleteEvent('${ev.id}')">
-                        <span class="material-icons-round">delete_outline</span>
-                    </button>
                 </div>`;
         });
     }
 
-    function renderCalendar() {
-        const grid = document.getElementById('calendarGrid');
-        grid.innerHTML = '';
-        ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].forEach(d => grid.innerHTML += `<div class="weekday-label">${d}</div>`);
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
-        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="calendar-day"></div>`;
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(now.getFullYear(), now.getMonth(), day);
-            const hasEvent = events.some(e => normalizeDate(e.date).getTime() === normalizeDate(date).getTime());
-            grid.innerHTML += `<div class="calendar-day ${normalizeDate(date).getTime() === normalizeDate(now).getTime() ? 'today' : ''}">${day}${hasEvent ? '<div class="marker"></div>' : ''}</div>`;
-        }
+    function selectDate(y, m, d) {
+        selectedDate = new Date(y, m, d);
+        renderCalendar();
+        displayDailyEvents();
     }
 
-    async function addEvent() {
-        const title = document.getElementById('title').value;
-        if (!title) return showToast("נא להזין נושא");
-        showToast("שומר...");
-        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ 
-            action: "add", title, date: new Date().toISOString(), 
-            classId: document.getElementById('classId').value, type: document.getElementById('type').value 
-        })});
-        setTimeout(() => { document.getElementById('title').value = ''; loadEvents(); }, 1500);
-    }
-
-    async function deleteEvent(id) {
-        if(!confirm("למחוק?")) return;
-        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "delete", id }) });
-        setTimeout(loadEvents, 1000);
+    function changeMonth(delta) {
+        viewDate.setMonth(viewDate.getMonth() + delta);
+        renderCalendar();
     }
 
     function showToast(msg) {
@@ -251,8 +314,9 @@
         setTimeout(() => t.style.display = 'none', 3000);
     }
 
-    loadEvents();
     renderCalendar();
+    displayDailyEvents();
+
 </script>
 </body>
 </html>
