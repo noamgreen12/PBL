@@ -3,185 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ניהול זמן ואירועים - שכבת י'</title>
+    <title>מערכת ניהול זמן ובית ספר</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         :root {
             --primary: #3f51b5;
             --secondary: #10ac84;
-            --bg: #f5f6fa;
+            --bg: #f0f2f5;
             --card: #ffffff;
             --text: #2d3436;
             --muted: #636e72;
             --exam: #ee5253;
-            --study: #f1c40f;
+            --school: #0984e3;
+            --holiday: #6c5ce7;
             --border: #dfe6e9;
         }
 
         body {
             font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0; padding: 0;
-            display: flex; flex-direction: column; align-items: center;
-            -webkit-tap-highlight-color: transparent;
-            padding-bottom: 80px;
+            background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 0; direction: rtl;
         }
 
-        header {
-            width: 100%; background: var(--card);
-            padding: 15px 0; text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        /* ניווט עליון */
+        nav.top-nav {
+            display: flex; background: var(--card);
             position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        .nav-tab {
+            flex: 1; padding: 15px; text-align: center;
+            border: none; background: none; font-weight: 700;
+            color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent;
+        }
+        .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-        .app-container { width: 92%; max-width: 600px; padding: 20px 0; }
-
-        .page { display: none; width: 100%; animation: fadeIn 0.3s ease; }
+        .app-container { width: 92%; max-width: 650px; margin: 20px auto; padding-bottom: 50px; }
+        .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
 
         .card {
-            background: var(--card); padding: 20px;
-            border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-            margin-bottom: 20px; border: 1px solid var(--border);
+            background: var(--card); padding: 20px; border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;
         }
 
-        h2 { font-size: 1.1rem; margin-top: 0; display: flex; align-items: center; gap: 8px; }
-
-        /* ניווט תחתון */
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; max-width: 600px;
-            background: white; display: flex; justify-content: space-around;
-            padding: 12px 0; border-top: 1px solid var(--border); z-index: 1001;
-        }
-        .nav-btn { border: none; background: none; color: var(--muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 0.8rem; flex: 1; }
-        .nav-btn.active { color: var(--primary); }
-        .nav-btn i { font-size: 1.6rem; margin-bottom: 4px; }
+        h2 { font-size: 1.2rem; margin-top: 0; display: flex; align-items: center; gap: 8px; }
 
         /* טפסים */
-        .input-group { margin-bottom: 15px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .full { grid-column: span 2; }
         label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; outline: none; box-sizing: border-box; background: #fff; }
+        input, select, textarea { 
+            width: 100%; padding: 10px; border: 1px solid var(--border); 
+            border-radius: 12px; font-size: 1rem; outline: none; box-sizing: border-box;
+        }
 
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-magic { background: white; border: 2px solid var(--secondary); color: var(--secondary); margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn { 
+            padding: 12px; border: none; border-radius: 12px; 
+            font-weight: 700; cursor: pointer; transition: 0.2s; 
+        }
+        .btn-primary { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
+        .btn-sec { background: var(--bg); color: var(--text); border: 1px solid var(--border); font-size: 0.8rem; }
 
         /* לוח שנה */
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-        .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-size: 0.9rem; position: relative; }
+        .day { 
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
+            border-radius: 50%; cursor: pointer; font-size: 0.9rem; position: relative; 
+        }
         .day.selected { background: var(--primary); color: white; }
         .day.today { border: 2px solid var(--primary); }
-        .marker { height: 4px; width: 4px; border-radius: 50%; background: var(--exam); position: absolute; bottom: 4px; }
+        .dot { width: 5px; height: 5px; border-radius: 50%; position: absolute; bottom: 4px; }
 
-        /* אירועים */
-        .event-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fff; border-radius: 16px; margin-bottom: 10px; border-right: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .event-item.מבחן { border-right-color: var(--exam); }
-        .event-item.study-block { border-right-color: var(--study); background: #fffdf2; }
-        .event-item span { font-size: 0.8rem; color: var(--muted); }
+        /* רשימות אירועים */
+        .event-card {
+            display: flex; align-items: center; padding: 12px;
+            background: white; border-radius: 15px; margin-bottom: 8px;
+            border-right: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .school-ev { border-right-color: var(--school); background: #f0f7ff; }
+        .school-ev.read-only { opacity: 0.8; }
+        .info { flex: 1; margin-right: 10px; }
+        .info strong { display: block; font-size: 0.95rem; }
+        .info span { font-size: 0.75rem; color: var(--muted); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        #toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; display: none; z-index: 2000; }
+        .json-area { width: 100%; height: 80px; font-family: monospace; font-size: 0.7rem; margin-top: 10px; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; display: none; z-index: 2000; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1 id="mainTitle">לוח אירועים שכבתי</h1>
-</header>
+<nav class="top-nav">
+    <button class="nav-tab active" onclick="switchPage('personal', this)">היומן שלי</button>
+    <button class="nav-tab" onclick="switchPage('school', this)">לוח אירועי בית ספר</button>
+</nav>
 
 <div class="app-container">
     
-    <div id="page-shared" class="page active">
+    <div id="page-personal" class="page active">
         <div class="card">
-            <h2><span class="material-icons-round">campaign</span> הוספת אירוע לשכבה</h2>
-            <div class="input-group">
-                <label>נושא האירוע</label>
-                <input type="text" id="shared-title" placeholder="למשל: בגרות בלשון">
-            </div>
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1">
-                    <label>קהל יעד</label>
-                    <select id="shared-class">
-                        <option value="כל השכבה">כל השכבה ⭐</option>
-                        <option>י'1</option><option>י'2</option><option>י'3</option><option>י'4</option><option>י'5</option>
-                    </select>
-                </div>
-                <div style="flex:1">
+            <h2><span class="material-icons-round">edit_note</span> משימה חדשה</h2>
+            <div class="form-grid">
+                <div class="full"><input type="text" id="p-title" placeholder="כותרת המשימה"></div>
+                <div>
                     <label>סוג</label>
-                    <select id="shared-type">
-                        <option>מבחן</option><option>בוחן</option><option>פעילות</option><option>טיול</option>
+                    <select id="p-type">
+                        <option value="מבחן">מבחן</option>
+                        <option value="שיעורים">שיעורי בית</option>
+                        <option value="עבודה">עבודה</option>
                     </select>
                 </div>
+                <div><label>שעה</label><input type="time" id="p-time" value="16:00"></div>
             </div>
-            <button class="btn btn-primary" onclick="addSharedEvent()" style="margin-top:15px">שמור בלוח השכבתי</button>
+            <button class="btn btn-primary" onclick="addPersonalEvent()">שמור ותכנן למידה</button>
         </div>
 
         <div class="card">
             <div class="cal-header">
-                <button onclick="changeMonth(-1)" style="border:none;background:none;"><i class="material-icons-round">chevron_right</i></button>
+                <button class="btn-sec" onclick="changeMonth(-1)"><i class="material-icons-round">chevron_right</i></button>
                 <strong id="monthLabel"></strong>
-                <button onclick="changeMonth(1)" style="border:none;background:none;"><i class="material-icons-round">chevron_left</i></button>
+                <button class="btn-sec" onclick="changeMonth(1)"><i class="material-icons-round">chevron_left</i></button>
             </div>
             <div class="cal-grid" id="calendarGrid"></div>
         </div>
 
-        <h3 style="margin:20px 10px 10px">אירועים ביום שנבחר:</h3>
-        <div id="sharedDailyList"></div>
+        <h3>היום שלי: <span id="selectedDateLabel"></span></h3>
+        <div id="combinedList"></div>
     </div>
 
-    <div id="page-personal" class="page">
+    <div id="page-school" class="page">
         <div class="card">
-            <h2><span class="material-icons-round">psychology</span> מתכנן למידה אישי</h2>
-            <p style="font-size:0.85rem; color:var(--muted)">כאן תוכל להוסיף מטלות אישיות. המערכת תתכנן לך זמן למידה למבחנים מהלוח השכבתי.</p>
-            <div class="input-group">
-                <label>משימה אישית</label>
-                <input type="text" id="personal-title" placeholder="למשל: להכין עבודה באזרחות">
-            </div>
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1">
-                    <label>שעה</label>
-                    <input type="time" id="personal-time" value="16:00">
+            <h2><span class="material-icons-round">school</span> הוספת אירוע בית ספר</h2>
+            <div class="form-grid">
+                <div class="full"><input type="text" id="s-title" placeholder="כותרת האירוע (טיול, טקס...)"></div>
+                <div>
+                    <label>סוג אירוע</label>
+                    <select id="s-type">
+                        <option>טיול</option><option>אסיפה</option><option>יום מרוכז</option>
+                        <option>חופשה</option><option>בגרות</option><option>טקס</option>
+                    </select>
                 </div>
-                <div style="flex:1">
-                    <label>משך (דק')</label>
-                    <input type="number" id="personal-duration" value="60">
+                <div>
+                    <label>קהל יעד</label>
+                    <select id="s-target">
+                        <option>כל בית הספר</option><option>שכבה י׳</option><option>כיתה י׳1</option>
+                    </select>
                 </div>
+                <div class="full"><textarea id="s-desc" placeholder="תיאור קצר..."></textarea></div>
             </div>
-            <button class="btn btn-primary" onclick="addPersonalEvent()" style="margin-top:15px">הוסף ליומן שלי</button>
+            <button class="btn btn-primary" onclick="addSchoolEvent()">הוסף ללוח בית הספר</button>
         </div>
 
         <div class="card">
-            <h2><span class="material-icons-round">auto_awesome</span> סדר היום שלי ל-<span id="personalDateLabel"></span></h2>
-            <div id="personalDailyList"></div>
-            <button class="btn btn-magic" onclick="magicOrganize()">
-                <i class="material-icons-round">auto_fix_high</i>
-                סדר לי את היום אוטומטית
-            </button>
+            <h2>ייבוא / ייצוא נתונים (JSON)</h2>
+            <textarea id="jsonBox" class="json-area" placeholder="הדבק כאן JSON לייבוא..."></textarea>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-sec" onclick="exportSchoolEvents()">ייצוא לקליפבורד</button>
+                <button class="btn btn-sec" onclick="importSchoolEvents()">ייבוא מהתיבה</button>
+            </div>
         </div>
+
+        <h3>כל אירועי בית הספר:</h3>
+        <select id="school-filter" onchange="renderSchoolList()" style="margin-bottom:15px;">
+            <option value="הכל">סנן לפי קהל יעד: הכל</option>
+            <option>כל בית הספר</option><option>שכבה י׳</option><option>כיתה י׳1</option>
+        </select>
+        <div id="schoolList"></div>
     </div>
 
 </div>
 
-<nav class="bottom-nav">
-    <button class="nav-btn active" id="nav-shared" onclick="switchPage('shared')">
-        <i class="material-icons-round">groups</i>
-        <span>לוח שכבתי</span>
-    </button>
-    <button class="nav-btn" id="nav-personal" onclick="switchPage('personal')">
-        <i class="material-icons-round">person</i>
-        <span>היומן שלי</span>
-    </button>
-</nav>
-
 <div id="toast"></div>
 
 <script>
-    // --- הגדרות ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjUOZw7k1RUW9HArAZPEpdX7L1HP5jpMGasjeFC0jwNSylvDLUEyYQUqIq46YhEpTu/exec";
-    let events = []; // אירועים מהשיטס
-    let personalEvents = JSON.parse(localStorage.getItem('myPersonal_v1')) || [];
+    let personalEvents = JSON.parse(localStorage.getItem('personalEvents')) || [];
+    let schoolEvents = JSON.parse(localStorage.getItem('schoolEvents')) || [];
     let selectedDate = new Date();
     let viewDate = new Date();
 
@@ -189,24 +188,87 @@
     selectedDate = normalizeDate(selectedDate);
 
     // --- ניווט ---
-    function switchPage(page) {
+    function switchPage(id, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('page-' + page).classList.add('active');
-        document.getElementById('nav-' + page).classList.add('active');
-        document.getElementById('mainTitle').innerText = (page === 'shared') ? "לוח אירועים שכבתי" : "ניהול זמן אישי";
-        if(page === 'personal') displayPersonalDay();
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('page-' + id).classList.add('active');
+        el.classList.add('active');
+        refreshUI();
     }
 
-    // --- לוח שנה שכבתי ---
-    async function loadSharedEvents() {
-        if (SCRIPT_URL.includes("כאן_מדביקים")) return;
+    // --- ניהול אישי ---
+    function addPersonalEvent() {
+        const title = document.getElementById('p-title').value;
+        const type = document.getElementById('p-type').value;
+        if (!title) return showToast("נא להזין כותרת");
+
+        const ev = { id: Date.now(), title, type, time: document.getElementById('p-time').value, date: selectedDate.toISOString(), isStudy: false };
+        personalEvents.push(ev);
+        
+        if (type === 'מבחן') autoPlanStudy(title, selectedDate);
+        
+        saveAndRefresh();
+        document.getElementById('p-title').value = '';
+    }
+
+    function autoPlanStudy(examTitle, examDate) {
+        for (let i = 1; i <= 3; i++) {
+            let sDate = new Date(examDate);
+            sDate.setDate(sDate.getDate() - i);
+            
+            // בדיקת התנגשות עם אירועי בית ספר (חופשות/טיולים)
+            const hasConflict = schoolEvents.some(se => 
+                normalizeDate(se.date).getTime() === normalizeDate(sDate).getTime() && 
+                (se.type === 'חופשה' || se.type === 'טיול')
+            );
+
+            if (!hasConflict && sDate > new Date()) {
+                personalEvents.push({ id: Date.now()+i, title: "למידה: " + examTitle, type: "למידה", time: "17:00", date: sDate.toISOString(), isStudy: true });
+            }
+        }
+    }
+
+    // --- ניהול בית ספר ---
+    function addSchoolEvent() {
+        const title = document.getElementById('s-title').value;
+        if (!title) return showToast("נא להזין כותרת");
+
+        schoolEvents.push({
+            id: Date.now(), title, type: document.getElementById('s-type').value,
+            target: document.getElementById('s-target').value, date: selectedDate.toISOString(),
+            desc: document.getElementById('s-desc').value
+        });
+        saveAndRefresh();
+        document.getElementById('s-title').value = '';
+    }
+
+    // --- ייבוא/ייצוא ---
+    function exportSchoolEvents() {
+        const data = JSON.stringify(schoolEvents);
+        navigator.clipboard.writeText(data);
+        showToast("הנתונים הועתקו לקליפבורד");
+    }
+
+    function importSchoolEvents() {
         try {
-            const response = await fetch(SCRIPT_URL);
-            events = await response.json();
-            renderCalendar();
-            displaySharedDaily();
-        } catch (e) { console.error(e); }
+            const data = JSON.parse(document.getElementById('jsonBox').value);
+            schoolEvents = data;
+            saveAndRefresh();
+            showToast("ייבוא הצליח!");
+        } catch(e) { showToast("שגיאה בפורמט ה-JSON"); }
+    }
+
+    // --- תצוגה ---
+    function refreshUI() {
+        renderCalendar();
+        renderCombinedDaily();
+        renderSchoolList();
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('personalEvents', JSON.stringify(personalEvents));
+        localStorage.setItem('schoolEvents', JSON.stringify(schoolEvents));
+        refreshUI();
     }
 
     function renderCalendar() {
@@ -214,118 +276,78 @@
         const label = document.getElementById('monthLabel');
         grid.innerHTML = '';
         label.innerText = viewDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+
         ['א','ב','ג','ד','ה','ו','ש'].forEach(d => grid.innerHTML += `<div style="font-size:0.7rem; font-weight:800; color:var(--muted)">${d}</div>`);
 
-        const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
-        const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+        const first = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+        const days = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
 
-        for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
-        for (let d = 1; d <= daysInMonth; d++) {
+        for (let i = 0; i < first; i++) grid.innerHTML += `<div></div>`;
+        for (let d = 1; d <= days; d++) {
             const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
             const time = normalizeDate(date).getTime();
-            const hasEvent = events.some(e => normalizeDate(e.date).getTime() === time);
-            const isSelected = time === selectedDate.getTime();
+            const hasP = personalEvents.some(e => normalizeDate(e.date).getTime() === time);
+            const hasS = schoolEvents.some(e => normalizeDate(e.date).getTime() === time);
 
             grid.innerHTML += `
-                <div class="day ${isSelected ? 'selected' : ''}" onclick="selectDate(${viewDate.getFullYear()},${viewDate.getMonth()},${d})">
+                <div class="day ${time === selectedDate.getTime() ? 'selected' : ''}" onclick="selectDate(${viewDate.getFullYear()},${viewDate.getMonth()},${d})">
                     ${d}
-                    ${hasEvent ? '<div class="marker"></div>' : ''}
+                    <div class="dot" style="background:${hasS ? 'var(--school)' : (hasP ? 'var(--primary)' : 'transparent')}"></div>
                 </div>`;
         }
     }
 
     function selectDate(y, m, d) {
         selectedDate = new Date(y, m, d);
-        renderCalendar();
-        displaySharedDaily();
-        displayPersonalDay();
+        refreshUI();
     }
 
-    function displaySharedDaily() {
-        const list = document.getElementById('sharedDailyList');
+    function renderCombinedDaily() {
+        const list = document.getElementById('combinedList');
+        document.getElementById('selectedDateLabel').innerText = selectedDate.toLocaleDateString('he-IL');
         list.innerHTML = '';
-        const daily = events.filter(e => normalizeDate(e.date).getTime() === selectedDate.getTime());
-        if (daily.length === 0) { list.innerHTML = '<p style="text-align:center;color:var(--muted)">אין אירועים רשומים</p>'; return; }
-        daily.forEach(ev => {
-            list.innerHTML += `<div class="event-item ${ev.type}"><div><strong>${ev.title}</strong><span>${ev.classId} | ${ev.type}</span></div></div>`;
+        const time = selectedDate.getTime();
+
+        // אירועי בית ספר (לקריאה בלבד)
+        schoolEvents.filter(e => normalizeDate(e.date).getTime() === time).forEach(e => {
+            list.innerHTML += `<div class="event-card school-ev read-only">
+                <div class="info"><strong>${e.title} (בי"ס)</strong><span>${e.target} | ${e.type}</span></div>
+                <i class="material-icons-round" style="color:var(--school)">lock</i>
+            </div>`;
+        });
+
+        // אירועים אישיים
+        personalEvents.filter(e => normalizeDate(e.date).getTime() === time).forEach(e => {
+            list.innerHTML += `<div class="event-card" style="border-right-color:${e.type==='מבחן'?'var(--exam)':''}">
+                <div class="info"><strong>${e.title}</strong><span>${e.time} | ${e.type}</span></div>
+                <button onclick="deleteEvent(${e.id}, 'p')" style="border:none;background:none;cursor:pointer;color:var(--exam)"><i class="material-icons-round">delete</i></button>
+            </div>`;
         });
     }
 
-    async function addSharedEvent() {
-        const title = document.getElementById('shared-title').value;
-        if(!title) return showToast("נא להזין נושא");
-        showToast("שומר בלוח השכבתי...");
-        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
-            action: "add", title, date: selectedDate.toISOString(),
-            classId: document.getElementById('shared-class').value, type: document.getElementById('shared-type').value
-        })});
-        setTimeout(() => { document.getElementById('shared-title').value = ''; loadSharedEvents(); }, 1500);
-    }
-
-    // --- יומן אישי וניהול זמן ---
-    function displayPersonalDay() {
-        const list = document.getElementById('personalDailyList');
-        document.getElementById('personalDateLabel').innerText = selectedDate.toLocaleDateString('he-IL');
+    function renderSchoolList() {
+        const list = document.getElementById('schoolList');
+        const filter = document.getElementById('school-filter').value;
         list.innerHTML = '';
         
-        // 1. מבחנים מהלוח השכבתי שמופיעים היום
-        const sharedToday = events.filter(e => normalizeDate(e.date).getTime() === selectedDate.getTime());
-        
-        // 2. בלוקים ללמידה אוטומטיים (לפני מבחנים עתידיים)
-        const studyBlocks = generateStudyBlocks();
-        
-        // 3. אירועים אישיים
-        const combined = [...sharedToday, ...studyBlocks, ...personalEvents].filter(e => normalizeDate(e.date).getTime() === selectedDate.getTime());
-        combined.sort((a,b) => (a.time || "08:00").localeCompare(b.time || "08:00"));
-
-        if (combined.length === 0) { list.innerHTML = '<p style="text-align:center;color:var(--muted)">היום שלך פנוי!</p>'; return; }
-        
-        combined.forEach(e => {
-            const isStudy = e.isStudyBlock;
-            list.innerHTML += `
-                <div class="event-item ${isStudy ? 'study-block' : e.type}">
-                    <div><strong>${isStudy ? '📖 למידה: ' + e.title : e.title}</strong><span>${e.time || 'כל היום'}</span></div>
-                </div>`;
+        schoolEvents.filter(e => filter === 'הכל' || e.target === filter).sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(e => {
+            list.innerHTML += `<div class="event-card school-ev">
+                <div class="info"><strong>${e.title}</strong><span>${new Date(e.date).toLocaleDateString('he-IL')} | ${e.target}</span></div>
+                <button onclick="deleteEvent(${e.id}, 's')" style="border:none;background:none;cursor:pointer;color:var(--exam)"><i class="material-icons-round">delete</i></button>
+            </div>`;
         });
     }
 
-    function generateStudyBlocks() {
-        let blocks = [];
-        events.filter(e => e.type === 'מבחן').forEach(ex => {
-            const examDate = normalizeDate(ex.date);
-            for(let i=1; i<=3; i++) {
-                let sDate = new Date(examDate);
-                sDate.setDate(sDate.getDate() - i);
-                blocks.push({ title: ex.title, date: sDate.toISOString(), time: "17:00", isStudyBlock: true });
-            }
-        });
-        return blocks;
-    }
-
-    function addPersonalEvent() {
-        const title = document.getElementById('personal-title').value;
-        if(!title) return showToast("נא להזין משימה");
-        personalEvents.push({ title, time: document.getElementById('personal-time').value, date: selectedDate.toISOString(), type: 'personal' });
-        localStorage.setItem('myPersonal_v1', JSON.stringify(personalEvents));
-        document.getElementById('personal-title').value = '';
-        displayPersonalDay();
-        showToast("נוסף ליומן האישי");
-    }
-
-    function magicOrganize() {
-        showToast("מארגן לך את הלו\"ז...");
-        setTimeout(() => {
-            // לוגיקה פשוטה: אם יש משימה אישית ללא שעה, משבץ ב-16:00
-            showToast("סידרתי! הוספתי הפסקות וזמני למידה.");
-            displayPersonalDay();
-        }, 1000);
+    function deleteEvent(id, type) {
+        if (type === 'p') personalEvents = personalEvents.filter(e => e.id !== id);
+        else schoolEvents = schoolEvents.filter(e => e.id !== id);
+        saveAndRefresh();
     }
 
     function changeMonth(delta) { viewDate.setMonth(viewDate.getMonth() + delta); renderCalendar(); }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
 
-    loadSharedEvents();
-    renderCalendar();
+    refreshUI();
 </script>
 </body>
 </html>
