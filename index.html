@@ -3,210 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent AI Planner</title>
+    <title>SmartStudent AI Planner Pro</title>
     <style>
         :root {
-            --primary: #4a90e2;
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
             --bg: #f4f6f9;
             --card-bg: #ffffff;
-            --text: #2c3e50;
-            --text-light: #7f8c8d;
-            --safe: #2ecc71;
-            --warning: #f1c40f;
-            --danger: #e74c3c;
-            --shadow: 0 4px 6px rgba(0,0,0,0.05);
-            --radius: 12px;
+            --text: #2d3436;
+            --text-light: #636e72;
+            --safe: #00b894;
+            --warning: #fdcb6e;
+            --danger: #ff7675;
+            --shadow: 0 8px 20px rgba(0,0,0,0.06);
+            --radius: 16px;
             --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; tap-highlight-color: transparent; }
         body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
         /* Layout */
         .app-container { display: flex; height: 100%; width: 100%; overflow: hidden; }
         
-        /* Sidebar (Desktop) / Bottom Nav (Mobile) */
+        /* Navigation */
         .nav-sidebar {
-            background: var(--card-bg);
-            width: 250px;
-            display: none; /* Mobile default */
-            flex-direction: column;
-            padding: 20px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-            z-index: 100;
+            background: var(--card-bg); width: 260px; display: none; flex-direction: column; padding: 25px;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.03); z-index: 100;
+        }
+        .nav-bottom {
+            position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg);
+            display: flex; justify-content: space-around; padding: 15px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 100; border-radius: 20px 20px 0 0;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px;
+            cursor: pointer; color: var(--text-light); transition: 0.2s; font-weight: 500;
+        }
+        .nav-item.active { background: #efeefc; color: var(--primary); font-weight: 700; }
+        .nav-icon { font-size: 1.4rem; }
+
+        /* Main Area */
+        .main-content {
+            flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px;
+            max-width: 1200px; margin: 0 auto; width: 100%;
+        }
+
+        /* Components */
+        h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        h2 { font-size: 1.4rem; margin: 20px 0 10px 0; }
+        .subtitle { color: var(--text-light); font-size: 0.9rem; margin-bottom: 20px; }
+
+        .card {
+            background: var(--card-bg); border-radius: var(--radius); padding: 20px;
+            margin-bottom: 15px; box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.02);
+            transition: transform 0.2s;
         }
         
-        .nav-bottom {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--card-bg);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            z-index: 100;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-radius: var(--radius);
-            cursor: pointer;
-            color: var(--text-light);
-            transition: 0.2s;
-        }
-        .nav-item.active { background: #eaf2fd; color: var(--primary); font-weight: bold; }
-        .nav-icon { font-size: 1.2rem; }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            padding-bottom: 80px; /* Space for bottom nav */
-            position: relative;
-        }
-
-        /* Typography & Components */
-        h1, h2, h3 { margin: 0 0 10px 0; }
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(0,0,0,0.03);
-        }
-
-        /* AI Insights Box */
-        .ai-insight {
-            background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
-            border-right: 4px solid var(--primary);
-            padding: 15px;
-            margin-bottom: 20px;
-            position: relative;
-        }
-        .ai-badge {
-            position: absolute;
-            top: -10px;
-            left: 10px;
-            background: var(--primary);
-            color: white;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        /* Load Indicators */
-        .load-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-left: 5px; }
-        .load-green { background: var(--safe); }
-        .load-orange { background: var(--warning); }
-        .load-red { background: var(--danger); }
-
-        /* Event List */
+        /* Event List Styles */
         .event-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid #eee;
+            display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f1f2f6;
+            position: relative; align-items: flex-start;
         }
         .event-item:last-child { border-bottom: none; }
-        .event-time { font-weight: bold; min-width: 60px; color: var(--primary); }
-        .event-details { flex: 1; }
-        .event-tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #eee; margin-right: 5px; }
-        .tag-exam { background: #ffebee; color: #c62828; }
-        .tag-study { background: #e3f2fd; color: #1565c0; }
-        .tag-school { background: #f3e5f5; color: #6a1b9a; opacity: 0.7; }
-
-        /* FAB */
-        .fab {
-            position: fixed;
-            bottom: 80px;
-            left: 20px;
-            width: 56px;
-            height: 56px;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.4);
-            cursor: pointer;
-            z-index: 101;
+        .event-time-col {
+            display: flex; flex-direction: column; align-items: center; min-width: 50px;
+            font-weight: 700; color: var(--text); font-size: 0.9rem;
         }
+        .event-content { flex: 1; }
+        .event-title { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+        .event-meta { font-size: 0.8rem; color: var(--text-light); display: flex; gap: 8px; align-items: center; }
+        
+        .tag { font-size: 0.7rem; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+        .tag-exam { background: #ffeaa7; color: #d35400; }
+        .tag-study { background: #dfe6e9; color: #2d3436; border-left: 3px solid var(--primary); }
+        .tag-auto { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; }
 
-        /* Modal/BottomSheet */
+        /* AI Elements */
+        .ai-status-card {
+            background: linear-gradient(135deg, #6c5ce7 0%, #8e7bf3 100%);
+            color: white; padding: 20px; border-radius: var(--radius); margin-bottom: 25px;
+            position: relative; overflow: hidden;
+        }
+        .ai-status-card::after {
+            content: 'AI'; position: absolute; right: -10px; bottom: -20px;
+            font-size: 8rem; opacity: 0.1; font-weight: 900;
+        }
+        .load-meter {
+            height: 6px; background: rgba(255,255,255,0.3); border-radius: 10px; margin: 15px 0; overflow: hidden;
+        }
+        .load-fill { height: 100%; background: #00cec9; width: 0%; transition: 1s ease; }
+
+        /* FAB & Modal */
+        .fab {
+            position: fixed; bottom: 90px; left: 20px; width: 60px; height: 60px;
+            background: var(--text); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 30px;
+            box-shadow: 0 10px 25px rgba(45, 52, 54, 0.3); cursor: pointer; z-index: 101;
+            transition: transform 0.2s;
+        }
+        .fab:active { transform: scale(0.9); }
+
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            display: none;
-            align-items: flex-end; /* Bottom sheet on mobile */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(45, 52, 54, 0.6); backdrop-filter: blur(4px);
+            z-index: 200; display: none; align-items: flex-end; justify-content: center;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
-            background: white;
-            width: 100%;
-            max-height: 90vh;
-            border-radius: 20px 20px 0 0;
-            padding: 20px;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
+            background: white; width: 100%; max-width: 500px;
+            border-radius: 24px 24px 0 0; padding: 25px;
+            max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        /* Form & Plan Styles */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text); }
+        input, select {
+            width: 100%; padding: 14px; border: 2px solid #f1f2f6; border-radius: 12px;
+            font-size: 1rem; font-family: var(--font); transition: 0.2s;
+        }
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        
+        .ai-plan-box {
+            background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 15px; margin-top: 15px;
+            display: none; animation: fadeIn 0.5s;
+        }
+        .ai-plan-box.active { display: block; }
+        .plan-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: var(--primary); font-weight: bold; }
+        .plan-explanation { font-size: 0.9rem; line-height: 1.5; color: var(--text-light); margin-bottom: 15px; }
+        .plan-slots { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .slot-chip {
+            background: white; border: 1px solid #dfe6e9; padding: 6px 12px; border-radius: 20px;
+            font-size: 0.85rem; display: flex; align-items: center; gap: 5px;
         }
 
-        /* Form */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; }
-        input, select, textarea {
-            width: 100%; padding: 12px;
-            border: 1px solid #ddd; border-radius: 8px;
-            font-family: var(--font); font-size: 1rem;
-        }
-        button {
-            width: 100%; padding: 14px;
-            border: none; border-radius: 8px;
-            font-weight: bold; font-size: 1rem; cursor: pointer;
+        .btn {
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            font-weight: 700; font-size: 1rem; cursor: pointer; margin-bottom: 10px;
         }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-secondary { background: #eee; color: #333; margin-top: 10px; }
-
-        /* Notifications */
-        .notification {
-            background: #fff3cd; color: #856404;
-            padding: 10px; border-radius: 8px;
-            margin-bottom: 10px; font-size: 0.9rem;
-            border: 1px solid #ffeeba;
-        }
-
-        /* Calendar Grid (Simplified) */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-        .cal-day { 
-            aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            border: 1px solid #eee; border-radius: 8px; font-size: 0.8rem; position: relative;
-        }
-        .cal-day.today { border-color: var(--primary); font-weight: bold; }
-        .cal-day.has-event::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: var(--primary); border-radius: 50%; }
-
-        @media (min-width: 768px) {
-            .nav-sidebar { display: flex; }
-            .nav-bottom { display: none; }
-            .modal-overlay { align-items: center; justify-content: center; }
-            .modal-content { width: 400px; border-radius: var(--radius); animation: fadeIn 0.3s ease; }
-            .main-content { padding-bottom: 20px; }
-            .fab { left: 40px; bottom: 40px; }
-        }
+        .btn-magic { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; }
+        .btn-ghost { background: transparent; color: var(--text-light); }
 
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        @media (min-width: 768px) {
+            .nav-sidebar { display: flex; height: 100vh; }
+            .nav-bottom { display: none; }
+            .modal-overlay { align-items: center; }
+            .modal-content { border-radius: 24px; padding: 40px; }
+            .fab { left: 40px; bottom: 40px; }
+        }
         
         .hidden { display: none !important; }
     </style>
@@ -215,477 +164,537 @@
 
 <div class="app-container">
     <nav class="nav-sidebar">
-        <h2>SmartStudent</h2>
-        <div class="nav-item active" onclick="switchTab('dashboard')">
-            <span class="nav-icon">📊</span> דאשבורד
+        <h2 style="color:var(--primary)">SmartStudent AI</h2>
+        <div class="nav-item active" onclick="app.switchTab('dashboard')">
+            <span class="nav-icon">⚡</span> דאשבורד
         </div>
-        <div class="nav-item" onclick="switchTab('calendar')">
+        <div class="nav-item" onclick="app.switchTab('calendar')">
             <span class="nav-icon">📅</span> היומן שלי
-        </div>
-        <div class="nav-item" onclick="switchTab('school')">
-            <span class="nav-icon">🏫</span> לוח בית ספר
         </div>
     </nav>
 
-    <main class="main-content" id="mainView">
+    <main class="main-content" id="viewContainer">
         </main>
 
     <nav class="nav-bottom">
-        <div class="nav-item active" onclick="switchTab('dashboard')"><span class="nav-icon">📊</span></div>
-        <div class="nav-item" onclick="switchTab('calendar')"><span class="nav-icon">📅</span></div>
-        <div class="nav-item" onclick="switchTab('school')"><span class="nav-icon">🏫</span></div>
+        <div class="nav-item active" onclick="app.switchTab('dashboard')"><span class="nav-icon">⚡</span></div>
+        <div class="nav-item" onclick="app.switchTab('calendar')"><span class="nav-icon">📅</span></div>
     </nav>
 </div>
 
-<div class="fab" onclick="openModal()">+</div>
+<div class="fab" onclick="ui.openModal()">+</div>
 
 <div class="modal-overlay" id="eventModal">
     <div class="modal-content">
-        <h3>הוספת אירוע</h3>
-        <div class="notification hidden" id="aiWarning"></div>
-        <form id="addEventForm" onsubmit="handleFormSubmit(event)">
+        <h2 id="modalTitle">הוספת אירוע</h2>
+        
+        <form id="eventForm" onsubmit="return false;">
             <div class="form-group">
                 <label>כותרת</label>
-                <input type="text" id="evtTitle" required placeholder="לדוגמה: מבחן במתמטיקה">
+                <input type="text" id="evtTitle" placeholder="שם האירוע / מבחן">
             </div>
+
             <div class="form-group">
                 <label>סוג</label>
-                <select id="evtType" onchange="checkExamMode()">
+                <select id="evtType" onchange="ui.onTypeChange()">
                     <option value="activity">פעילות / חוג</option>
                     <option value="assignment">מטלה</option>
-                    <option value="exam">מבחן</option>
-                    <option value="study">בלוק למידה</option>
+                    <option value="exam">מבחן (הפעלת AI Planner)</option>
+                    <option value="school_overlay">אירוע בית ספר</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>תאריך</label>
-                <input type="date" id="evtDate" required onchange="analyzeDateLoad()">
-            </div>
-            <div class="form-group">
-                <label>שעה</label>
-                <input type="time" id="evtTime" required>
-            </div>
-            <div class="form-group">
-                <label>משך (בשעות)</label>
-                <input type="number" id="evtDuration" value="1" min="0.5" step="0.5" required>
-            </div>
-            <div id="aiSuggestionBox" class="ai-insight hidden">
-                <strong>💡 הצעת AI:</strong>
-                <p id="aiSuggestionText" style="font-size: 0.9rem; margin: 5px 0;"></p>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button type="button" class="btn-primary" style="padding:8px; font-size:0.8rem" onclick="applyAiSuggestion()">קבל הצעה</button>
+
+            <div id="examFields" class="hidden">
+                <div class="form-group">
+                    <label>רמת קושי (קובע שעות הכנה)</label>
+                    <select id="evtDifficulty">
+                        <option value="2">קל (שעתיים הכנה)</option>
+                        <option value="4" selected>בינוני (4 שעות הכנה)</option>
+                        <option value="7">קשה (7 שעות הכנה)</option>
+                        <option value="10">קריטי (10 שעות הכנה)</option>
+                    </select>
                 </div>
             </div>
-            <button type="submit" class="btn-primary">שמור</button>
-            <button type="button" class="btn-secondary" onclick="closeModal()">ביטול</button>
+
+            <div class="form-group">
+                <label>תאריך</label>
+                <input type="date" id="evtDate" required>
+            </div>
+            
+            <div class="form-group" id="timeGroup">
+                <label>שעה</label>
+                <input type="time" id="evtTime" value="10:00">
+            </div>
+
+             <div class="form-group" id="durationGroup">
+                <label>משך (בשעות)</label>
+                <input type="number" id="evtDuration" value="1" step="0.5" min="0.5">
+            </div>
+
+            <div id="aiPlannerArea" class="hidden">
+                <button type="button" class="btn btn-magic" onclick="ai.generatePlan()">✨ צור תוכנית לימוד AI</button>
+                
+                <div id="aiResultBox" class="ai-plan-box">
+                    <div class="plan-header">
+                        <span>🤖 המלצת המערכת</span>
+                    </div>
+                    <div class="plan-explanation" id="aiExplanation"></div>
+                    <div class="plan-slots" id="aiSlotsContainer"></div>
+                    <div style="font-size:0.8rem; color: #ff7675; margin-bottom:10px;" id="aiWarning"></div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="app.savePlan()">אשר תוכנית והוסף ליומן</button>
+                    <button type="button" class="btn btn-ghost" onclick="ui.resetPlan()">בטל תכנון</button>
+                </div>
+            </div>
+
+            <div id="standardButtons">
+                <button type="button" class="btn btn-primary" onclick="app.saveStandardEvent()">שמור</button>
+                <button type="button" class="btn btn-ghost" onclick="ui.closeModal()">ביטול</button>
+            </div>
         </form>
     </div>
 </div>
 
 <script>
-    /**
-     * Data Model & State
-     */
-    const STATE = {
-        personalEvents: [],
-        schoolEvents: [], // Read only overlay
-        view: 'dashboard'
-    };
-
-    // Initialization
-    function init() {
-        loadData();
-        if (STATE.personalEvents.length === 0) {
-            seedData();
-        }
-        render();
-        setupDateInputs();
-    }
-
-    function loadData() {
-        const stored = localStorage.getItem('smartStudentData');
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            STATE.personalEvents = parsed.personalEvents || [];
-            STATE.schoolEvents = parsed.schoolEvents || [];
-        }
-    }
-
-    function saveData() {
-        localStorage.setItem('smartStudentData', JSON.stringify(STATE));
-        render();
-    }
-
-    function seedData() {
-        // Sample Data
+/**
+ * 1. Data Store & Configuration
+ */
+const DB = {
+    key: 'smartStudentPro_v1',
+    data: {
+        events: []
+    },
+    load() {
+        const stored = localStorage.getItem(this.key);
+        if (stored) this.data = JSON.parse(stored);
+        else this.seed();
+    },
+    save() {
+        localStorage.setItem(this.key, JSON.stringify(this.data));
+        app.render();
+    },
+    seed() {
         const today = new Date().toISOString().split('T')[0];
-        STATE.schoolEvents = [
-            { id: 's1', title: 'טיול שנתי שכבה י׳', date: addDays(today, 5), type: 'school', audience: 'shichva' }
+        this.data.events = [
+            { id: 1, title: 'חוג כדורסל', type: 'activity', date: today, time: '16:00', duration: 1.5 },
+            { id: 2, title: 'יום הורים', type: 'school_overlay', date: today, time: '18:00', duration: 2 }
         ];
-        STATE.personalEvents = [
-            { id: 1, title: 'חוג כדורסל', type: 'activity', date: today, time: '16:00', duration: 2, isAuto: false },
-            { id: 2, title: 'שיעורי בית אנגלית', type: 'assignment', date: today, time: '19:00', duration: 1, isAuto: false }
-        ];
-        saveData();
+        this.save();
     }
+};
 
-    /**
-     * Heuristic AI Engine (The Brain)
-     */
-    const AI = {
-        // Calculate load score for a specific date (0-100)
-        calculateDailyLoad: (dateStr) => {
-            const events = STATE.personalEvents.filter(e => e.date === dateStr);
-            const totalHours = events.reduce((sum, e) => sum + parseFloat(e.duration), 0);
-            const examCount = events.filter(e => e.type === 'exam').length;
-            
-            let score = (totalHours * 10) + (examCount * 30);
-            return { score, hours: totalHours, exams: examCount };
-        },
+/**
+ * 2. The Heuristic AI Engine
+ */
+const ai = {
+    tempPlan: null, // Holds proposed slots before saving
 
-        // Find optimal study slots backwards from exam date
-        findStudySlots: (examDate, examSubject) => {
-            const suggestions = [];
-            let neededHours = 4; // Default needed study time
-            let daysBack = 1;
-            
-            // Loop 7 days back
-            while (daysBack <= 7 && neededHours > 0) {
-                const targetDate = addDays(examDate, -daysBack);
-                const load = AI.calculateDailyLoad(targetDate);
-                
-                // Heuristic: Avoid days with > 5 hours load or existing exams
-                if (load.hours < 5 && load.exams === 0) {
-                    // Score logic: Prefer 2 days before over day before (cramming)
-                    const quality = (daysBack === 1) ? 'medium' : 'high';
-                    
-                    suggestions.push({
-                        date: targetDate,
-                        time: '16:00', // Default convenient time
-                        duration: 2,
-                        reason: `יום ${getDayName(targetDate)} פנוי יחסית (${load.hours} שעות תפוסות בלבד)`,
-                        quality: quality
-                    });
-                    neededHours -= 2;
-                }
-                daysBack++;
-            }
-            return suggestions;
-        },
-
-        // Generate natural language insights for dashboard
-        getInsights: () => {
-            const today = new Date().toISOString().split('T')[0];
-            const load = AI.calculateDailyLoad(today);
-            const upcomingExams = STATE.personalEvents
-                .filter(e => e.type === 'exam' && e.date >= today)
-                .sort((a,b) => new Date(a.date) - new Date(b.date));
-
-            let messages = [];
-
-            // 1. Daily Load Insight
-            if (load.hours > 6) {
-                messages.push({ type: 'danger', text: `שים לב: היום שלך עמוס מאוד (${load.hours} שעות). שקול להזיז מטלות לא דחופות.` });
-            } else if (load.hours < 2) {
-                messages.push({ type: 'safe', text: `היום רגוע. זה זמן מצוין להשלים פערים או לנוח.` });
-            }
-
-            // 2. Exam Prep Insight
-            if (upcomingExams.length > 0) {
-                const nextExam = upcomingExams[0];
-                const daysToExam = (new Date(nextExam.date) - new Date(today)) / (1000 * 60 * 60 * 24);
-                
-                if (daysToExam < 3 && daysToExam >= 0) {
-                     messages.push({ type: 'warning', text: `המבחן ב${nextExam.title} מתקרב (עוד ${Math.ceil(daysToExam)} ימים). פינית זמן לחזרה?` });
-                }
-                
-                // Prioritization logic
-                if (upcomingExams.length >= 2) {
-                    const secondExam = upcomingExams[1];
-                    const gap = (new Date(secondExam.date) - new Date(nextExam.date)) / (1000 * 60 * 60 * 24);
-                    if (gap < 3) {
-                         messages.push({ type: 'danger', text: `אזהרת צפיפות: יש לך שני מבחנים בשבוע אחד. כדאי להתחיל ללמוד ל${secondExam.title} כבר עכשיו.` });
-                    }
-                }
-            }
-
-            return messages;
-        }
-    };
-
-    /**
-     * UI Rendering Logic
-     */
-    function render() {
-        const container = document.getElementById('mainView');
-        container.innerHTML = '';
-        updateNavState();
-
-        if (STATE.view === 'dashboard') renderDashboard(container);
-        else if (STATE.view === 'calendar') renderCalendar(container);
-        else if (STATE.view === 'school') renderSchoolBoard(container);
-    }
-
-    function renderDashboard(container) {
-        const today = new Date().toISOString().split('T')[0];
-        const insights = AI.getInsights();
-        const load = AI.calculateDailyLoad(today);
+    // Main Planner Function
+    generatePlan() {
+        const title = document.getElementById('evtTitle').value || 'המבחן';
+        const examDateStr = document.getElementById('evtDate').value;
+        const difficultyHours = parseFloat(document.getElementById('evtDifficulty').value);
         
-        // Determine Load Color
-        let loadClass = 'load-green', loadText = 'רגוע';
-        if (load.score > 40) { loadClass = 'load-orange'; loadText = 'בינוני'; }
-        if (load.score > 70) { loadClass = 'load-red'; loadText = 'עמוס מאוד'; }
+        if (!examDateStr) { alert('נא לבחור תאריך למבחן'); return; }
 
-        // Insights HTML
-        const insightsHtml = insights.map(msg => `
-            <div style="margin-bottom:8px; font-size:0.95rem; border-right: 3px solid var(--${msg.type}); padding-right:8px;">
-                ${msg.text}
-            </div>
-        `).join('') || '<p>אין התראות מיוחדות להיום. הכל בשליטה!</p>';
+        const examDate = new Date(examDateStr);
+        const windowDays = 7; // Look back window
+        let hoursNeeded = difficultyHours;
+        let suggestedSlots = [];
+        let messages = [];
 
-        // Today's Events
-        const todaysEvents = STATE.personalEvents
-            .filter(e => e.date === today)
-            .sort((a,b) => a.time.localeCompare(b.time));
+        // Algorithm Loop: Go backwards from day before exam
+        for (let i = 1; i <= windowDays; i++) {
+            if (hoursNeeded <= 0) break;
 
-        let eventsHtml = todaysEvents.length ? '' : '<p style="color:var(--text-light)">אין אירועים להיום</p>';
-        todaysEvents.forEach(e => {
-            eventsHtml += `
-                <div class="event-item">
-                    <div class="event-time">${e.time}</div>
-                    <div class="event-details">
-                        <div><strong>${e.title}</strong></div>
-                        <span class="event-tag tag-${e.type}">${getTypeName(e.type)}</span>
-                        ${e.isAuto ? '<span class="event-tag">🤖 AI</span>' : ''}
-                    </div>
-                </div>
-            `;
-        });
-
-        container.innerHTML = `
-            <h1>שלום תלמיד 👋</h1>
+            const targetDate = new Date(examDate);
+            targetDate.setDate(targetDate.getDate() - i);
+            const dateStr = targetDate.toISOString().split('T')[0];
             
-            <div class="card ai-insight">
-                <span class="ai-badge">ניתוח חכם</span>
-                <h3>מה המצב היום?</h3>
-                <div style="margin-bottom:10px;">
-                    עומס יומי: <strong>${loadText}</strong> <span class="load-indicator ${loadClass}"></span>
-                    <br><small>${load.hours} שעות פעילות מתוכננות</small>
-                </div>
-                <div style="background:rgba(255,255,255,0.6); padding:10px; border-radius:8px;">
-                    ${insightsHtml}
-                </div>
-            </div>
+            // Skip if date is in past
+            if (new Date(dateStr) < new Date().setHours(0,0,0,0)) continue;
 
-            <h3>היום שלי (${formatDateIL(today)})</h3>
-            <div class="card">
-                ${eventsHtml}
-            </div>
-        `;
-    }
+            // Get day's existing load
+            const dayEvents = DB.data.events.filter(e => e.date === dateStr);
+            const load = this.calculateDayLoad(dayEvents);
 
-    function renderCalendar(container) {
-        // Simplified List View for robustness + Horizontal Week Scroll
-        const days = [];
-        const today = new Date();
-        for(let i=0; i<7; i++) {
-            days.push(addDays(today.toISOString().split('T')[0], i));
-        }
+            // Hard constraints: Max daily load 6 hours
+            if (load > 6) continue;
 
-        let calendarHtml = `<h2>השבוע הקרוב</h2>`;
-        
-        days.forEach(dateStr => {
-            const dayEvents = STATE.personalEvents.filter(e => e.date === dateStr);
-            const schoolEvents = STATE.schoolEvents.filter(e => e.date === dateStr);
-            const load = AI.calculateDailyLoad(dateStr);
-            let color = load.score > 60 ? 'var(--danger)' : (load.score > 30 ? 'var(--warning)' : 'var(--safe)');
-
-            let items = '';
-            // Overlay School Events
-            schoolEvents.forEach(e => {
-                items += `<div class="event-item" style="background:#f9f9f9"><span class="event-time">🔒</span> ${e.title} <span class="event-tag tag-school">ביה"ס</span></div>`;
-            });
-            // Personal Events
-            dayEvents.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
-                items += `<div class="event-item">
-                    <span class="event-time">${e.time}</span>
-                    <span>${e.title}</span>
-                </div>`;
-            });
-
-            calendarHtml += `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:5px;">
-                        <strong>${getDayName(dateStr)} ${formatDateIL(dateStr)}</strong>
-                        <div style="display:flex; align-items:center; font-size:0.8rem;">
-                            עומס: <div style="width:10px; height:10px; border-radius:50%; background:${color}; margin-right:5px;"></div>
-                        </div>
-                    </div>
-                    ${items || '<small style="color:#aaa">פנוי</small>'}
-                </div>
-            `;
-        });
-
-        container.innerHTML = calendarHtml;
-    }
-
-    function renderSchoolBoard(container) {
-        let html = `
-            <h2>🏫 לוח הודעות בית ספר</h2>
-            <p style="color:var(--text-light)">לוח זה מנוהל על ידי בית הספר ואינו ניתן לעריכה.</p>
-        `;
-        
-        if (STATE.schoolEvents.length === 0) {
-            html += `<div class="card"><p>אין הודעות חדשות מבית הספר.</p></div>`;
-        } else {
-            STATE.schoolEvents.forEach(e => {
-                html += `
-                <div class="card" style="border-right: 4px solid #9c27b0;">
-                    <h3>${e.title}</h3>
-                    <p>📅 ${formatDateIL(e.date)}</p>
-                    <span class="event-tag tag-school">${e.audience === 'shichva' ? 'שכבה' : 'כללי'}</span>
-                </div>`;
+            // Find optimal slots in this day (16:00 - 21:00)
+            const slots = this.findSlotsInDay(dateStr, dayEvents, hoursNeeded);
+            
+            slots.forEach(slot => {
+                if (hoursNeeded > 0) {
+                    suggestedSlots.push(slot);
+                    hoursNeeded -= slot.duration;
+                }
             });
         }
-        container.innerHTML = html;
-    }
 
-    /**
-     * Interaction Logic & AI Form Handling
-     */
-    function switchTab(viewName) {
-        STATE.view = viewName;
-        render();
-    }
-
-    function updateNavState() {
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        // Simple logic to highlight active based on onclick attribute matching state
-        // (Simplified for single-file conciseness)
-    }
-
-    function openModal() {
-        document.getElementById('eventModal').classList.add('active');
-        document.getElementById('aiWarning').classList.add('hidden');
-        document.getElementById('aiSuggestionBox').classList.add('hidden');
-        document.getElementById('evtDate').value = new Date().toISOString().split('T')[0];
-    }
-
-    function closeModal() {
-        document.getElementById('eventModal').classList.remove('active');
-        document.getElementById('addEventForm').reset();
-    }
-
-    function setupDateInputs() {
-        // Set min date to today
-        document.getElementById('evtDate').min = new Date().toISOString().split('T')[0];
-    }
-
-    // AI Check when adding event
-    let proposedStudySlots = [];
-
-    function checkExamMode() {
-        const type = document.getElementById('evtType').value;
-        const suggestionBox = document.getElementById('aiSuggestionBox');
-        
-        if (type === 'exam') {
-            // Wait for date input
+        // Logic for explanation
+        let explanation = "";
+        if (suggestedSlots.length === 0) {
+            explanation = "לא נמצאו חלונות זמן פנויים בשבוע שלפני המבחן. מומלץ לפנות זמן ידנית.";
         } else {
-            suggestionBox.classList.add('hidden');
-        }
-    }
-
-    function analyzeDateLoad() {
-        const date = document.getElementById('evtDate').value;
-        const type = document.getElementById('evtType').value;
-        const warningBox = document.getElementById('aiWarning');
-        const suggestionBox = document.getElementById('aiSuggestionBox');
-        
-        if (!date) return;
-
-        // 1. Conflict Check
-        const load = AI.calculateDailyLoad(date);
-        if (load.hours >= 6) {
-            warningBox.innerText = `⚠️ שים לב! ביום זה כבר יש ${load.hours} שעות פעילות. הוספת אירוע תיצור עומס יתר.`;
-            warningBox.classList.remove('hidden');
-        } else {
-            warningBox.classList.add('hidden');
+            explanation = `יש ללמוד ${difficultyHours} שעות. המערכת סרקה 7 ימים אחורה.<br>`;
+            
+            // Humanize logic
+            const dayCounts = {};
+            suggestedSlots.forEach(s => {
+                const day = ui.getDayName(s.date);
+                dayCounts[day] = (dayCounts[day] || 0) + 1;
+            });
+            
+            explanation += `פיזרתי את הלמידה על פני: <b>${Object.keys(dayCounts).join(', ')}</b> כדי למנוע עומס. נבחרו שעות בהן אין התנגשות עם פעילויות אחרות.`;
         }
 
-        // 2. Exam Study Planner Trigger
-        if (type === 'exam') {
-            proposedStudySlots = AI.findStudySlots(date);
-            if (proposedStudySlots.length > 0) {
-                const text = `יש לך מבחן ב-${formatDateIL(date)}. המערכת איתרה ${proposedStudySlots.length} חלונות זמן אופטימליים ללמידה בימים שלפני, בימים פחות עמוסים. האם לשבץ אותם?`;
-                document.getElementById('aiSuggestionText').innerText = text;
-                suggestionBox.classList.remove('hidden');
-            }
-        }
-    }
-
-    function applyAiSuggestion() {
-        const examTitle = document.getElementById('evtTitle').value || 'המבחן';
-        proposedStudySlots.forEach(slot => {
-            STATE.personalEvents.push({
+        // Store and Render
+        this.tempPlan = {
+            examEvent: {
+                id: Date.now(),
+                title: title,
+                type: 'exam',
+                date: examDateStr,
+                time: document.getElementById('evtTime').value,
+                duration: 1.5, // Exam duration default
+                difficulty: difficultyHours
+            },
+            studyBlocks: suggestedSlots.map(s => ({
                 id: Date.now() + Math.random(),
-                title: `למידה ל${examTitle}`,
+                title: `למידה ל${title}`,
                 type: 'study',
-                date: slot.date,
-                time: slot.time,
-                duration: slot.duration,
+                date: s.date,
+                time: s.time,
+                duration: s.duration,
                 isAuto: true,
-                description: slot.reason
-            });
-        });
-        document.getElementById('aiSuggestionBox').innerHTML = '<p style="color:green; font-weight:bold;">✅ שובצו שעות למידה בהצלחה!</p>';
-        setTimeout(() => document.getElementById('aiSuggestionBox').classList.add('hidden'), 2000);
-    }
-
-    function handleFormSubmit(e) {
-        e.preventDefault();
-        
-        const newEvent = {
-            id: Date.now(),
-            title: document.getElementById('evtTitle').value,
-            type: document.getElementById('evtType').value,
-            date: document.getElementById('evtDate').value,
-            time: document.getElementById('evtTime').value,
-            duration: document.getElementById('evtDuration').value,
-            isAuto: false
+                linkedExamId: null // Set upon save
+            }))
         };
 
-        STATE.personalEvents.push(newEvent);
-        saveData();
-        closeModal();
-    }
+        ui.renderPlanProposal(explanation, suggestedSlots, hoursNeeded > 0);
+    },
 
-    /**
-     * Helpers
-     */
-    function addDays(dateStr, days) {
-        const date = new Date(dateStr);
-        date.setDate(date.getDate() + days);
-        return date.toISOString().split('T')[0];
-    }
+    // Identify free slots in a specific day with Scoring
+    findSlotsInDay(dateStr, dayEvents, maxHoursNeeded) {
+        // Potential start times: 16:00 to 20:00 (every 30 mins)
+        // Converted to minutes from midnight
+        const startWindow = 16 * 60; 
+        const endWindow = 21 * 60;
+        const candidates = [];
 
-    function formatDateIL(dateStr) {
+        // Helper: Convert "HH:MM" to minutes
+        const toMin = (t) => parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]);
+
+        // Scan every 30 min block
+        for (let time = startWindow; time < endWindow; time += 30) {
+            // Define a potential block (default 60 mins or remaining needed)
+            let duration = Math.min(60, maxHoursNeeded * 60); 
+            if (duration < 45) duration = 45; // Minimum study block
+
+            const slotStart = time;
+            const slotEnd = time + duration;
+
+            // 1. Collision Check
+            let collision = false;
+            dayEvents.forEach(e => {
+                const eStart = toMin(e.time);
+                const eEnd = eStart + (e.duration * 60);
+                // Overlap formula
+                if (slotStart < eEnd && slotEnd > eStart) collision = true;
+            });
+
+            if (collision) continue;
+
+            // 2. Scoring System
+            let score = 100;
+            
+            // Prefer earlier in the evening (16:00-18:00)
+            if (slotStart < 18 * 60) score += 20;
+            
+            // Penalize if adjacent to existing events (allow 30 min break)
+            dayEvents.forEach(e => {
+                const eEnd = toMin(e.time) + (e.duration * 60);
+                if (Math.abs(slotStart - eEnd) < 30) score -= 30; // Too close to previous event
+            });
+
+            // Convert back to HH:MM
+            const hh = Math.floor(slotStart / 60).toString().padStart(2,'0');
+            const mm = (slotStart % 60).toString().padStart(2,'0');
+
+            candidates.push({
+                date: dateStr,
+                time: `${hh}:${mm}`,
+                duration: duration / 60,
+                score: score
+            });
+        }
+
+        // Sort by score and pick non-overlapping best ones
+        candidates.sort((a,b) => b.score - a.score);
+        
+        // Simple heuristic: Take top 1, max 2 per day if really needed
+        if (candidates.length > 0) return [candidates[0]];
+        return [];
+    },
+
+    calculateDayLoad(events) {
+        return events.reduce((sum, e) => sum + parseFloat(e.duration), 0);
+    },
+
+    getInsights() {
+        const today = new Date().toISOString().split('T')[0];
+        const dayEvents = DB.data.events.filter(e => e.date === today);
+        const load = this.calculateDayLoad(dayEvents);
+        
+        let status = { text: 'רגוע', color: 'safe', percent: 20 };
+        if (load > 3) status = { text: 'עמוס בינוני', color: 'warning', percent: 50 };
+        if (load > 6) status = { text: 'יום דחוס', color: 'danger', percent: 90 };
+
+        const exams = DB.data.events.filter(e => e.type === 'exam' && e.date >= today);
+        const nextExam = exams.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+
+        return { load, status, nextExam };
+    }
+};
+
+/**
+ * 3. UI Controller
+ */
+const ui = {
+    init() {
+        DB.load();
+        app.render();
+    },
+
+    onTypeChange() {
+        const type = document.getElementById('evtType').value;
+        const examFields = document.getElementById('examFields');
+        const aiArea = document.getElementById('aiPlannerArea');
+        const stdBtns = document.getElementById('standardButtons');
+        const timeGroup = document.getElementById('timeGroup');
+        const durGroup = document.getElementById('durationGroup');
+
+        if (type === 'exam') {
+            examFields.classList.remove('hidden');
+            aiArea.classList.remove('hidden');
+            stdBtns.classList.add('hidden'); // Hide standard save, enforce AI flow or manual later
+            // Exam usually has fixed time, but duration is less relevant for "event" itself visually
+        } else {
+            examFields.classList.add('hidden');
+            aiArea.classList.add('hidden');
+            stdBtns.classList.remove('hidden');
+            this.resetPlan();
+        }
+    },
+
+    renderPlanProposal(text, slots, isPartial) {
+        document.getElementById('aiResultBox').classList.add('active');
+        document.getElementById('aiExplanation').innerHTML = text;
+        
+        const container = document.getElementById('aiSlotsContainer');
+        container.innerHTML = '';
+        slots.forEach(s => {
+            container.innerHTML += `
+                <div class="slot-chip">
+                    <span>📅 ${this.getDayName(s.date)}</span>
+                    <span>⏰ ${s.time}</span>
+                    <span>⏳ ${s.duration}ש'</span>
+                </div>
+            `;
+        });
+
+        const warning = document.getElementById('aiWarning');
+        if (isPartial) {
+            warning.innerText = "⚠️ שים לב: עקב עומס, לא הצלחנו לשבץ את כל שעות ההכנה הנדרשות.";
+        } else {
+            warning.innerText = "";
+        }
+    },
+
+    resetPlan() {
+        document.getElementById('aiResultBox').classList.remove('active');
+        ai.tempPlan = null;
+    },
+
+    openModal() {
+        document.getElementById('eventModal').classList.add('active');
+        // Reset fields
+        document.getElementById('evtDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('evtTitle').value = '';
+        document.getElementById('evtType').value = 'activity';
+        this.onTypeChange();
+    },
+
+    closeModal() {
+        document.getElementById('eventModal').classList.remove('active');
+    },
+
+    getDayName(dateStr) {
+        const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+        return days[new Date(dateStr).getDay()];
+    },
+    
+    formatDate(dateStr) {
         const parts = dateStr.split('-');
         return `${parts[2]}/${parts[1]}`;
     }
+};
 
-    function getDayName(dateStr) {
-        const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-        return days[new Date(dateStr).getDay()];
+/**
+ * 4. App Controller (Logic Glue)
+ */
+const app = {
+    view: 'dashboard',
+
+    switchTab(view) {
+        this.view = view;
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        // Add active class logic here if needed
+        this.render();
+    },
+
+    saveStandardEvent() {
+        const newEvent = {
+            id: Date.now(),
+            title: document.getElementById('evtTitle').value || 'ללא כותרת',
+            type: document.getElementById('evtType').value,
+            date: document.getElementById('evtDate').value,
+            time: document.getElementById('evtTime').value,
+            duration: parseFloat(document.getElementById('evtDuration').value),
+            isAuto: false
+        };
+        DB.data.events.push(newEvent);
+        DB.save();
+        ui.closeModal();
+    },
+
+    savePlan() {
+        if (!ai.tempPlan) return;
+        
+        // Save the Exam
+        const exam = ai.tempPlan.examEvent;
+        DB.data.events.push(exam);
+
+        // Save the Study Blocks (linked)
+        ai.tempPlan.studyBlocks.forEach(block => {
+            block.linkedExamId = exam.id;
+            DB.data.events.push(block);
+        });
+
+        DB.save();
+        ui.closeModal();
+    },
+
+    render() {
+        const container = document.getElementById('viewContainer');
+        container.innerHTML = '';
+
+        if (this.view === 'dashboard') this.renderDashboard(container);
+        else this.renderCalendar(container);
+    },
+
+    renderDashboard(container) {
+        const insights = ai.getInsights();
+        const upcomingEvents = DB.data.events
+            .filter(e => new Date(e.date) >= new Date().setHours(0,0,0,0))
+            .sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time))
+            .slice(0, 5);
+
+        let html = `
+            <h1>שלום, אלוף 🎓</h1>
+            <p class="subtitle">הנה תמונת המצב שלך להיום</p>
+
+            <div class="ai-status-card">
+                <h3>מצב עומס יומי: ${insights.status.text}</h3>
+                <div class="load-meter">
+                    <div class="load-fill" style="width: ${insights.status.percent}%; background-color: var(--${insights.status.color})"></div>
+                </div>
+                <p style="font-size:0.9rem; opacity:0.9">
+                    ${insights.nextExam ? `🎯 המטרה הבאה: מבחן ב${insights.nextExam.title} ב-${ui.formatDate(insights.nextExam.date)}` : 'אין מבחנים קרובים. זמן טוב לנוח!'}
+                </p>
+            </div>
+
+            <h2>האירועים הקרובים</h2>
+        `;
+
+        upcomingEvents.forEach(e => {
+            html += this.createEventCard(e);
+        });
+
+        if(upcomingEvents.length === 0) html += '<p style="text-align:center; margin-top:20px;">היומן ריק לחלוטין 😎</p>';
+
+        container.innerHTML = html;
+    },
+
+    renderCalendar(container) {
+        // Group by Date
+        const grouped = {};
+        const dates = [];
+        
+        // Sort all events
+        const sorted = [...DB.data.events].sort((a,b) => new Date(a.date) - new Date(b.date));
+        
+        sorted.forEach(e => {
+            if(!grouped[e.date]) {
+                grouped[e.date] = [];
+                dates.push(e.date);
+            }
+            grouped[e.date].push(e);
+        });
+
+        // Generate HTML
+        let html = '<h2>היומן המלא</h2>';
+        dates.forEach(date => {
+            // Check if date is passed
+            const isPast = new Date(date) < new Date().setHours(0,0,0,0);
+            const style = isPast ? 'opacity: 0.6; filter: grayscale(1);' : '';
+            
+            html += `<div style="${style}">
+                <h3 style="margin-top:20px; font-size:1rem; color:var(--primary)">${ui.getDayName(date)} ${ui.formatDate(date)}</h3>
+            `;
+            
+            // Sort by time within day
+            grouped[date].sort((a,b) => a.time.localeCompare(b.time));
+            
+            grouped[date].forEach(e => {
+                html += this.createEventCard(e);
+            });
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
+    },
+
+    createEventCard(e) {
+        let tagClass = 'tag-study';
+        let label = 'אירוע';
+        
+        if (e.type === 'exam') { tagClass = 'tag-exam'; label = 'מבחן'; }
+        else if (e.isAuto) { tagClass = 'tag-auto'; label = 'AI Planner'; }
+        else if (e.type === 'school_overlay') { label = 'בי"ס'; }
+
+        return `
+            <div class="event-item">
+                <div class="event-time-col">
+                    <span>${e.time}</span>
+                    <span style="font-size:0.7rem; font-weight:400">${e.duration}ש'</span>
+                </div>
+                <div class="event-content">
+                    <div class="event-title">${e.title}</div>
+                    <div class="event-meta">
+                        <span class="tag ${tagClass}">${label}</span>
+                        ${e.isAuto ? '<span>✨ נוצר אוטומטית</span>' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
     }
+};
 
-    function getTypeName(type) {
-        const types = { 'exam': 'מבחן', 'assignment': 'מטלה', 'activity': 'פעילות', 'study': 'למידה' };
-        return types[type] || type;
-    }
-
-    // Start App
-    init();
-
+// Start
+ui.init();
 </script>
+
 </body>
 </html>
