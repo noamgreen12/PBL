@@ -675,7 +675,7 @@ const app = {
                 <div class="sync-status"><div class="status-dot ${DB.data.lastSync?'ok':'error'}"></div> עודכן: ${lastSync}</div>
             </div>
             <div class="input-group-row">
-                <input type="text" id="sheetUrl" placeholder="הדבק כאן לינק (Publish to Web CSV)" value="${DB.data.schoolSheetUrl||''}">
+                <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pubhtml" value="${DB.data.schoolSheetUrl||''}">
                 <button class="btn btn-primary" onclick="logic.syncFromSheets(document.getElementById('sheetUrl').value)">רענן נתונים</button>
             </div>
         </div>`;
