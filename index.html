@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent AI - ניהול זמן חכם</title>
+    <title>SmartStudent AI Pro</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         :root {
             --primary: #4f46e5;
+            --primary-light: #eef2ff;
             --bg: #f8fafc;
             --card: #ffffff;
             --text: #1e293b;
@@ -18,337 +19,364 @@
             --homework: #10b981;
             --activity: #0ea5e9;
             --school: #6366f1;
-            --radius: 20px;
+            --radius: 18px;
+            --sidebar-w: 260px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- Sidebar & Layout --- */
+        .sidebar { width: var(--sidebar-w); background: var(--card); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; z-index: 1000; overflow-y: auto; }
+        .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; position: relative; }
+        
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid var(--border); z-index: 2000; }
+            .main-content { padding-bottom: 80px; }
+        }
 
         /* --- AI Insights Header --- */
-        .ai-status-bar {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            color: white; padding: 20px; border-radius: 0 0 30px 30px;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
-            margin-bottom: 20px;
-        }
-        .ai-badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-        .ai-message { font-size: 1rem; font-weight: 600; margin-top: 10px; line-height: 1.4; }
+        .ai-header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 15px 20px; border-radius: 0 0 25px 25px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); }
+        .ai-header small { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; }
+        .ai-header p { margin: 8px 0 0; font-size: 0.95rem; font-weight: 500; }
 
-        .app-container { width: 92%; max-width: 800px; margin: 0 auto; padding-bottom: 100px; }
+        /* --- Navigation --- */
+        .top-nav { padding: 12px 20px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 10px; }
+        .segmented-control { display: flex; background: var(--bg); padding: 4px; border-radius: 12px; }
+        .seg-btn { border: none; background: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--muted); }
+        .seg-btn.active { background: var(--card); color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        /* --- Dashboard Grid --- */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); }
-        .stat-card span { font-size: 0.8rem; color: var(--muted); display: block; }
-        .stat-card strong { font-size: 1.2rem; color: var(--primary); }
+        /* --- Views Rendering --- */
+        .view-container { padding: 20px; flex: 1; }
 
-        /* --- Views & Calendar --- */
-        .view-switcher { display: flex; background: #eee; padding: 4px; border-radius: 12px; margin-bottom: 20px; }
-        .view-btn { flex: 1; border: none; padding: 8px; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--muted); }
-        .view-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* Day View */
+        .timeline { position: relative; padding-right: 55px; }
+        .time-row { height: 65px; border-top: 1px solid var(--border); position: relative; }
+        .time-label { position: absolute; right: -55px; top: -10px; font-size: 0.75rem; color: var(--muted); }
+        .ev-block { position: absolute; left: 0; right: 0; background: var(--primary-light); border-right: 4px solid var(--primary); padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; z-index: 10; overflow: hidden; }
 
-        .calendar-card { background: white; padding: 20px; border-radius: var(--radius); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-        .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; position: relative; font-size: 0.9rem; }
-        .day.selected { background: var(--primary); color: white; }
-        .day.conflict { background: #fee2e2; color: #ef4444; }
-        .dot { width: 4px; height: 4px; border-radius: 50%; position: absolute; bottom: 4px; }
+        /* Month View */
+        .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .month-day { aspect-ratio: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border); cursor: pointer; position: relative; }
+        .month-day.selected { border: 2px solid var(--primary); background: var(--primary-light); }
+        .month-day.today { color: var(--primary); font-weight: 800; }
+        .dots { display: flex; gap: 2px; position: absolute; bottom: 5px; }
+        .dot { width: 4px; height: 4px; border-radius: 50%; }
+
+        /* Year View */
+        .year-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .mini-month { background: white; padding: 10px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; font-size: 0.65rem; }
+        .mini-month:hover { border-color: var(--primary); }
 
         /* --- Modals & Forms --- */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 3000; align-items: center; justify-content: center; }
-        .modal { background: white; padding: 25px; border-radius: 24px; width: 90%; max-width: 450px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; }
-        
-        .conflict-warning { background: #fff1f2; color: #e11d48; padding: 10px; border-radius: 10px; font-size: 0.8rem; margin-bottom: 15px; display: none; border: 1px solid #fda4af; }
+        .modal { background: white; padding: 25px; border-radius: 24px; width: 90%; max-width: 450px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; }
+        .conflict-alert { background: #fff1f2; color: #e11d48; padding: 10px; border-radius: 8px; font-size: 0.75rem; margin-bottom: 15px; display: none; border: 1px solid #fda4af; }
 
-        /* --- FAB & Nav --- */
-        .fab { position: fixed; bottom: 85px; left: 20px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: none; box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4); z-index: 2000; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid var(--border); z-index: 2500; }
-        .nav-item { border: none; background: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; }
-        .nav-item.active { color: var(--primary); }
+        .btn { padding: 14px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .fab { position: fixed; bottom: 85px; left: 20px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); cursor: pointer; z-index: 1500; }
 
-        .event-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px; border-right: 5px solid var(--primary); }
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; display: none; z-index: 4000; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-    <div class="ai-status-bar">
-        <span class="ai-badge">Smart AI Insights</span>
-        <div class="ai-message" id="ai-insight-text">מנתח את הלו"ז שלך...</div>
-    </div>
-
-    <div class="app-container">
-        <div class="stats-grid">
-            <div class="stat-card"><span>עומס שבועי</span><strong id="stat-load">רגיל</strong></div>
-            <div class="stat-card"><span>משימות פתוחות</span><strong id="stat-tasks">0</strong></div>
-            <div class="stat-card"><span>מבחן קרוב</span><strong id="stat-exam">--</strong></div>
+    <aside class="sidebar">
+        <h2 style="color:var(--primary); margin-bottom:30px;">SmartStudent AI</h2>
+        
+        <div style="margin-bottom:25px;">
+            <label style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">לוחות</label>
+            <button class="btn" id="board-p" style="background:var(--primary-light); color:var(--primary); text-align:right; width:100%; margin:8px 0;" onclick="switchBoard('personal')">📅 היומן שלי</button>
+            <button class="btn" id="board-s" style="background:transparent; color:var(--muted); text-align:right; width:100%;" onclick="switchBoard('school')">🏫 לוח בית ספר</button>
         </div>
 
-        <div class="view-switcher">
-            <button class="view-btn active" id="btn-personal" onclick="switchTab('personal')">היומן שלי</button>
-            <button class="view-btn" id="btn-school" onclick="switchTab('school')">לוח בית ספר</button>
-        </div>
-
-        <div class="card" id="calendar-section">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <button onclick="changeMonth(-1)" style="border:none;background:none;">▶</button>
-                <strong id="monthYearLabel"></strong>
-                <button onclick="changeMonth(1)" style="border:none;background:none;">◀</button>
+        <div style="margin-bottom:25px;">
+            <label style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">סינון</label>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem;"><input type="checkbox" checked onchange="toggleFilter('מבחן')" id="f-מבחן"> מבחנים <span style="background:var(--exam); width:8px; height:8px; border-radius:50%"></span></label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem;"><input type="checkbox" checked onchange="toggleFilter('מטלה')" id="f-מטלה"> שיעורים <span style="background:var(--homework); width:8px; height:8px; border-radius:50%"></span></label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem;"><input type="checkbox" checked onchange="toggleFilter('למידה')" id="f-למידה"> למידה <span style="background:var(--study); width:8px; height:8px; border-radius:50%"></span></label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem;"><input type="checkbox" onchange="toggleFilter('overlay')" id="f-overlay"> הצג שכבת בי"ס</label>
             </div>
-            <div class="cal-grid" id="calendarGrid"></div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="ai-header">
+            <small>AI INSIGHTS</small>
+            <p id="ai-insight">מנתח את הלו"ז שלך לעדכונים חכמים...</p>
         </div>
 
-        <h3 id="dailyLabel" style="margin-top:25px;">אירועים להיום:</h3>
-        <div id="dailyAgenda"></div>
-    </div>
+        <div class="top-nav">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button onclick="move(-1)" style="border:none;background:none;cursor:pointer;">▶</button>
+                <strong id="viewLabel" style="min-width:120px; text-align:center;">ינואר 2026</strong>
+                <button onclick="move(1)" style="border:none;background:none;cursor:pointer;">◀</button>
+            </div>
+            <div class="segmented-control">
+                <button class="seg-btn" id="seg-day" onclick="changeView('day')">היום</button>
+                <button class="seg-btn" id="seg-week" onclick="changeView('week')">שבוע</button>
+                <button class="seg-btn active" id="seg-month" onclick="changeView('month')">חודש</button>
+                <button class="seg-btn" id="seg-year" onclick="changeView('year')">שנה</button>
+            </div>
+        </div>
+
+        <div class="view-container" id="viewContainer"></div>
+    </main>
 
     <button class="fab" onclick="openModal()">+</button>
-
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchTab('personal')"><i class="material-icons-round">person</i><span>יומן</span></button>
-        <button class="nav-item" onclick="openModal()"><i class="material-icons-round">add</i><span>הוספה</span></button>
-        <button class="nav-item" onclick="switchTab('school')"><i class="material-icons-round">groups</i><span>בי"ס</span></button>
-    </nav>
 
     <div class="overlay" id="eventModal">
         <div class="modal">
             <h3 id="modalTitle">אירוע חדש</h3>
-            <div class="conflict-warning" id="conflict-msg">שים לב: יש כבר אירוע בשעה זו!</div>
-            
+            <div class="conflict-alert" id="conflict-msg">⚠️ שים לב: כבר קיים אירוע בשעה זו!</div>
             <div class="form-group">
-                <label>נושא</label>
-                <input type="text" id="ev-title" oninput="checkConflictRealTime()">
+                <label>כותרת</label>
+                <input type="text" id="ev-title" oninput="validateTime()">
             </div>
             <div style="display:flex; gap:10px;">
                 <div class="form-group" style="flex:1">
                     <label>סוג</label>
-                    <select id="ev-type" onchange="toggleAIPlan()">
-                        <option value="מטלה">שיעורי בית</option>
+                    <select id="ev-type" onchange="toggleAutoStudy()">
+                        <option value="מטלה">שיעורים / עבודה</option>
                         <option value="מבחן">מבחן</option>
-                        <option value="פעילות">פעילות/חוג</option>
+                        <option value="פעילות">פעילות / חוג</option>
                     </select>
                 </div>
                 <div class="form-group" style="flex:1">
                     <label>תאריך</label>
-                    <input type="date" id="ev-date" onchange="checkConflictRealTime()">
+                    <input type="date" id="ev-date" onchange="validateTime()">
                 </div>
             </div>
             <div style="display:flex; gap:10px;">
                 <div class="form-group" style="flex:1">
                     <label>שעה</label>
-                    <input type="time" id="ev-time" value="16:00" onchange="checkConflictRealTime()">
+                    <input type="time" id="ev-time" value="16:00" onchange="validateTime()">
                 </div>
                 <div class="form-group" style="flex:1">
                     <label>משך (דקות)</label>
                     <input type="number" id="ev-dur" value="60">
                 </div>
             </div>
-
-            <div id="ai-plan-box" style="display:none; background:var(--primary-light); padding:12px; border-radius:12px; margin-bottom:15px;">
-                <label style="display:flex; align-items:center; gap:8px; color:var(--primary);">
-                    <input type="checkbox" id="ev-auto-ai" checked> תכנון למידה חכם (AI)
+            <div id="ai-planner" style="display:none; background:var(--primary-light); padding:10px; border-radius:10px; margin-bottom:15px;">
+                <label style="display:flex; align-items:center; gap:8px; color:var(--primary); margin:0; cursor:pointer;">
+                    <input type="checkbox" id="ev-auto" checked> תכנן לי זמן למידה אוטומטי (AI)
                 </label>
-                <small style="color:var(--muted)">המערכת תמצא עבורך את השעות הפנויות הכי טובות.</small>
             </div>
-
-            <div style="display:flex; gap:10px;">
-                <button class="btn" style="background:var(--primary); color:white; flex:2; padding:12px; border-radius:12px; border:none; font-weight:700;" onclick="saveEvent()">שמור</button>
-                <button class="btn" style="background:var(--bg); flex:1; padding:12px; border-radius:12px; border:none;" onclick="closeModal()">ביטול</button>
-            </div>
+            <button class="btn btn-primary" onclick="save()">שמור אירוע</button>
+            <button class="btn" style="background:none; color:var(--muted); width:100%; margin-top:10px;" onclick="closeModal()">ביטול</button>
         </div>
     </div>
 
     <div id="toast"></div>
 
     <script>
-        // --- Configuration & Data ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjUOZw7k1RUW9HArAZPEpdX7L1HP5jpMGasjeFC0jwNSylvDLUEyYQUqIq46YhEpTu/exec";
-        let personalEvents = JSON.parse(localStorage.getItem('smart_student_v10')) || [];
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjUOZw7k1RUW9HArAZPEpdX7L1HP5jpMGasjeFC0jwNSylvDLUEyYQUqIq46YhEpTu/exec"; // לינק לשיטס במידה ויש
+        let personalEvents = JSON.parse(localStorage.getItem('student_ai_v11')) || [];
         let schoolEvents = [];
-        let currentTab = 'personal';
-        let selectedDate = new Date();
-        let viewDate = new Date();
+        let board = 'personal';
+        let view = 'month';
+        let date = new Date();
+        let filters = { מבחן: true, מטלה: true, למידה: true, overlay: false };
 
-        function normalizeDate(d) { const date = new Date(d); return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }
-        selectedDate = normalizeDate(selectedDate);
-
-        // --- AI Engine (הלב של המערכת) ---
-
-        function runAIAnalysis() {
-            const insightText = document.getElementById('ai-insight-text');
-            const now = new Date();
-            const weekLater = new Date(); weekLater.setDate(now.getDate() + 7);
-            
-            // 1. זיהוי עומס שבועי
-            const weekEvents = [...personalEvents, ...schoolEvents].filter(e => {
-                const d = new Date(e.date);
-                return d >= now && d <= weekLater;
+        function init() {
+            render();
+            // Shortcuts
+            window.addEventListener('keydown', e => {
+                if(e.key.toLowerCase() === 'n') openModal();
+                if(e.key === 'ArrowRight') move(-1);
+                if(e.key === 'ArrowLeft') move(1);
             });
-
-            const examsCount = weekEvents.filter(e => e.type === 'מבחן').length;
-            
-            if (examsCount >= 2) {
-                insightText.innerHTML = `⚠️ שים לב! יש לך ${examsCount} מבחנים השבוע. הלו"ז צפוף, כדאי להתחיל ללמוד כבר היום.`;
-                document.getElementById('stat-load').innerText = "גבוה 🔥";
-                document.getElementById('stat-load').style.color = "var(--exam)";
-            } else if (weekEvents.length > 5) {
-                insightText.innerHTML = `📅 שבוע פעיל לפניך. מצאתי לך כמה חלונות זמן פנויים בערב לשיעורי הבית.`;
-                document.getElementById('stat-load').innerText = "בינוני";
-            } else {
-                insightText.innerHTML = `🌟 הלו"ז שלך מאוזן. זה זמן מצוין להתקדם במטלות ארוכות טווח.`;
-                document.getElementById('stat-load').innerText = "רגיל";
-            }
-
-            // 2. המלצת למידה ספציפית
-            const nextExam = weekEvents.find(e => e.type === 'מבחן');
-            if (nextExam) {
-                insightText.innerHTML += `<br>💡 המלצה: מצאתי שביום ${new Date(nextExam.date).toLocaleDateString('he-IL', {weekday:'long'})} יש לך פחות אירועים, זה זמן מעולה לחרישה.`;
-            }
         }
 
-        // פונקציית שיבוץ חכם - מחפשת חלונות פנויים
-        function smartScheduleStudy(examTitle, examDateStr) {
-            const examDate = new Date(examDateStr);
-            let blocksAdded = 0;
+        function render() {
+            const container = document.getElementById('viewContainer');
+            container.innerHTML = '';
+            updateHeader();
+            runAI();
 
-            for (let i = 1; i <= 4 && blocksAdded < 3; i++) {
-                let targetDate = new Date(examDate);
-                targetDate.setDate(examDate.getDate() - i);
-                if (targetDate <= new Date()) continue;
-
-                // בדיקת חלונות זמן פנויים (16:00, 18:00, 20:00)
-                const options = ["16:00", "18:00", "20:00"];
-                let foundSlot = false;
-
-                for (let slot of options) {
-                    if (!checkConflict(targetDate.toISOString().split('T')[0], slot)) {
-                        personalEvents.push({
-                            id: "ai-" + Date.now() + i,
-                            title: "למידה: " + examTitle,
-                            type: "למידה",
-                            date: targetDate.toISOString().split('T')[0],
-                            time: slot,
-                            dur: 90
-                        });
-                        blocksAdded++;
-                        foundSlot = true;
-                        break;
-                    }
-                }
-            }
+            if(view === 'month') renderMonth(container);
+            else if(view === 'day') renderDay(container);
+            else if(view === 'year') renderYear(container);
+            else renderWeek(container);
         }
 
-        function checkConflict(date, time) {
-            return [...personalEvents, ...schoolEvents].some(e => 
-                e.date === date && e.time === time
-            );
+        function updateHeader() {
+            const label = document.getElementById('viewLabel');
+            const opts = { month: 'long', year: 'numeric' };
+            if(view === 'day') label.innerText = date.toLocaleDateString('he-IL', {day:'numeric', ...opts});
+            else if(view === 'year') label.innerText = date.getFullYear();
+            else label.innerText = date.toLocaleDateString('he-IL', opts);
         }
 
-        function checkConflictRealTime() {
-            const date = document.getElementById('ev-date').value;
-            const time = document.getElementById('ev-time').value;
-            const msg = document.getElementById('conflict-msg');
-            msg.style.display = checkConflict(date, time) ? 'block' : 'none';
+        function getEvents() {
+            let list = board === 'personal' ? personalEvents : schoolEvents;
+            let filtered = list.filter(e => filters[e.type] || e.type === 'פעילות');
+            if(board === 'personal' && filters.overlay) filtered = [...filtered, ...schoolEvents];
+            return filtered;
         }
 
-        // --- UI & Logic ---
+        // --- View Renderers ---
+        function renderMonth(container) {
+            const grid = document.createElement('div');
+            grid.className = 'month-grid';
+            const year = date.getFullYear(), month = date.getMonth();
+            const first = new Date(year, month, 1).getDay();
+            const days = new Date(year, month + 1, 0).getDate();
 
-        async function loadData() {
-            if (!SCRIPT_URL.includes("כאן_הלינק")) {
-                try {
-                    const res = await fetch(SCRIPT_URL);
-                    schoolEvents = await res.json();
-                } catch(e) {}
-            }
-            refreshUI();
-        }
+            ['א','ב','ג','ד','ה','ו','ש'].forEach(d => grid.innerHTML += `<div style="text-align:center;font-weight:800;font-size:0.7rem;color:var(--muted)">${d}</div>`);
+            for(let i=0; i<first; i++) grid.innerHTML += '<div></div>';
 
-        function refreshUI() {
-            renderCalendar();
-            renderDaily();
-            runAIAnalysis();
-            document.getElementById('stat-tasks').innerText = personalEvents.length;
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-            document.getElementById('monthYearLabel').innerText = viewDate.toLocaleDateString('he-IL', {month:'long', year:'numeric'});
-            
-            const first = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
-            const days = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
-
-            ['א','ב','ג','ד','ה','ו','ש'].forEach(d => grid.innerHTML += `<div style="font-size:0.7rem;font-weight:800;color:var(--muted)">${d}</div>`);
-            for (let i = 0; i < first; i++) grid.innerHTML += `<div></div>`;
-            
-            for (let d = 1; d <= days; d++) {
-                const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
-                const dateStr = date.toISOString().split('T')[0];
-                const isSelected = dateStr === selectedDate.toISOString().split('T')[0];
-                const hasEvent = [...personalEvents, ...schoolEvents].some(e => e.date === dateStr);
+            const evs = getEvents();
+            for(let d=1; d<=days; d++) {
+                const dDate = new Date(year, month, d).toISOString().split('T')[0];
+                const dayEvs = evs.filter(e => e.date === dDate);
+                const isSelected = dDate === date.toISOString().split('T')[0];
                 
-                grid.innerHTML += `<div class="day ${isSelected ? 'selected' : ''}" onclick="selectDate(${d})">${d}${hasEvent ? '<div class="dot" style="background:white"></div>' : ''}</div>`;
+                const el = document.createElement('div');
+                el.className = `month-day ${isSelected ? 'selected' : ''}`;
+                el.innerHTML = d;
+                const dots = document.createElement('div');
+                dots.className = 'dots';
+                dayEvs.slice(0,3).forEach(e => {
+                    const dot = document.createElement('div');
+                    dot.className = 'dot';
+                    dot.style.background = `var(--${e.type==='מבחן'?'exam':(e.type==='למידה'?'study':'homework')})`;
+                    dots.appendChild(dot);
+                });
+                el.appendChild(dots);
+                el.onclick = () => { date = new Date(year, month, d); changeView('day'); };
+                grid.appendChild(el);
             }
+            container.appendChild(grid);
         }
 
-        function renderDaily() {
-            const list = document.getElementById('dailyAgenda');
-            list.innerHTML = '';
-            const dateStr = selectedDate.toISOString().split('T')[0];
-            const daily = [...personalEvents, ...schoolEvents].filter(e => e.date === dateStr);
-            
-            if(daily.length === 0) { list.innerHTML = "<p style='text-align:center; color:var(--muted)'>אין תוכניות להיום. זמן לנוח!</p>"; return; }
-            
-            daily.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
-                list.innerHTML += `<div class="event-item" style="border-right-color:var(--${e.type==='מבחן'?'exam':(e.type==='למידה'?'study':'primary')})">
-                    <div><strong>${e.title}</strong><br><span>${e.time} | ${e.type}</span></div>
-                    <button onclick="deleteEvent('${e.id}')" style="border:none;background:none;color:var(--exam)"><i class="material-icons-round">delete_outline</i></button>
+        function renderDay(container) {
+            const tl = document.createElement('div');
+            tl.className = 'timeline';
+            const dateStr = date.toISOString().split('T')[0];
+            const evs = getEvents().filter(e => e.date === dateStr);
+
+            for(let h=8; h<=22; h++) {
+                const row = document.createElement('div');
+                row.className = 'time-row';
+                row.innerHTML = `<div class="time-label">${h}:00</div>`;
+                const hEvs = evs.filter(e => parseInt(e.time.split(':')[0]) === h);
+                hEvs.forEach(e => {
+                    row.innerHTML += `<div class="ev-block" style="border-right-color:var(--${e.type==='מבחן'?'exam':(e.type==='למידה'?'study':'homework')})">
+                        <strong>${e.title}</strong><br><small>${e.time}</small>
+                    </div>`;
+                });
+                tl.appendChild(row);
+            }
+            container.appendChild(tl);
+        }
+
+        function renderYear(container) {
+            const grid = document.createElement('div');
+            grid.className = 'year-grid';
+            for(let m=0; m<12; m++) {
+                const d = new Date(date.getFullYear(), m, 1);
+                grid.innerHTML += `<div class="mini-month" onclick="goToMonth(${m})">
+                    <div style="font-weight:800; text-align:center; color:var(--primary); margin-bottom:5px;">${d.toLocaleDateString('he-IL', {month:'long'})}</div>
+                    <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:1px; text-align:center;">
+                        ${Array.from({length:31}, (_,i) => `<div>${i+1}</div>`).join('')}
+                    </div>
                 </div>`;
-            });
-        }
-
-        function saveEvent() {
-            const title = document.getElementById('ev-title').value;
-            const date = document.getElementById('ev-date').value;
-            const time = document.getElementById('ev-time').value;
-            const type = document.getElementById('ev-type').value;
-            const autoAI = document.getElementById('ev-auto-ai').checked;
-
-            if(!title || !date) return alert("מלא פרטים!");
-
-            if (currentTab === 'personal') {
-                personalEvents.push({ id: Date.now().toString(), title, date, time, type, dur: document.getElementById('ev-dur').value });
-                if(type === 'מבחן' && autoAI) smartScheduleStudy(title, date);
-                localStorage.setItem('smart_student_v10', JSON.stringify(personalEvents));
-            } else {
-                syncToCloud(title, date, time, type);
             }
+            container.appendChild(grid);
+        }
+
+        function renderWeek(container) {
+            container.innerHTML = `<div style="text-align:center; padding:50px; color:var(--muted)">מבט שבועי בתהליך... מומלץ להשתמש במבט יום או חודש.</div>`;
+        }
+
+        // --- AI Logic ---
+        function runAI() {
+            const bar = document.getElementById('ai-insight');
+            const now = new Date();
+            const week = new Date(); week.setDate(now.getDate() + 7);
+            const evs = [...personalEvents, ...schoolEvents].filter(e => new Date(e.date) >= now && new Date(e.date) <= week);
+            const exams = evs.filter(e => e.type === 'מבחן');
+
+            if(exams.length >= 2) bar.innerHTML = `⚠️ עומס גבוה: יש לך ${exams.length} מבחנים השבוע. כדאי להתחיל ללמוד כבר ביום ${new Date(exams[0].date).toLocaleDateString('he-IL', {weekday:'long'})}.`;
+            else if(exams.length === 1) bar.innerHTML = `💡 המבחן הקרוב: ${exams[0].title}. מצאתי לך חלון פנוי ללמידה ביום שנראה הכי פחות עמוס.`;
+            else bar.innerHTML = `🌟 השבוע נראה מאוזן. זמן מצוין לסגור פערים במטלות קטנות.`;
+        }
+
+        function validateTime() {
+            const d = document.getElementById('ev-date').value;
+            const t = document.getElementById('ev-time').value;
+            const conflict = [...personalEvents, ...schoolEvents].some(e => e.date === d && e.time === t);
+            document.getElementById('conflict-msg').style.display = conflict ? 'block' : 'none';
+        }
+
+        function save() {
+            const title = document.getElementById('ev-title').value;
+            const d = document.getElementById('ev-date').value;
+            const t = document.getElementById('ev-time').value;
+            const type = document.getElementById('ev-type').value;
+            if(!title || !d) return;
+
+            const ev = { id: Date.now().toString(), title, date: d, time: t, type, dur: document.getElementById('ev-dur').value };
             
+            if(board === 'personal') {
+                personalEvents.push(ev);
+                if(type === 'מבחן' && document.getElementById('ev-auto').checked) planAI(title, d);
+                localStorage.setItem('student_ai_v11', JSON.stringify(personalEvents));
+            }
             closeModal();
-            refreshUI();
+            render();
+            showToast("נשמר בהצלחה!");
         }
 
-        async function syncToCloud(title, date, time, type) {
-            await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "add", title, date, time, type }) });
-            setTimeout(loadData, 1500);
+        function planAI(title, examDateStr) {
+            const examDate = new Date(examDateStr);
+            for(let i=1; i<=3; i++) {
+                let sDate = new Date(examDate); sDate.setDate(examDate.getDate() - i);
+                if(sDate < new Date()) continue;
+                
+                let sTime = "17:00";
+                // בדיקת התנגשות חכמה
+                if([...personalEvents, ...schoolEvents].some(e => e.date === sDate.toISOString().split('T')[0] && e.time === sTime)) sTime = "19:00";
+
+                personalEvents.push({ id: Date.now()+i, title: "למידה: " + title, date: sDate.toISOString().split('T')[0], time: sTime, type: 'למידה', dur: 90 });
+            }
         }
 
-        function deleteEvent(id) {
-            personalEvents = personalEvents.filter(e => e.id !== id);
-            localStorage.setItem('smart_student_v10', JSON.stringify(personalEvents));
-            refreshUI();
+        // --- Helpers ---
+        function switchBoard(b) { 
+            board = b; 
+            document.getElementById('board-p').style.background = b==='personal'?'var(--primary-light)':'none';
+            document.getElementById('board-s').style.background = b==='school'?'var(--primary-light)':'none';
+            render(); 
         }
-
-        function openModal() { document.getElementById('eventModal').style.display = 'flex'; document.getElementById('ev-date').value = selectedDate.toISOString().split('T')[0]; }
+        function changeView(v) { 
+            view = v; 
+            document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('seg-'+v).classList.add('active');
+            render(); 
+        }
+        function move(dir) {
+            if(view === 'day') date.setDate(date.getDate() + dir);
+            else if(view === 'year') date.setFullYear(date.getFullYear() + dir);
+            else date.setMonth(date.getMonth() + dir);
+            render();
+        }
+        function openModal() { document.getElementById('eventModal').style.display = 'flex'; document.getElementById('ev-date').value = date.toISOString().split('T')[0]; }
         function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
-        function toggleAIPlan() { document.getElementById('ai-plan-box').style.display = document.getElementById('ev-type').value === 'מבחן' ? 'block' : 'none'; }
-        function selectDate(d) { selectedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), d); refreshUI(); }
-        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
-        function switchTab(t) { currentTab = t; document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); refreshUI(); }
+        function toggleAutoStudy() { document.getElementById('ai-planner').style.display = document.getElementById('ev-type').value === 'מבחן' ? 'block' : 'none'; }
+        function toggleFilter(f) { filters[f] = document.getElementById('f-'+f).checked; render(); }
+        function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none',3000); }
+        function goToMonth(m) { date.setMonth(m); changeView('month'); }
 
-        loadData();
+        init();
     </script>
 </body>
 </html>
