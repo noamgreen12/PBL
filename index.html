@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v7.0 - Visual Board</title>
+    <title>SmartStudent Pro v8.0 - Sheet Selector</title>
     <style>
         :root {
             --primary: #4361ee;
@@ -19,15 +19,11 @@
             --school: #7209b7;
             --school-light: #f3e5f5;
             
-            /* Tag Colors (Reference Image Style) */
-            --tag-exam: #fff176; /* Yellow/Orange */
-            --tag-exam-text: #f57f17;
-            --tag-activity: #80deea; /* Turquoise */
-            --tag-activity-text: #006064;
-            --tag-trip: #e1bee7; /* Purple */
-            --tag-trip-text: #4a148c;
-            --tag-lesson: #90caf9; /* Blue */
-            --tag-lesson-text: #0d47a1;
+            /* Tag Colors */
+            --tag-exam: #fff176; --tag-exam-text: #f57f17;
+            --tag-activity: #80deea; --tag-activity-text: #006064;
+            --tag-trip: #e1bee7; --tag-trip-text: #4a148c;
+            --tag-lesson: #90caf9; --tag-lesson-text: #0d47a1;
             
             --radius: 12px;
             --shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -108,10 +104,10 @@
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
         .status-dot.ok { background: #2ecc71; }
         .status-dot.error { background: #e74c3c; }
-        .input-group-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .input-group-row input { flex: 1; margin-bottom: 0; font-size: 0.9rem; padding: 10px; min-width: 200px; }
+        .input-group-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .input-group-row input, .input-group-row select { flex: 1; margin-bottom: 0; font-size: 0.9rem; padding: 10px; min-width: 200px; background: white; }
 
-        /* --- WEEK GRID (School Board Visual) --- */
+        /* --- WEEK GRID --- */
         .week-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 12px; box-shadow: var(--shadow); }
         .week-nav-center { display: flex; gap: 10px; align-items: center; }
         
@@ -120,11 +116,11 @@
             display: grid;
             grid-template-columns: repeat(7, minmax(130px, 1fr));
             gap: 8px;
-            min-width: 900px; /* Ensure visual integrity on mobile */
+            min-width: 900px;
         }
         .day-col {
             background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
-            display: flex; flex-direction: column; height: 350px; /* Fixed height for consistency */
+            display: flex; flex-direction: column; height: 350px;
             overflow: hidden;
         }
         .day-header {
@@ -141,7 +137,6 @@
         }
         .board-tag:hover { transform: translateY(-1px); box-shadow: 0 3px 5px rgba(0,0,0,0.15); }
         
-        /* Visual Colors based on Reference */
         .bt-exam { background: var(--tag-exam); color: var(--tag-exam-text); border-right: 3px solid #fbc02d; }
         .bt-activity { background: var(--tag-activity); color: var(--tag-activity-text); border-right: 3px solid #00acc1; }
         .bt-trip { background: var(--tag-trip); color: var(--tag-trip-text); border-right: 3px solid #8e24aa; }
@@ -150,7 +145,7 @@
 
         .more-events { text-align: center; font-size: 0.75rem; color: #666; cursor: pointer; margin-top: auto; padding: 4px; background: #eee; border-radius: 4px; }
 
-        /* --- Modals & Error --- */
+        /* --- Modals --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5); z-index: 200; backdrop-filter: blur(2px);
@@ -272,13 +267,22 @@
 </div>
 
 <script>
+/** * CONFIG: SCHOOL SHEETS
+ * Define your school layers here. 
+ * Using Google Sheets "Publish to Web" CSV links.
+ */
+const SCHOOL_SHEETS = {
+  "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv", 
+};
+
 /** --- STATE & DB --- */
 const DB = {
-    key: 'smartStudentV7',
+    key: 'smartStudentV8',
     data: { 
         personalEvents: [], 
         schoolEvents: [],
         schoolSheetUrl: '',
+        selectedSheetKey: '', // Stores the key from SCHOOL_SHEETS
         lastSync: null
     },
     
@@ -298,12 +302,13 @@ const DB = {
     
     save() {
         localStorage.setItem(this.key, JSON.stringify(this.data));
-        if (app.currentPage !== 'school') app.render(); 
+        // If we are on the school screen, re-render to update the visual board
+        if (app.currentPage === 'school') app.render(); 
     },
 
     seed() {
         const today = new Date().toISOString().split('T')[0];
-        this.data.personalEvents = [];
+        this.data.personalEvents = [{ id: 101, title: 'חוג גיטרה', type: 'activity', date: today, time: '17:00', duration: 1.5, isAuto: false }];
         this.save();
     },
 
@@ -344,33 +349,37 @@ const logic = {
     },
 
     // --- Google Sheets Sync Engine ---
+    
+    handleSheetSelection(key) {
+        if (!key) return; // Empty selection
+        
+        const url = SCHOOL_SHEETS[key];
+        if (url) {
+            DB.data.selectedSheetKey = key;
+            // Also update the generic URL field so the rest of the app works as before
+            DB.data.schoolSheetUrl = url; 
+            DB.save(); // Save choice immediately
+            
+            // Trigger Sync
+            this.syncFromSheets(url, false);
+        }
+    },
+
     async syncFromSheets(rawUrl, isAuto = false) {
         if (!rawUrl) return;
 
-        // 1. Detect "Edit" URL
-        if (rawUrl.includes('/edit') && !rawUrl.includes('output=csv') && !rawUrl.includes('tq?')) {
-            if (!isAuto) alert("⚠️ זה נראה כמו קישור לעריכה.\nבבקשה פרסם את הגיליון (File > Share > Publish to web) והעתק את הקישור משם.");
-            return;
-        }
-
-        // 2. Normalize URL to CSV output
+        // Normalization (Edit -> Export logic)
         let exportUrl = rawUrl;
-        
-        // Handle standard "Publish to web" -> CSV
-        if (rawUrl.includes('/pubhtml') || (rawUrl.includes('/d/') && !rawUrl.includes('output=csv') && !rawUrl.includes('tq?'))) {
-             // If user pasted a /pubhtml link or generic /d/ link, try to guess the export format
-             // But usually Publish gives you a link ending in output=csv if selected correctly.
-             // If identifying ID:
+        if (rawUrl.includes('/edit') && !rawUrl.includes('output=csv')) {
+             if (!isAuto) alert("⚠️ זה נראה כמו קישור לעריכה. ודא שהלינק הוא Publish to Web.");
+        }
+        if (rawUrl.includes('/pubhtml') || (rawUrl.includes('/d/') && !rawUrl.includes('output=csv'))) {
              const idMatch = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
              if (idMatch && idMatch[1]) {
                  exportUrl = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv`;
              }
         }
-        
-        // Handle Google Viz (tq)
-        if (rawUrl.includes('tq?')) {
-             if (!rawUrl.includes('out:csv')) exportUrl = rawUrl + '&tqx=out:csv';
-        }
+        if (rawUrl.includes('tq?') && !rawUrl.includes('out:csv')) exportUrl = rawUrl + '&tqx=out:csv';
 
         try {
             if(!isAuto) ui.setSyncStatus('loading');
@@ -385,18 +394,18 @@ const logic = {
                 // Keep manual imports, replace sheet events
                 const others = DB.data.schoolEvents.filter(e => e.source !== 'google_sheets');
                 DB.data.schoolEvents = [...others, ...parsedEvents];
-                DB.data.schoolSheetUrl = rawUrl;
+                DB.data.schoolSheetUrl = rawUrl; // Ensure stored
                 DB.data.lastSync = Date.now();
                 DB.save();
                 if (!isAuto) alert(`✅ סנכרון הצליח! נטענו ${parsedEvents.length} אירועים.`);
                 if (app.currentPage === 'school') app.render();
             } else {
-                if (!isAuto) alert("⚠️ הקובץ נקרא אך לא זוהו אירועים תקינים. בדוק את שמות העמודות.");
+                if (!isAuto) alert("⚠️ הקובץ נקרא אך לא זוהו אירועים תקינים. בדוק כותרות.");
             }
 
         } catch (e) {
             console.error(e);
-            if (!isAuto) alert("❌ שגיאה בסנכרון. ודא שהקובץ Public ושקישור ה-CSV תקין.");
+            if (!isAuto) alert("❌ שגיאה בסנכרון. בדוק חיבור ושהלינק תקין.");
         } finally {
             if(!isAuto) ui.setSyncStatus('idle');
         }
@@ -406,7 +415,6 @@ const logic = {
         const rows = text.split(/\r?\n/);
         const headers = rows[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
         
-        // Map header names to indices
         const idx = {
             title: headers.indexOf('title'),
             type: headers.indexOf('type'),
@@ -417,22 +425,19 @@ const logic = {
             desc: headers.indexOf('description')
         };
 
-        if (idx.title === -1 || idx.date === -1) return []; // Critical missing columns
+        if (idx.title === -1 || idx.date === -1) return [];
 
         const events = [];
         for (let i = 1; i < rows.length; i++) {
-            // Basic CSV split (handling simple commas) - for robust use regex but simple split requested
-            // Using a slightly smarter split for quotes if present
             const matches = rows[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
             let cols = rows[i].split(','); 
-            if (matches && matches.length > cols.length) cols = matches; // Fallback
-            
+            if (matches && matches.length > cols.length) cols = matches;
             cols = cols.map(c => c ? c.replace(/^"|"$/g, '').trim() : '');
 
             if (cols.length < 3) continue;
 
             const title = cols[idx.title];
-            const date = cols[idx.date]; // YYYY-MM-DD expected
+            const date = cols[idx.date];
             
             if (title && !isNaN(new Date(date).getTime())) {
                 events.push({
@@ -440,7 +445,7 @@ const logic = {
                     title: title,
                     type: cols[idx.type] || 'school',
                     date: date,
-                    time: cols[idx.time] || '', // Empty allowed
+                    time: cols[idx.time] || '',
                     duration: parseFloat(cols[idx.duration]) || 1,
                     audience: idx.audience > -1 ? cols[idx.audience] : 'all',
                     description: idx.desc > -1 ? cols[idx.desc] : '',
@@ -459,10 +464,7 @@ const logic = {
 
         for (let e of all) {
             if (e.date === newEvent.date && e.id !== newEvent.id) {
-                // Ignore school events without time (full day assumption usually doesn't block exact hours unless specified, 
-                // but for safety we only conflict if school event has time)
                 if (!e.time) continue; 
-                
                 const eStart = this.toMin(e.time);
                 const eEnd = eStart + (e.duration * 60);
                 if (nStart < eEnd && nEnd > eStart) return { conflict: true, event: e };
@@ -493,7 +495,6 @@ const logic = {
         }
 
         DB.data.personalEvents.push(newEvt);
-        // AI Logic stub
         if (type === 'exam') alert("🤖 AI Planner: רשמתי את המבחן. (סימולציה: פיניתי זמן למידה)");
         
         DB.save();
@@ -504,12 +505,11 @@ const logic = {
 
 /** --- UI CONTROLLER --- */
 const ui = {
-    currentSchoolWeekStart: new Date(), // State for visual board
+    currentSchoolWeekStart: new Date(),
 
     init() {
-        // Set to start of current week (Sunday)
         const today = new Date();
-        const day = today.getDay(); // 0 = Sun
+        const day = today.getDay();
         const diff = today.getDate() - day; 
         this.currentSchoolWeekStart = new Date(today.setDate(diff));
     },
@@ -530,7 +530,7 @@ const ui = {
     },
 
     setSyncStatus(status) {
-        // Could update a spinner icon here
+        // Visual feedback placeholder
     },
 
     changeWeek(offset) {
@@ -568,7 +568,6 @@ const ui = {
         m.classList.add('active');
     },
 
-    // Show overflow events
     openDayModal(dateStr, events) {
         const list = document.getElementById('dayModalList');
         list.innerHTML = '';
@@ -600,7 +599,6 @@ const app = {
     navigate(p) {
         this.currentPage = p;
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        // Simple heuristic for active tab highlight based on index
         const idx = p==='dashboard'?0 : p==='calendar'?1 : 2;
         document.querySelectorAll('.nav-item')[idx].classList.add('active');
         document.querySelectorAll('.sidebar .nav-item')[idx].classList.add('active');
@@ -612,7 +610,7 @@ const app = {
         con.innerHTML = '';
         if (this.currentPage === 'dashboard') this.renderDashboard(con);
         else if (this.currentPage === 'calendar') this.renderCalendar(con);
-        else this.renderSchool(con); // New Visual Board
+        else this.renderSchool(con);
     },
 
     renderDashboard(con) {
@@ -620,7 +618,6 @@ const app = {
         const events = DB.data.personalEvents.filter(e => e.date >= today).sort((a,b) => a.date.localeCompare(b.date));
         let html = `<h1>דאשבורד ⚡</h1>`;
         
-        // Next event
         if (events.length) {
             const e = events[0];
             html += `<div class="card" style="border-right:4px solid var(--primary)">
@@ -634,9 +631,7 @@ const app = {
     },
 
     renderCalendar(con) {
-        // Personal Calendar Overlay View
         const all = [...DB.data.personalEvents.map(e=>({...e, s:'p'})), ...DB.data.schoolEvents.map(e=>({...e, s:'s', time:e.time||'08:00'}))];
-        // Group by date
         const grp = {};
         all.sort((a,b) => a.date.localeCompare(b.date)).forEach(e => {
             if(!grp[e.date]) grp[e.date]=[];
@@ -663,24 +658,33 @@ const app = {
         con.innerHTML = html;
     },
 
-    // --- NEW SCHOOL BOARD VISUAL ---
     renderSchool(con) {
         const lastSync = DB.data.lastSync ? new Date(DB.data.lastSync).toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'}) : '...';
         
-        // 1. Sync Panel
+        // --- PREPARE SELECT OPTIONS ---
+        let optionsHtml = `<option value="">-- בחר לוח בית ספר --</option>`;
+        for (let [name, url] of Object.entries(SCHOOL_SHEETS)) {
+            const isSel = DB.data.selectedSheetKey === name ? 'selected' : '';
+            optionsHtml += `<option value="${name}" ${isSel}>${name}</option>`;
+        }
+
+        // --- SYNC PANEL ---
         let html = `<h2>לוח בית ספר 🏫</h2>
         <div class="sync-box">
             <div class="sync-header">
-                <strong>☁️ חיבור ל-Google Sheets</strong>
+                <strong>☁️ בחירת לוח (Google Sheets)</strong>
                 <div class="sync-status"><div class="status-dot ${DB.data.lastSync?'ok':'error'}"></div> עודכן: ${lastSync}</div>
             </div>
+            
             <div class="input-group-row">
-                <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pubhtml" value="${DB.data.schoolSheetUrl||''}">
-                <button class="btn btn-primary" onclick="logic.syncFromSheets(document.getElementById('sheetUrl').value)">רענן נתונים</button>
+                <select onchange="logic.handleSheetSelection(this.value)">${optionsHtml}</select>
+                
+                <input type="text" id="sheetUrl" placeholder="או הדבק לינק ידני..." value="${DB.data.schoolSheetUrl||''}">
+                <button class="btn btn-primary" onclick="logic.syncFromSheets(document.getElementById('sheetUrl').value)">רענן</button>
             </div>
         </div>`;
 
-        // 2. Week Navigation
+        // --- VISUAL BOARD (Same as v7) ---
         const start = ui.currentSchoolWeekStart;
         const end = new Date(start); end.setDate(end.getDate()+6);
         const rangeStr = `${logic.formatDateIL(start.toISOString().split('T')[0])} - ${logic.formatDateIL(end.toISOString().split('T')[0])}`;
@@ -694,32 +698,24 @@ const app = {
                 <input type="date" style="width:40px; padding:0; border:none;" onchange="ui.jumpToWeek(this.value)">
             </div>
             <button class="btn btn-nav" onclick="ui.changeWeek(1)">❯</button>
-        </div>`;
+        </div>
+        <div class="school-grid-container"><div class="school-grid">`;
 
-        // 3. Grid Container
-        html += `<div class="school-grid-container"><div class="school-grid">`;
-
-        // 4. Generate Days
         const curr = new Date(start);
         for (let i = 0; i < 7; i++) {
             const dStr = curr.toISOString().split('T')[0];
-            const displayDate = logic.formatDateShort(dStr); // 11.1 format
+            const displayDate = logic.formatDateShort(dStr);
             const dayName = logic.getDayName(dStr);
-            
-            // Filter events for this day
             const dayEvents = DB.data.schoolEvents.filter(e => e.date === dStr);
             
-            html += `
-            <div class="day-col">
+            html += `<div class="day-col">
                 <div class="day-header">${dayName}</div>
                 <div class="day-date">${displayDate}</div>
                 <div class="day-body">`;
             
-            // Render Tags (Max 3, then overflow)
             const MAX_SHOW = 3;
             dayEvents.slice(0, MAX_SHOW).forEach(e => {
                 const colorClass = ui.getColorClass(e.type);
-                // Safe JSON for onclick
                 const eJson = JSON.stringify(e).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
                 html += `<div class="board-tag ${colorClass}" onclick='ui.openViewModal(${eJson}, true)'>
                     <span style="font-size:0.7rem; opacity:0.8">${e.time || ''}</span>
@@ -732,13 +728,11 @@ const app = {
                 const hiddenJson = JSON.stringify(hidden).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
                 html += `<div class="more-events" onclick='ui.openDayModal("${dStr}", ${hiddenJson})'>+ עוד ${hidden.length}</div>`;
             }
-
-            html += `</div></div>`; // Close body, col
-            
+            html += `</div></div>`;
             curr.setDate(curr.getDate() + 1);
         }
 
-        html += `</div></div>`; // Close grid
+        html += `</div></div>`;
         con.innerHTML = html;
     }
 };
@@ -746,7 +740,7 @@ const app = {
 // Init
 ui.init();
 DB.init();
-app.navigate('school'); // Start on school for demo
+app.navigate('school');
 </script>
 </body>
 </html>
