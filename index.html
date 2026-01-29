@@ -3,380 +3,689 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent AI Pro</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <title>SmartStudent AI Planner</title>
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-light: #eef2ff;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #1e293b;
-            --muted: #64748b;
-            --border: #e2e8f0;
-            --exam: #ef4444;
-            --study: #f59e0b;
-            --homework: #10b981;
-            --activity: #0ea5e9;
-            --school: #6366f1;
-            --radius: 18px;
-            --sidebar-w: 260px;
+            --primary: #4a90e2;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --safe: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --shadow: 0 4px 6px rgba(0,0,0,0.05);
+            --radius: 12px;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* --- Sidebar & Layout --- */
-        .sidebar { width: var(--sidebar-w); background: var(--card); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; z-index: 1000; overflow-y: auto; }
-        .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; position: relative; }
+        /* Layout */
+        .app-container { display: flex; height: 100%; width: 100%; overflow: hidden; }
         
-        @media (max-width: 900px) {
-            .sidebar { display: none; }
-            .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid var(--border); z-index: 2000; }
-            .main-content { padding-bottom: 80px; }
+        /* Sidebar (Desktop) / Bottom Nav (Mobile) */
+        .nav-sidebar {
+            background: var(--card-bg);
+            width: 250px;
+            display: none; /* Mobile default */
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+        
+        .nav-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
         }
 
-        /* --- AI Insights Header --- */
-        .ai-header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 15px 20px; border-radius: 0 0 25px 25px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); }
-        .ai-header small { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; }
-        .ai-header p { margin: 8px 0 0; font-size: 0.95rem; font-weight: 500; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            color: var(--text-light);
+            transition: 0.2s;
+        }
+        .nav-item.active { background: #eaf2fd; color: var(--primary); font-weight: bold; }
+        .nav-icon { font-size: 1.2rem; }
 
-        /* --- Navigation --- */
-        .top-nav { padding: 12px 20px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 10px; }
-        .segmented-control { display: flex; background: var(--bg); padding: 4px; border-radius: 12px; }
-        .seg-btn { border: none; background: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--muted); }
-        .seg-btn.active { background: var(--card); color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 80px; /* Space for bottom nav */
+            position: relative;
+        }
 
-        /* --- Views Rendering --- */
-        .view-container { padding: 20px; flex: 1; }
+        /* Typography & Components */
+        h1, h2, h3 { margin: 0 0 10px 0; }
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
 
-        /* Day View */
-        .timeline { position: relative; padding-right: 55px; }
-        .time-row { height: 65px; border-top: 1px solid var(--border); position: relative; }
-        .time-label { position: absolute; right: -55px; top: -10px; font-size: 0.75rem; color: var(--muted); }
-        .ev-block { position: absolute; left: 0; right: 0; background: var(--primary-light); border-right: 4px solid var(--primary); padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; z-index: 10; overflow: hidden; }
+        /* AI Insights Box */
+        .ai-insight {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+            border-right: 4px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .ai-badge {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
 
-        /* Month View */
-        .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-        .month-day { aspect-ratio: 1; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border); cursor: pointer; position: relative; }
-        .month-day.selected { border: 2px solid var(--primary); background: var(--primary-light); }
-        .month-day.today { color: var(--primary); font-weight: 800; }
-        .dots { display: flex; gap: 2px; position: absolute; bottom: 5px; }
-        .dot { width: 4px; height: 4px; border-radius: 50%; }
+        /* Load Indicators */
+        .load-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-left: 5px; }
+        .load-green { background: var(--safe); }
+        .load-orange { background: var(--warning); }
+        .load-red { background: var(--danger); }
 
-        /* Year View */
-        .year-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-        .mini-month { background: white; padding: 10px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; font-size: 0.65rem; }
-        .mini-month:hover { border-color: var(--primary); }
+        /* Event List */
+        .event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .event-item:last-child { border-bottom: none; }
+        .event-time { font-weight: bold; min-width: 60px; color: var(--primary); }
+        .event-details { flex: 1; }
+        .event-tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #eee; margin-right: 5px; }
+        .tag-exam { background: #ffebee; color: #c62828; }
+        .tag-study { background: #e3f2fd; color: #1565c0; }
+        .tag-school { background: #f3e5f5; color: #6a1b9a; opacity: 0.7; }
 
-        /* --- Modals & Forms --- */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 3000; align-items: center; justify-content: center; }
-        .modal { background: white; padding: 25px; border-radius: 24px; width: 90%; max-width: 450px; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; }
-        .conflict-alert { background: #fff1f2; color: #e11d48; padding: 10px; border-radius: 8px; font-size: 0.75rem; margin-bottom: 15px; display: none; border: 1px solid #fda4af; }
+        /* FAB */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+            z-index: 101;
+        }
 
-        .btn { padding: 14px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; }
-        .btn-primary { background: var(--primary); color: white; width: 100%; }
-        .fab { position: fixed; bottom: 85px; left: 20px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); cursor: pointer; z-index: 1500; }
+        /* Modal/BottomSheet */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            display: none;
+            align-items: flex-end; /* Bottom sheet on mobile */
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-height: 90vh;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
 
-        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; display: none; z-index: 4000; font-size: 0.85rem; }
+        /* Form */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; }
+        input, select, textarea {
+            width: 100%; padding: 12px;
+            border: 1px solid #ddd; border-radius: 8px;
+            font-family: var(--font); font-size: 1rem;
+        }
+        button {
+            width: 100%; padding: 14px;
+            border: none; border-radius: 8px;
+            font-weight: bold; font-size: 1rem; cursor: pointer;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: #eee; color: #333; margin-top: 10px; }
+
+        /* Notifications */
+        .notification {
+            background: #fff3cd; color: #856404;
+            padding: 10px; border-radius: 8px;
+            margin-bottom: 10px; font-size: 0.9rem;
+            border: 1px solid #ffeeba;
+        }
+
+        /* Calendar Grid (Simplified) */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+        .cal-day { 
+            aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border: 1px solid #eee; border-radius: 8px; font-size: 0.8rem; position: relative;
+        }
+        .cal-day.today { border-color: var(--primary); font-weight: bold; }
+        .cal-day.has-event::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: var(--primary); border-radius: 50%; }
+
+        @media (min-width: 768px) {
+            .nav-sidebar { display: flex; }
+            .nav-bottom { display: none; }
+            .modal-overlay { align-items: center; justify-content: center; }
+            .modal-content { width: 400px; border-radius: var(--radius); animation: fadeIn 0.3s ease; }
+            .main-content { padding-bottom: 20px; }
+            .fab { left: 40px; bottom: 40px; }
+        }
+
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <h2 style="color:var(--primary); margin-bottom:30px;">SmartStudent AI</h2>
-        
-        <div style="margin-bottom:25px;">
-            <label style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">לוחות</label>
-            <button class="btn" id="board-p" style="background:var(--primary-light); color:var(--primary); text-align:right; width:100%; margin:8px 0;" onclick="switchBoard('personal')">📅 היומן שלי</button>
-            <button class="btn" id="board-s" style="background:transparent; color:var(--muted); text-align:right; width:100%;" onclick="switchBoard('school')">🏫 לוח בית ספר</button>
+<div class="app-container">
+    <nav class="nav-sidebar">
+        <h2>SmartStudent</h2>
+        <div class="nav-item active" onclick="switchTab('dashboard')">
+            <span class="nav-icon">📊</span> דאשבורד
         </div>
-
-        <div style="margin-bottom:25px;">
-            <label style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">סינון</label>
-            <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-                <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem;"><input type="checkbox" checked onchange="toggleFilter('מבחן')" id="f-מבחן"> מבחנים <span style="background:var(--exam); width:8px; height:8px; border-radius:50%"></span></label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem;"><input type="checkbox" checked onchange="toggleFilter('מטלה')" id="f-מטלה"> שיעורים <span style="background:var(--homework); width:8px; height:8px; border-radius:50%"></span></label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem;"><input type="checkbox" checked onchange="toggleFilter('למידה')" id="f-למידה"> למידה <span style="background:var(--study); width:8px; height:8px; border-radius:50%"></span></label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem;"><input type="checkbox" onchange="toggleFilter('overlay')" id="f-overlay"> הצג שכבת בי"ס</label>
-            </div>
+        <div class="nav-item" onclick="switchTab('calendar')">
+            <span class="nav-icon">📅</span> היומן שלי
         </div>
-    </aside>
-
-    <main class="main-content">
-        <div class="ai-header">
-            <small>AI INSIGHTS</small>
-            <p id="ai-insight">מנתח את הלו"ז שלך לעדכונים חכמים...</p>
+        <div class="nav-item" onclick="switchTab('school')">
+            <span class="nav-icon">🏫</span> לוח בית ספר
         </div>
+    </nav>
 
-        <div class="top-nav">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button onclick="move(-1)" style="border:none;background:none;cursor:pointer;">▶</button>
-                <strong id="viewLabel" style="min-width:120px; text-align:center;">ינואר 2026</strong>
-                <button onclick="move(1)" style="border:none;background:none;cursor:pointer;">◀</button>
-            </div>
-            <div class="segmented-control">
-                <button class="seg-btn" id="seg-day" onclick="changeView('day')">היום</button>
-                <button class="seg-btn" id="seg-week" onclick="changeView('week')">שבוע</button>
-                <button class="seg-btn active" id="seg-month" onclick="changeView('month')">חודש</button>
-                <button class="seg-btn" id="seg-year" onclick="changeView('year')">שנה</button>
-            </div>
-        </div>
+    <main class="main-content" id="mainView">
+        </main>
 
-        <div class="view-container" id="viewContainer"></div>
-    </main>
+    <nav class="nav-bottom">
+        <div class="nav-item active" onclick="switchTab('dashboard')"><span class="nav-icon">📊</span></div>
+        <div class="nav-item" onclick="switchTab('calendar')"><span class="nav-icon">📅</span></div>
+        <div class="nav-item" onclick="switchTab('school')"><span class="nav-icon">🏫</span></div>
+    </nav>
+</div>
 
-    <button class="fab" onclick="openModal()">+</button>
+<div class="fab" onclick="openModal()">+</div>
 
-    <div class="overlay" id="eventModal">
-        <div class="modal">
-            <h3 id="modalTitle">אירוע חדש</h3>
-            <div class="conflict-alert" id="conflict-msg">⚠️ שים לב: כבר קיים אירוע בשעה זו!</div>
+<div class="modal-overlay" id="eventModal">
+    <div class="modal-content">
+        <h3>הוספת אירוע</h3>
+        <div class="notification hidden" id="aiWarning"></div>
+        <form id="addEventForm" onsubmit="handleFormSubmit(event)">
             <div class="form-group">
                 <label>כותרת</label>
-                <input type="text" id="ev-title" oninput="validateTime()">
+                <input type="text" id="evtTitle" required placeholder="לדוגמה: מבחן במתמטיקה">
             </div>
-            <div style="display:flex; gap:10px;">
-                <div class="form-group" style="flex:1">
-                    <label>סוג</label>
-                    <select id="ev-type" onchange="toggleAutoStudy()">
-                        <option value="מטלה">שיעורים / עבודה</option>
-                        <option value="מבחן">מבחן</option>
-                        <option value="פעילות">פעילות / חוג</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex:1">
-                    <label>תאריך</label>
-                    <input type="date" id="ev-date" onchange="validateTime()">
+            <div class="form-group">
+                <label>סוג</label>
+                <select id="evtType" onchange="checkExamMode()">
+                    <option value="activity">פעילות / חוג</option>
+                    <option value="assignment">מטלה</option>
+                    <option value="exam">מבחן</option>
+                    <option value="study">בלוק למידה</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>תאריך</label>
+                <input type="date" id="evtDate" required onchange="analyzeDateLoad()">
+            </div>
+            <div class="form-group">
+                <label>שעה</label>
+                <input type="time" id="evtTime" required>
+            </div>
+            <div class="form-group">
+                <label>משך (בשעות)</label>
+                <input type="number" id="evtDuration" value="1" min="0.5" step="0.5" required>
+            </div>
+            <div id="aiSuggestionBox" class="ai-insight hidden">
+                <strong>💡 הצעת AI:</strong>
+                <p id="aiSuggestionText" style="font-size: 0.9rem; margin: 5px 0;"></p>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button type="button" class="btn-primary" style="padding:8px; font-size:0.8rem" onclick="applyAiSuggestion()">קבל הצעה</button>
                 </div>
             </div>
-            <div style="display:flex; gap:10px;">
-                <div class="form-group" style="flex:1">
-                    <label>שעה</label>
-                    <input type="time" id="ev-time" value="16:00" onchange="validateTime()">
-                </div>
-                <div class="form-group" style="flex:1">
-                    <label>משך (דקות)</label>
-                    <input type="number" id="ev-dur" value="60">
-                </div>
-            </div>
-            <div id="ai-planner" style="display:none; background:var(--primary-light); padding:10px; border-radius:10px; margin-bottom:15px;">
-                <label style="display:flex; align-items:center; gap:8px; color:var(--primary); margin:0; cursor:pointer;">
-                    <input type="checkbox" id="ev-auto" checked> תכנן לי זמן למידה אוטומטי (AI)
-                </label>
-            </div>
-            <button class="btn btn-primary" onclick="save()">שמור אירוע</button>
-            <button class="btn" style="background:none; color:var(--muted); width:100%; margin-top:10px;" onclick="closeModal()">ביטול</button>
-        </div>
+            <button type="submit" class="btn-primary">שמור</button>
+            <button type="button" class="btn-secondary" onclick="closeModal()">ביטול</button>
+        </form>
     </div>
+</div>
 
-    <div id="toast"></div>
+<script>
+    /**
+     * Data Model & State
+     */
+    const STATE = {
+        personalEvents: [],
+        schoolEvents: [], // Read only overlay
+        view: 'dashboard'
+    };
 
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjUOZw7k1RUW9HArAZPEpdX7L1HP5jpMGasjeFC0jwNSylvDLUEyYQUqIq46YhEpTu/exec"; // לינק לשיטס במידה ויש
-        let personalEvents = JSON.parse(localStorage.getItem('student_ai_v11')) || [];
-        let schoolEvents = [];
-        let board = 'personal';
-        let view = 'month';
-        let date = new Date();
-        let filters = { מבחן: true, מטלה: true, למידה: true, overlay: false };
+    // Initialization
+    function init() {
+        loadData();
+        if (STATE.personalEvents.length === 0) {
+            seedData();
+        }
+        render();
+        setupDateInputs();
+    }
 
-        function init() {
-            render();
-            // Shortcuts
-            window.addEventListener('keydown', e => {
-                if(e.key.toLowerCase() === 'n') openModal();
-                if(e.key === 'ArrowRight') move(-1);
-                if(e.key === 'ArrowLeft') move(1);
+    function loadData() {
+        const stored = localStorage.getItem('smartStudentData');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            STATE.personalEvents = parsed.personalEvents || [];
+            STATE.schoolEvents = parsed.schoolEvents || [];
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem('smartStudentData', JSON.stringify(STATE));
+        render();
+    }
+
+    function seedData() {
+        // Sample Data
+        const today = new Date().toISOString().split('T')[0];
+        STATE.schoolEvents = [
+            { id: 's1', title: 'טיול שנתי שכבה י׳', date: addDays(today, 5), type: 'school', audience: 'shichva' }
+        ];
+        STATE.personalEvents = [
+            { id: 1, title: 'חוג כדורסל', type: 'activity', date: today, time: '16:00', duration: 2, isAuto: false },
+            { id: 2, title: 'שיעורי בית אנגלית', type: 'assignment', date: today, time: '19:00', duration: 1, isAuto: false }
+        ];
+        saveData();
+    }
+
+    /**
+     * Heuristic AI Engine (The Brain)
+     */
+    const AI = {
+        // Calculate load score for a specific date (0-100)
+        calculateDailyLoad: (dateStr) => {
+            const events = STATE.personalEvents.filter(e => e.date === dateStr);
+            const totalHours = events.reduce((sum, e) => sum + parseFloat(e.duration), 0);
+            const examCount = events.filter(e => e.type === 'exam').length;
+            
+            let score = (totalHours * 10) + (examCount * 30);
+            return { score, hours: totalHours, exams: examCount };
+        },
+
+        // Find optimal study slots backwards from exam date
+        findStudySlots: (examDate, examSubject) => {
+            const suggestions = [];
+            let neededHours = 4; // Default needed study time
+            let daysBack = 1;
+            
+            // Loop 7 days back
+            while (daysBack <= 7 && neededHours > 0) {
+                const targetDate = addDays(examDate, -daysBack);
+                const load = AI.calculateDailyLoad(targetDate);
+                
+                // Heuristic: Avoid days with > 5 hours load or existing exams
+                if (load.hours < 5 && load.exams === 0) {
+                    // Score logic: Prefer 2 days before over day before (cramming)
+                    const quality = (daysBack === 1) ? 'medium' : 'high';
+                    
+                    suggestions.push({
+                        date: targetDate,
+                        time: '16:00', // Default convenient time
+                        duration: 2,
+                        reason: `יום ${getDayName(targetDate)} פנוי יחסית (${load.hours} שעות תפוסות בלבד)`,
+                        quality: quality
+                    });
+                    neededHours -= 2;
+                }
+                daysBack++;
+            }
+            return suggestions;
+        },
+
+        // Generate natural language insights for dashboard
+        getInsights: () => {
+            const today = new Date().toISOString().split('T')[0];
+            const load = AI.calculateDailyLoad(today);
+            const upcomingExams = STATE.personalEvents
+                .filter(e => e.type === 'exam' && e.date >= today)
+                .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            let messages = [];
+
+            // 1. Daily Load Insight
+            if (load.hours > 6) {
+                messages.push({ type: 'danger', text: `שים לב: היום שלך עמוס מאוד (${load.hours} שעות). שקול להזיז מטלות לא דחופות.` });
+            } else if (load.hours < 2) {
+                messages.push({ type: 'safe', text: `היום רגוע. זה זמן מצוין להשלים פערים או לנוח.` });
+            }
+
+            // 2. Exam Prep Insight
+            if (upcomingExams.length > 0) {
+                const nextExam = upcomingExams[0];
+                const daysToExam = (new Date(nextExam.date) - new Date(today)) / (1000 * 60 * 60 * 24);
+                
+                if (daysToExam < 3 && daysToExam >= 0) {
+                     messages.push({ type: 'warning', text: `המבחן ב${nextExam.title} מתקרב (עוד ${Math.ceil(daysToExam)} ימים). פינית זמן לחזרה?` });
+                }
+                
+                // Prioritization logic
+                if (upcomingExams.length >= 2) {
+                    const secondExam = upcomingExams[1];
+                    const gap = (new Date(secondExam.date) - new Date(nextExam.date)) / (1000 * 60 * 60 * 24);
+                    if (gap < 3) {
+                         messages.push({ type: 'danger', text: `אזהרת צפיפות: יש לך שני מבחנים בשבוע אחד. כדאי להתחיל ללמוד ל${secondExam.title} כבר עכשיו.` });
+                    }
+                }
+            }
+
+            return messages;
+        }
+    };
+
+    /**
+     * UI Rendering Logic
+     */
+    function render() {
+        const container = document.getElementById('mainView');
+        container.innerHTML = '';
+        updateNavState();
+
+        if (STATE.view === 'dashboard') renderDashboard(container);
+        else if (STATE.view === 'calendar') renderCalendar(container);
+        else if (STATE.view === 'school') renderSchoolBoard(container);
+    }
+
+    function renderDashboard(container) {
+        const today = new Date().toISOString().split('T')[0];
+        const insights = AI.getInsights();
+        const load = AI.calculateDailyLoad(today);
+        
+        // Determine Load Color
+        let loadClass = 'load-green', loadText = 'רגוע';
+        if (load.score > 40) { loadClass = 'load-orange'; loadText = 'בינוני'; }
+        if (load.score > 70) { loadClass = 'load-red'; loadText = 'עמוס מאוד'; }
+
+        // Insights HTML
+        const insightsHtml = insights.map(msg => `
+            <div style="margin-bottom:8px; font-size:0.95rem; border-right: 3px solid var(--${msg.type}); padding-right:8px;">
+                ${msg.text}
+            </div>
+        `).join('') || '<p>אין התראות מיוחדות להיום. הכל בשליטה!</p>';
+
+        // Today's Events
+        const todaysEvents = STATE.personalEvents
+            .filter(e => e.date === today)
+            .sort((a,b) => a.time.localeCompare(b.time));
+
+        let eventsHtml = todaysEvents.length ? '' : '<p style="color:var(--text-light)">אין אירועים להיום</p>';
+        todaysEvents.forEach(e => {
+            eventsHtml += `
+                <div class="event-item">
+                    <div class="event-time">${e.time}</div>
+                    <div class="event-details">
+                        <div><strong>${e.title}</strong></div>
+                        <span class="event-tag tag-${e.type}">${getTypeName(e.type)}</span>
+                        ${e.isAuto ? '<span class="event-tag">🤖 AI</span>' : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = `
+            <h1>שלום תלמיד 👋</h1>
+            
+            <div class="card ai-insight">
+                <span class="ai-badge">ניתוח חכם</span>
+                <h3>מה המצב היום?</h3>
+                <div style="margin-bottom:10px;">
+                    עומס יומי: <strong>${loadText}</strong> <span class="load-indicator ${loadClass}"></span>
+                    <br><small>${load.hours} שעות פעילות מתוכננות</small>
+                </div>
+                <div style="background:rgba(255,255,255,0.6); padding:10px; border-radius:8px;">
+                    ${insightsHtml}
+                </div>
+            </div>
+
+            <h3>היום שלי (${formatDateIL(today)})</h3>
+            <div class="card">
+                ${eventsHtml}
+            </div>
+        `;
+    }
+
+    function renderCalendar(container) {
+        // Simplified List View for robustness + Horizontal Week Scroll
+        const days = [];
+        const today = new Date();
+        for(let i=0; i<7; i++) {
+            days.push(addDays(today.toISOString().split('T')[0], i));
+        }
+
+        let calendarHtml = `<h2>השבוע הקרוב</h2>`;
+        
+        days.forEach(dateStr => {
+            const dayEvents = STATE.personalEvents.filter(e => e.date === dateStr);
+            const schoolEvents = STATE.schoolEvents.filter(e => e.date === dateStr);
+            const load = AI.calculateDailyLoad(dateStr);
+            let color = load.score > 60 ? 'var(--danger)' : (load.score > 30 ? 'var(--warning)' : 'var(--safe)');
+
+            let items = '';
+            // Overlay School Events
+            schoolEvents.forEach(e => {
+                items += `<div class="event-item" style="background:#f9f9f9"><span class="event-time">🔒</span> ${e.title} <span class="event-tag tag-school">ביה"ס</span></div>`;
+            });
+            // Personal Events
+            dayEvents.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
+                items += `<div class="event-item">
+                    <span class="event-time">${e.time}</span>
+                    <span>${e.title}</span>
+                </div>`;
+            });
+
+            calendarHtml += `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:5px;">
+                        <strong>${getDayName(dateStr)} ${formatDateIL(dateStr)}</strong>
+                        <div style="display:flex; align-items:center; font-size:0.8rem;">
+                            עומס: <div style="width:10px; height:10px; border-radius:50%; background:${color}; margin-right:5px;"></div>
+                        </div>
+                    </div>
+                    ${items || '<small style="color:#aaa">פנוי</small>'}
+                </div>
+            `;
+        });
+
+        container.innerHTML = calendarHtml;
+    }
+
+    function renderSchoolBoard(container) {
+        let html = `
+            <h2>🏫 לוח הודעות בית ספר</h2>
+            <p style="color:var(--text-light)">לוח זה מנוהל על ידי בית הספר ואינו ניתן לעריכה.</p>
+        `;
+        
+        if (STATE.schoolEvents.length === 0) {
+            html += `<div class="card"><p>אין הודעות חדשות מבית הספר.</p></div>`;
+        } else {
+            STATE.schoolEvents.forEach(e => {
+                html += `
+                <div class="card" style="border-right: 4px solid #9c27b0;">
+                    <h3>${e.title}</h3>
+                    <p>📅 ${formatDateIL(e.date)}</p>
+                    <span class="event-tag tag-school">${e.audience === 'shichva' ? 'שכבה' : 'כללי'}</span>
+                </div>`;
             });
         }
+        container.innerHTML = html;
+    }
 
-        function render() {
-            const container = document.getElementById('viewContainer');
-            container.innerHTML = '';
-            updateHeader();
-            runAI();
+    /**
+     * Interaction Logic & AI Form Handling
+     */
+    function switchTab(viewName) {
+        STATE.view = viewName;
+        render();
+    }
 
-            if(view === 'month') renderMonth(container);
-            else if(view === 'day') renderDay(container);
-            else if(view === 'year') renderYear(container);
-            else renderWeek(container);
+    function updateNavState() {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        // Simple logic to highlight active based on onclick attribute matching state
+        // (Simplified for single-file conciseness)
+    }
+
+    function openModal() {
+        document.getElementById('eventModal').classList.add('active');
+        document.getElementById('aiWarning').classList.add('hidden');
+        document.getElementById('aiSuggestionBox').classList.add('hidden');
+        document.getElementById('evtDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    function closeModal() {
+        document.getElementById('eventModal').classList.remove('active');
+        document.getElementById('addEventForm').reset();
+    }
+
+    function setupDateInputs() {
+        // Set min date to today
+        document.getElementById('evtDate').min = new Date().toISOString().split('T')[0];
+    }
+
+    // AI Check when adding event
+    let proposedStudySlots = [];
+
+    function checkExamMode() {
+        const type = document.getElementById('evtType').value;
+        const suggestionBox = document.getElementById('aiSuggestionBox');
+        
+        if (type === 'exam') {
+            // Wait for date input
+        } else {
+            suggestionBox.classList.add('hidden');
+        }
+    }
+
+    function analyzeDateLoad() {
+        const date = document.getElementById('evtDate').value;
+        const type = document.getElementById('evtType').value;
+        const warningBox = document.getElementById('aiWarning');
+        const suggestionBox = document.getElementById('aiSuggestionBox');
+        
+        if (!date) return;
+
+        // 1. Conflict Check
+        const load = AI.calculateDailyLoad(date);
+        if (load.hours >= 6) {
+            warningBox.innerText = `⚠️ שים לב! ביום זה כבר יש ${load.hours} שעות פעילות. הוספת אירוע תיצור עומס יתר.`;
+            warningBox.classList.remove('hidden');
+        } else {
+            warningBox.classList.add('hidden');
         }
 
-        function updateHeader() {
-            const label = document.getElementById('viewLabel');
-            const opts = { month: 'long', year: 'numeric' };
-            if(view === 'day') label.innerText = date.toLocaleDateString('he-IL', {day:'numeric', ...opts});
-            else if(view === 'year') label.innerText = date.getFullYear();
-            else label.innerText = date.toLocaleDateString('he-IL', opts);
-        }
-
-        function getEvents() {
-            let list = board === 'personal' ? personalEvents : schoolEvents;
-            let filtered = list.filter(e => filters[e.type] || e.type === 'פעילות');
-            if(board === 'personal' && filters.overlay) filtered = [...filtered, ...schoolEvents];
-            return filtered;
-        }
-
-        // --- View Renderers ---
-        function renderMonth(container) {
-            const grid = document.createElement('div');
-            grid.className = 'month-grid';
-            const year = date.getFullYear(), month = date.getMonth();
-            const first = new Date(year, month, 1).getDay();
-            const days = new Date(year, month + 1, 0).getDate();
-
-            ['א','ב','ג','ד','ה','ו','ש'].forEach(d => grid.innerHTML += `<div style="text-align:center;font-weight:800;font-size:0.7rem;color:var(--muted)">${d}</div>`);
-            for(let i=0; i<first; i++) grid.innerHTML += '<div></div>';
-
-            const evs = getEvents();
-            for(let d=1; d<=days; d++) {
-                const dDate = new Date(year, month, d).toISOString().split('T')[0];
-                const dayEvs = evs.filter(e => e.date === dDate);
-                const isSelected = dDate === date.toISOString().split('T')[0];
-                
-                const el = document.createElement('div');
-                el.className = `month-day ${isSelected ? 'selected' : ''}`;
-                el.innerHTML = d;
-                const dots = document.createElement('div');
-                dots.className = 'dots';
-                dayEvs.slice(0,3).forEach(e => {
-                    const dot = document.createElement('div');
-                    dot.className = 'dot';
-                    dot.style.background = `var(--${e.type==='מבחן'?'exam':(e.type==='למידה'?'study':'homework')})`;
-                    dots.appendChild(dot);
-                });
-                el.appendChild(dots);
-                el.onclick = () => { date = new Date(year, month, d); changeView('day'); };
-                grid.appendChild(el);
-            }
-            container.appendChild(grid);
-        }
-
-        function renderDay(container) {
-            const tl = document.createElement('div');
-            tl.className = 'timeline';
-            const dateStr = date.toISOString().split('T')[0];
-            const evs = getEvents().filter(e => e.date === dateStr);
-
-            for(let h=8; h<=22; h++) {
-                const row = document.createElement('div');
-                row.className = 'time-row';
-                row.innerHTML = `<div class="time-label">${h}:00</div>`;
-                const hEvs = evs.filter(e => parseInt(e.time.split(':')[0]) === h);
-                hEvs.forEach(e => {
-                    row.innerHTML += `<div class="ev-block" style="border-right-color:var(--${e.type==='מבחן'?'exam':(e.type==='למידה'?'study':'homework')})">
-                        <strong>${e.title}</strong><br><small>${e.time}</small>
-                    </div>`;
-                });
-                tl.appendChild(row);
-            }
-            container.appendChild(tl);
-        }
-
-        function renderYear(container) {
-            const grid = document.createElement('div');
-            grid.className = 'year-grid';
-            for(let m=0; m<12; m++) {
-                const d = new Date(date.getFullYear(), m, 1);
-                grid.innerHTML += `<div class="mini-month" onclick="goToMonth(${m})">
-                    <div style="font-weight:800; text-align:center; color:var(--primary); margin-bottom:5px;">${d.toLocaleDateString('he-IL', {month:'long'})}</div>
-                    <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:1px; text-align:center;">
-                        ${Array.from({length:31}, (_,i) => `<div>${i+1}</div>`).join('')}
-                    </div>
-                </div>`;
-            }
-            container.appendChild(grid);
-        }
-
-        function renderWeek(container) {
-            container.innerHTML = `<div style="text-align:center; padding:50px; color:var(--muted)">מבט שבועי בתהליך... מומלץ להשתמש במבט יום או חודש.</div>`;
-        }
-
-        // --- AI Logic ---
-        function runAI() {
-            const bar = document.getElementById('ai-insight');
-            const now = new Date();
-            const week = new Date(); week.setDate(now.getDate() + 7);
-            const evs = [...personalEvents, ...schoolEvents].filter(e => new Date(e.date) >= now && new Date(e.date) <= week);
-            const exams = evs.filter(e => e.type === 'מבחן');
-
-            if(exams.length >= 2) bar.innerHTML = `⚠️ עומס גבוה: יש לך ${exams.length} מבחנים השבוע. כדאי להתחיל ללמוד כבר ביום ${new Date(exams[0].date).toLocaleDateString('he-IL', {weekday:'long'})}.`;
-            else if(exams.length === 1) bar.innerHTML = `💡 המבחן הקרוב: ${exams[0].title}. מצאתי לך חלון פנוי ללמידה ביום שנראה הכי פחות עמוס.`;
-            else bar.innerHTML = `🌟 השבוע נראה מאוזן. זמן מצוין לסגור פערים במטלות קטנות.`;
-        }
-
-        function validateTime() {
-            const d = document.getElementById('ev-date').value;
-            const t = document.getElementById('ev-time').value;
-            const conflict = [...personalEvents, ...schoolEvents].some(e => e.date === d && e.time === t);
-            document.getElementById('conflict-msg').style.display = conflict ? 'block' : 'none';
-        }
-
-        function save() {
-            const title = document.getElementById('ev-title').value;
-            const d = document.getElementById('ev-date').value;
-            const t = document.getElementById('ev-time').value;
-            const type = document.getElementById('ev-type').value;
-            if(!title || !d) return;
-
-            const ev = { id: Date.now().toString(), title, date: d, time: t, type, dur: document.getElementById('ev-dur').value };
-            
-            if(board === 'personal') {
-                personalEvents.push(ev);
-                if(type === 'מבחן' && document.getElementById('ev-auto').checked) planAI(title, d);
-                localStorage.setItem('student_ai_v11', JSON.stringify(personalEvents));
-            }
-            closeModal();
-            render();
-            showToast("נשמר בהצלחה!");
-        }
-
-        function planAI(title, examDateStr) {
-            const examDate = new Date(examDateStr);
-            for(let i=1; i<=3; i++) {
-                let sDate = new Date(examDate); sDate.setDate(examDate.getDate() - i);
-                if(sDate < new Date()) continue;
-                
-                let sTime = "17:00";
-                // בדיקת התנגשות חכמה
-                if([...personalEvents, ...schoolEvents].some(e => e.date === sDate.toISOString().split('T')[0] && e.time === sTime)) sTime = "19:00";
-
-                personalEvents.push({ id: Date.now()+i, title: "למידה: " + title, date: sDate.toISOString().split('T')[0], time: sTime, type: 'למידה', dur: 90 });
+        // 2. Exam Study Planner Trigger
+        if (type === 'exam') {
+            proposedStudySlots = AI.findStudySlots(date);
+            if (proposedStudySlots.length > 0) {
+                const text = `יש לך מבחן ב-${formatDateIL(date)}. המערכת איתרה ${proposedStudySlots.length} חלונות זמן אופטימליים ללמידה בימים שלפני, בימים פחות עמוסים. האם לשבץ אותם?`;
+                document.getElementById('aiSuggestionText').innerText = text;
+                suggestionBox.classList.remove('hidden');
             }
         }
+    }
 
-        // --- Helpers ---
-        function switchBoard(b) { 
-            board = b; 
-            document.getElementById('board-p').style.background = b==='personal'?'var(--primary-light)':'none';
-            document.getElementById('board-s').style.background = b==='school'?'var(--primary-light)':'none';
-            render(); 
-        }
-        function changeView(v) { 
-            view = v; 
-            document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('seg-'+v).classList.add('active');
-            render(); 
-        }
-        function move(dir) {
-            if(view === 'day') date.setDate(date.getDate() + dir);
-            else if(view === 'year') date.setFullYear(date.getFullYear() + dir);
-            else date.setMonth(date.getMonth() + dir);
-            render();
-        }
-        function openModal() { document.getElementById('eventModal').style.display = 'flex'; document.getElementById('ev-date').value = date.toISOString().split('T')[0]; }
-        function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
-        function toggleAutoStudy() { document.getElementById('ai-planner').style.display = document.getElementById('ev-type').value === 'מבחן' ? 'block' : 'none'; }
-        function toggleFilter(f) { filters[f] = document.getElementById('f-'+f).checked; render(); }
-        function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none',3000); }
-        function goToMonth(m) { date.setMonth(m); changeView('month'); }
+    function applyAiSuggestion() {
+        const examTitle = document.getElementById('evtTitle').value || 'המבחן';
+        proposedStudySlots.forEach(slot => {
+            STATE.personalEvents.push({
+                id: Date.now() + Math.random(),
+                title: `למידה ל${examTitle}`,
+                type: 'study',
+                date: slot.date,
+                time: slot.time,
+                duration: slot.duration,
+                isAuto: true,
+                description: slot.reason
+            });
+        });
+        document.getElementById('aiSuggestionBox').innerHTML = '<p style="color:green; font-weight:bold;">✅ שובצו שעות למידה בהצלחה!</p>';
+        setTimeout(() => document.getElementById('aiSuggestionBox').classList.add('hidden'), 2000);
+    }
 
-        init();
-    </script>
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        
+        const newEvent = {
+            id: Date.now(),
+            title: document.getElementById('evtTitle').value,
+            type: document.getElementById('evtType').value,
+            date: document.getElementById('evtDate').value,
+            time: document.getElementById('evtTime').value,
+            duration: document.getElementById('evtDuration').value,
+            isAuto: false
+        };
+
+        STATE.personalEvents.push(newEvent);
+        saveData();
+        closeModal();
+    }
+
+    /**
+     * Helpers
+     */
+    function addDays(dateStr, days) {
+        const date = new Date(dateStr);
+        date.setDate(date.getDate() + days);
+        return date.toISOString().split('T')[0];
+    }
+
+    function formatDateIL(dateStr) {
+        const parts = dateStr.split('-');
+        return `${parts[2]}/${parts[1]}`;
+    }
+
+    function getDayName(dateStr) {
+        const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+        return days[new Date(dateStr).getDay()];
+    }
+
+    function getTypeName(type) {
+        const types = { 'exam': 'מבחן', 'assignment': 'מטלה', 'activity': 'פעילות', 'study': 'למידה' };
+        return types[type] || type;
+    }
+
+    // Start App
+    init();
+
+</script>
 </body>
 </html>
