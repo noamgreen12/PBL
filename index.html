@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v5.0 - Import Edition</title>
+    <title>SmartStudent Pro v6.0 - Cloud Sync</title>
     <style>
         :root {
             --primary: #4361ee;
@@ -88,22 +88,33 @@
         .tag.school { background: var(--school-light); color: var(--school); }
         .tag.auto { background: linear-gradient(135deg, #4361ee, #3f37c9); color: white; }
 
-        /* --- School Board Import Styles --- */
+        /* --- SYNC PANEL --- */
+        .sync-box {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-radius: var(--radius); padding: 15px; margin-bottom: 20px;
+            border: 1px solid #e1bee7;
+        }
+        .sync-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .sync-status { font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+        .status-dot.ok { background: #2ecc71; }
+        .status-dot.error { background: #e74c3c; }
+        .input-group-row { display: flex; gap: 10px; }
+        .input-group-row input { margin-bottom: 0; font-size: 0.9rem; padding: 10px; }
+        
+        /* --- Import Modal Styles --- */
         .import-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .tab-nav { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #dee2e6; }
         .tab-btn { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500; color: var(--text-muted); }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-        
         .drop-zone { border: 2px dashed #ccc; border-radius: 10px; padding: 30px; text-align: center; color: #888; margin-bottom: 15px; cursor: pointer; transition: 0.2s; }
-        .drop-zone:hover { border-color: var(--primary); background: var(--primary-light); }
-        
         .preview-table-container { max-height: 200px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; border-radius: 8px; }
         .preview-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .preview-table th, .preview-table td { padding: 8px; text-align: right; border-bottom: 1px solid #eee; }
         .preview-table th { background: #f8f9fa; position: sticky; top: 0; }
         .row-invalid { background-color: #ffe3e3; color: #d32f2f; }
 
-        /* --- Error / Conflict Box --- */
+        /* --- Error Box --- */
         .error-box {
             background: #ffe3e3; border: 1px solid #ffc9c9; color: #c0392b;
             padding: 12px; border-radius: 10px; margin-top: 15px; font-size: 0.9rem;
@@ -123,7 +134,7 @@
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
-            background: white; width: 100%; max-width: 600px; /* Wider for import */
+            background: white; width: 100%; max-width: 600px;
             border-radius: 24px 24px 0 0; padding: 24px;
             max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -181,14 +192,12 @@
 <div class="modal-overlay" id="addModal">
     <div class="modal-content">
         <h2>הוספת אירוע חדש</h2>
-        
         <div id="conflictError" class="error-box">
             <strong>⚠️ התנגשות בזמן!</strong>
             <div id="conflictMsg"></div>
             <div style="margin-top:5px; font-weight:bold;">הצעות לזמן פנוי היום:</div>
             <div id="conflictSuggestions" class="suggestion-chips"></div>
         </div>
-
         <form onsubmit="return false;">
             <label>כותרת</label>
             <input type="text" id="addTitle" placeholder="מבחן בהיסטוריה / חוג...">
@@ -212,7 +221,6 @@
             <input type="time" id="addTime" value="16:00">
             <label>משך (בשעות)</label>
             <input type="number" id="addDuration" value="1" step="0.5">
-
             <button class="btn btn-primary" onclick="logic.handleAddEvent()">שמור אירוע</button>
             <button class="btn btn-ghost" onclick="ui.closeModals()">ביטול</button>
         </form>
@@ -221,47 +229,34 @@
 
 <div class="modal-overlay" id="importModal">
     <div class="modal-content">
-        <h2>ייבוא אירועי בית ספר</h2>
+        <h2>ייבוא ידני (קובץ/הדבקה)</h2>
         <div class="tab-nav">
             <div class="tab-btn active" onclick="ui.switchImportTab('csv')">CSV/Excel</div>
             <div class="tab-btn" onclick="ui.switchImportTab('paste')">הדבקה</div>
             <div class="tab-btn" onclick="ui.switchImportTab('json')">JSON</div>
         </div>
-
         <div id="tab-csv" class="import-tab">
             <label class="drop-zone">
                 📂 לחץ לבחירת קובץ CSV
                 <input type="file" id="importFile" accept=".csv" style="display:none" onchange="logic.import.handleFileSelect(event)">
             </label>
         </div>
-
         <div id="tab-paste" class="import-tab hidden">
-            <label>הדבק כאן שורות מ-Excel או Google Sheets:</label>
-            <textarea id="importText" placeholder="title,type,date,time,duration,audience,description..." oninput="logic.import.handlePaste(this.value)"></textarea>
+            <label>הדבק כאן שורות:</label>
+            <textarea id="importText" placeholder="title,type,date,time,duration..." oninput="logic.import.handlePaste(this.value)"></textarea>
         </div>
-
         <div id="tab-json" class="import-tab hidden">
             <label>העלה קובץ JSON:</label>
-            <label class="drop-zone">
-                📂 לחץ לבחירת קובץ JSON
-                <input type="file" id="importJsonFile" accept=".json" style="display:none" onchange="logic.import.handleFileSelect(event)">
-            </label>
+            <label class="drop-zone">📂 בחירת JSON<input type="file" id="importJsonFile" accept=".json" style="display:none" onchange="logic.import.handleFileSelect(event)"></label>
         </div>
-
         <div id="importPreview" class="hidden">
             <h3>תצוגה מקדימה</h3>
-            <div class="preview-table-container">
-                <table class="preview-table">
-                    <thead><tr><th>כותרת</th><th>תאריך</th><th>שעה</th><th>סטטוס</th></tr></thead>
-                    <tbody id="previewBody"></tbody>
-                </table>
-            </div>
+            <div class="preview-table-container"><table class="preview-table"><thead><tr><th>כותרת</th><th>תאריך</th><th>שעה</th><th>סטטוס</th></tr></thead><tbody id="previewBody"></tbody></table></div>
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button class="btn btn-school" onclick="logic.import.save(false)">הוסף לקיים</button>
-                <button class="btn btn-danger" style="margin-top:0" onclick="logic.import.save(true)">דרוס לוח קיים</button>
+                <button class="btn btn-school" onclick="logic.import.save(false)">הוסף</button>
+                <button class="btn btn-danger" style="margin-top:0" onclick="logic.import.save(true)">דרוס</button>
             </div>
         </div>
-
         <button class="btn btn-ghost" onclick="ui.closeModals()">ביטול</button>
     </div>
 </div>
@@ -269,7 +264,7 @@
 <div class="modal-overlay" id="viewModal">
     <div class="modal-content">
         <h2 id="viewTitle">כותרת</h2>
-        <div style="margin-bottom: 20px; color: var(--text-muted); line-height: 1.6;">
+        <div style="margin-bottom: 20px; color: var(--text-muted);">
             <div>📅 <span id="viewDate"></span></div>
             <div>⏰ <span id="viewTime"></span></div>
             <div>⏳ <span id="viewDuration"></span></div>
@@ -282,18 +277,29 @@
 </div>
 
 <script>
-/**
- * --- DATA LAYER ---
- */
+/** --- DATA --- */
 const DB = {
-    key: 'smartStudentV5',
-    data: { personalEvents: [], schoolEvents: [] },
+    key: 'smartStudentV6',
+    data: { 
+        personalEvents: [], 
+        schoolEvents: [],
+        schoolSheetUrl: '',
+        lastSync: null
+    },
     
     init() {
         const stored = localStorage.getItem(this.key);
         if (stored) {
             this.data = JSON.parse(stored);
             if (!this.data.schoolEvents) this.data.schoolEvents = [];
+            
+            // Auto Sync on load if configured and > 6 hours
+            if (this.data.schoolSheetUrl) {
+                const now = Date.now();
+                if (!this.data.lastSync || (now - this.data.lastSync > 6 * 60 * 60 * 1000)) {
+                    logic.syncFromSheets(this.data.schoolSheetUrl, true);
+                }
+            }
         } else {
             this.seed();
         }
@@ -301,56 +307,45 @@ const DB = {
     
     save() {
         localStorage.setItem(this.key, JSON.stringify(this.data));
-        app.render();
+        app.render(); // Re-render logic handles view updates
     },
 
     seed() {
         const today = new Date().toISOString().split('T')[0];
-        this.data.schoolEvents = [
-        ];
+        this.data.schoolEvents = [{ id: 's1', title: 'ברוכים הבאים', date: today, time: '08:00', duration: 1, type: 'school', audience: 'כללי', description: 'אירוע לדוגמה' }];
+        this.data.personalEvents = [{ id: 101, title: 'חוג גיטרה', type: 'activity', date: today, time: '17:00', duration: 1.5, isAuto: false }];
         this.save();
     },
 
     deleteEvent(id) {
         const isExam = this.data.personalEvents.find(e => e.id == id && e.type === 'exam');
-        if (isExam) {
-            this.data.personalEvents = this.data.personalEvents.filter(e => e.linkedExamId != id);
-        }
+        if (isExam) this.data.personalEvents = this.data.personalEvents.filter(e => e.linkedExamId != id);
         this.data.personalEvents = this.data.personalEvents.filter(e => e.id != id);
         this.save();
     }
 };
 
-/**
- * --- LOGIC LAYER ---
- */
+/** --- LOGIC --- */
 const logic = {
     addDays(dateStr, days) {
         const d = new Date(dateStr);
         d.setDate(d.getDate() + days);
         return d.toISOString().split('T')[0];
     },
-    
     toMin(timeStr) {
         if(!timeStr) return 0;
         const [h, m] = timeStr.split(':').map(Number);
         return h * 60 + m;
     },
-
     toTimeStr(min) {
         const h = Math.floor(min / 60).toString().padStart(2, '0');
         const m = (min % 60).toString().padStart(2, '0');
         return `${h}:${m}`;
     },
 
-    // CONFLICT GUARD (Now checks school events too)
+    // --- CONFLICT & AI ---
     checkConflict(newEvent, eventsToCheck = null) {
-        // If specific list not provided, check everything
-        let allEvents = eventsToCheck;
-        if (!allEvents) {
-            allEvents = [...DB.data.personalEvents, ...DB.data.schoolEvents];
-        }
-
+        let allEvents = eventsToCheck || [...DB.data.personalEvents, ...DB.data.schoolEvents];
         const newStart = this.toMin(newEvent.time);
         const newEnd = newStart + (newEvent.duration * 60);
 
@@ -358,10 +353,7 @@ const logic = {
             if (evt.date === newEvent.date && evt.id !== newEvent.id) {
                 const evtStart = this.toMin(evt.time || '08:00');
                 const evtEnd = evtStart + (evt.duration * 60);
-
-                if (newStart < evtEnd && newEnd > evtStart) {
-                    return { hasConflict: true, conflictingEvent: evt };
-                }
+                if (newStart < evtEnd && newEnd > evtStart) return { hasConflict: true, conflictingEvent: evt };
             }
         }
         return { hasConflict: false, conflictingEvent: null };
@@ -369,14 +361,11 @@ const logic = {
 
     findAlternativeSlots(date, durationHrs) {
         const slots = [];
-        // Check against BOTH personal and school
         const allEvents = [...DB.data.personalEvents, ...DB.data.schoolEvents];
         const existing = allEvents.filter(e => e.date === date);
-        
         for (let time = 14 * 60; time <= 22 * 60; time += 30) {
             const tempEvent = { date, time: this.toTimeStr(time), duration: durationHrs, id: -1 };
-            const check = this.checkConflict(tempEvent, existing);
-            if (!check.hasConflict) {
+            if (!this.checkConflict(tempEvent, existing).hasConflict) {
                 slots.push(this.toTimeStr(time));
                 if (slots.length >= 3) break;
             }
@@ -386,33 +375,22 @@ const logic = {
 
     runAIPlanner(examEvent) {
         const daysBack = 5;
-        let createdBlocks = 0;
-        let difficultyHours = examEvent.difficulty || 4;
-        let neededBlocks = Math.ceil(difficultyHours / 1.5);
-
+        let created = 0;
+        let needed = Math.ceil((examEvent.difficulty || 4) / 1.5);
         for(let i=1; i<=daysBack; i++) {
-            if (createdBlocks >= neededBlocks) break;
+            if (created >= needed) break;
             const checkDate = this.addDays(examEvent.date, -i);
             if (new Date(checkDate) < new Date().setHours(0,0,0,0)) continue;
-
             const freeSlots = this.findAlternativeSlots(checkDate, 1.5);
             if (freeSlots.length > 0) {
                 DB.data.personalEvents.push({
-                    id: Date.now() + Math.random(),
-                    title: `למידה ל${examEvent.title}`,
-                    type: 'study',
-                    date: checkDate,
-                    time: freeSlots[0],
-                    duration: 1.5,
-                    isAuto: true,
-                    linkedExamId: examEvent.id
+                    id: Date.now() + Math.random(), title: `למידה ל${examEvent.title}`, type: 'study',
+                    date: checkDate, time: freeSlots[0], duration: 1.5, isAuto: true, linkedExamId: examEvent.id
                 });
-                createdBlocks++;
+                created++;
             }
         }
-        return createdBlocks < neededBlocks ? 
-            `הצלחתי לקבוע ${createdBlocks} בלוקים, חסרים ${neededBlocks - createdBlocks}.` : 
-            `נקבעו ${createdBlocks} בלוקי למידה בהצלחה.`;
+        return created < needed ? `נוצרו ${created} בלוקים, חסרים ${needed - created}.` : `נוצרו ${created} בלוקי למידה בהצלחה.`;
     },
 
     handleAddEvent() {
@@ -421,369 +399,258 @@ const logic = {
         const time = document.getElementById('addTime').value;
         const duration = parseFloat(document.getElementById('addDuration').value);
         const type = document.getElementById('addType').value;
-        const difficulty = document.getElementById('addDifficulty').value;
-
+        
         if(!title || !date || !time) { alert('נא למלא את כל השדות'); return; }
 
         const newEvent = {
-            id: Date.now(),
-            title, type, date, time, duration, 
-            isAuto: false,
-            difficulty: type === 'exam' ? parseFloat(difficulty) : 0
+            id: Date.now(), title, type, date, time, duration, isAuto: false,
+            difficulty: type === 'exam' ? parseFloat(document.getElementById('addDifficulty').value) : 0
         };
 
         const check = this.checkConflict(newEvent);
-        if (check.hasConflict) {
-            ui.showConflictError(check.conflictingEvent, date, duration);
-            return;
-        }
+        if (check.hasConflict) { ui.showConflictError(check.conflictingEvent, date, duration); return; }
 
         DB.data.personalEvents.push(newEvent);
-        if (type === 'exam') {
-            const aiMsg = this.runAIPlanner(newEvent);
-            setTimeout(() => alert(`🤖 ${aiMsg}`), 100);
-        }
-
+        if (type === 'exam') setTimeout(() => alert(`🤖 ${this.runAIPlanner(newEvent)}`), 100);
+        
         DB.save();
         ui.closeModals();
     },
 
-    /**
-     * --- IMPORT LOGIC ---
-     */
-    import: {
-        tempData: [],
+    /** --- SHEETS SYNC LOGIC --- */
+    async syncFromSheets(rawUrl, isAuto = false) {
+        if (!rawUrl) return;
+        
+        // Convert Edit URL to Export URL if needed
+        let exportUrl = rawUrl;
+        const idMatch = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (idMatch && idMatch[1]) {
+            exportUrl = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv`;
+        }
 
-        handleFileSelect(evt) {
-            const file = evt.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const text = e.target.result;
-                if (file.name.endsWith('.json')) this.parseJSON(text);
-                else this.parseCSV(text);
-            };
-            reader.readAsText(file);
-        },
-
-        handlePaste(text) {
-            this.parseCSV(text);
-        },
-
-        parseJSON(text) {
-            try {
-                const json = JSON.parse(text);
-                if (Array.isArray(json)) {
-                    this.processParsedData(json);
-                } else {
-                    alert('פורמט JSON לא תקין: מצפה למערך []');
-                }
-            } catch (e) {
-                alert('שגיאה בקריאת JSON');
-            }
-        },
-
-        parseCSV(text) {
-            // Detect delimiter: Tab for paste from Excel, Comma for CSV
-            const delimiter = text.includes('\t') ? '\t' : ',';
-            const lines = text.trim().split('\n');
-            const result = [];
+        try {
+            if(!isAuto) ui.setSyncStatus('loading');
             
-            // Expected Order: title,type,date,time,duration,audience,description
-            // Skip header if exists (simple check)
-            let startIndex = lines[0].includes('title') ? 1 : 0;
-
-            for (let i = startIndex; i < lines.length; i++) {
-                const cols = lines[i].split(delimiter).map(c => c.trim());
-                if (cols.length < 3) continue; // Basic skip
-                
-                result.push({
-                    title: cols[0],
-                    type: cols[1] || 'school',
-                    date: cols[2], // Expect YYYY-MM-DD
-                    time: cols[3] || '08:00',
-                    duration: parseFloat(cols[4]) || 1,
-                    audience: cols[5] || 'כל בית הספר',
-                    description: cols[6] || ''
-                });
-            }
-            this.processParsedData(result);
-        },
-
-        processParsedData(data) {
-            this.tempData = data.map(item => ({
-                ...item,
-                isValid: this.validate(item)
-            }));
-            ui.renderImportPreview(this.tempData);
-        },
-
-        validate(item) {
-            // Must have title, valid date, positive duration
-            if (!item.title) return false;
-            const d = new Date(item.date);
-            if (isNaN(d.getTime())) return false;
-            if (item.duration <= 0) return false;
-            return true;
-        },
-
-        save(overwrite) {
-            const validItems = this.tempData.filter(i => i.isValid).map(i => ({
-                id: 'imp_' + Date.now() + Math.random().toString(36).substr(2, 5),
+            const response = await fetch(exportUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const text = await response.text();
+            const parsedData = this.import.parseCSVString(text);
+            
+            // Validate & Filter
+            const validEvents = parsedData.filter(i => this.import.validate(i)).map(i => ({
+                id: 'sheet_' + i.title + i.date,
                 title: i.title,
-                type: 'school', // Force type for safety
+                type: 'school',
                 date: i.date,
                 time: i.time,
                 duration: i.duration,
                 audience: i.audience,
                 description: i.description,
-                source: 'import',
+                source: 'google_sheets',
                 importedAt: Date.now()
             }));
 
-            if (validItems.length === 0) {
-                alert('אין אירועים תקינים לייבוא.');
-                return;
-            }
-
-            if (overwrite) {
-                DB.data.schoolEvents = validItems;
+            if (validEvents.length > 0) {
+                // Update DB: Replace all 'google_sheets' source events, keep manual ones
+                const manualEvents = DB.data.schoolEvents.filter(e => e.source !== 'google_sheets');
+                DB.data.schoolEvents = [...manualEvents, ...validEvents];
+                DB.data.schoolSheetUrl = rawUrl;
+                DB.data.lastSync = Date.now();
+                DB.save();
+                if(!isAuto) alert(`✅ סנכרון הצליח! נטענו ${validEvents.length} אירועים.`);
             } else {
-                // Avoid duplicates (title + date)
-                validItems.forEach(newItem => {
-                    const exists = DB.data.schoolEvents.some(
-                        e => e.title === newItem.title && e.date === newItem.date
-                    );
-                    if (!exists) DB.data.schoolEvents.push(newItem);
-                });
+                if(!isAuto) alert('⚠️ הקובץ נקרא אך לא נמצאו שורות תקינות.');
             }
 
-            DB.save();
-            ui.closeModals();
-            
-            // AI Analysis Notification
-            const days = new Set(validItems.map(i => i.date)).size;
-            alert(`🤖 ייבאתי בהצלחה ${validItems.length} אירועי בית ספר.\nסימנתי ${days} ימים בלוח כבעלי פעילות בית ספרית.`);
+        } catch (error) {
+            console.error(error);
+            if(!isAuto) alert('❌ שגיאה בסנכרון. בדוק שהקובץ מפורסם ל-Web (File > Share > Publish to web).');
+        } finally {
+            if(!isAuto) app.render(); // Update UI Status
+        }
+    },
+
+    /** --- IMPORT LOGIC REUSED --- */
+    import: {
+        tempData: [],
+        handleFileSelect(evt) { /* ... same as before ... */ 
+            const f = evt.target.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload=e=>this.parse(e.target.result, f.name.endsWith('.json')); r.readAsText(f);
+        },
+        handlePaste(t) { this.parse(t, false); },
+        parse(text, isJson) {
+            if(isJson) { try { this.process(JSON.parse(text)); } catch(e){alert('JSON Error');} }
+            else { this.process(this.parseCSVString(text)); }
+        },
+        parseCSVString(text) {
+            const delim = text.includes('\t') ? '\t' : ',';
+            const lines = text.trim().split('\n');
+            const res = [];
+            let start = lines[0].includes('title') ? 1 : 0;
+            for(let i=start; i<lines.length; i++) {
+                const c = lines[i].split(delim).map(s=>s.trim());
+                if(c.length<3) continue;
+                res.push({ title:c[0], type:c[1]||'school', date:c[2], time:c[3]||'08:00', duration:parseFloat(c[4])||1, audience:c[5]||'כללי', description:c[6]||'' });
+            }
+            return res;
+        },
+        process(data) {
+            this.tempData = data.map(i => ({...i, isValid: this.validate(i)}));
+            ui.renderImportPreview(this.tempData);
+        },
+        validate(i) { return i.title && !isNaN(new Date(i.date).getTime()) && i.duration > 0; },
+        save(overwrite) {
+            const valid = this.tempData.filter(i=>i.isValid).map(i=>({ ...i, id:'imp_'+Date.now()+Math.random(), source:'import', importedAt:Date.now(), type:'school' }));
+            if(valid.length===0) return alert('אין אירועים תקינים');
+            if(overwrite) DB.data.schoolEvents = valid;
+            else DB.data.schoolEvents.push(...valid);
+            DB.save(); ui.closeModals();
         }
     }
 };
 
-/**
- * --- UI LAYER ---
- */
+/** --- UI --- */
 const ui = {
     toggleExamFields() {
         const type = document.getElementById('addType').value;
-        const fields = document.getElementById('examFields');
-        type === 'exam' ? fields.classList.remove('hidden') : fields.classList.add('hidden');
+        document.getElementById('examFields').classList.toggle('hidden', type !== 'exam');
     },
-
     openAddModal() {
         document.getElementById('addModal').classList.add('active');
         document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('conflictError').classList.remove('active');
     },
-
     openImportModal() {
         document.getElementById('importModal').classList.add('active');
         document.getElementById('importPreview').classList.add('hidden');
         this.switchImportTab('csv');
-        document.getElementById('importText').value = '';
     },
-
     switchImportTab(tab) {
-        document.querySelectorAll('.import-tab').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.import-tab').forEach(el=>el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
         document.getElementById(`tab-${tab}`).classList.remove('hidden');
-        // Find button index to set active class (simplified)
         event.target.classList.add('active');
     },
-
     renderImportPreview(data) {
-        const tbody = document.getElementById('previewBody');
-        tbody.innerHTML = '';
-        data.forEach(row => {
-            const tr = document.createElement('tr');
-            if (!row.isValid) tr.classList.add('row-invalid');
-            tr.innerHTML = `
-                <td>${row.title}</td>
-                <td>${row.date}</td>
-                <td>${row.time}</td>
-                <td>${row.isValid ? '✅' : '❌ שגיאה'}</td>
-            `;
-            tbody.appendChild(tr);
+        const tb = document.getElementById('previewBody'); tb.innerHTML='';
+        data.forEach(r=>{
+            tb.innerHTML += `<tr class="${!r.isValid?'row-invalid':''}"><td>${r.title}</td><td>${r.date}</td><td>${r.time}</td><td>${r.isValid?'✅':'❌'}</td></tr>`;
         });
         document.getElementById('importPreview').classList.remove('hidden');
     },
-
-    showConflictError(conflictingEvent, date, duration) {
-        const errBox = document.getElementById('conflictError');
-        const errMsg = document.getElementById('conflictMsg');
-        const suggestBox = document.getElementById('conflictSuggestions');
-        
-        errMsg.innerText = `מתנגש עם '${conflictingEvent.title}'`;
-        
-        const alternatives = logic.findAlternativeSlots(date, duration);
-        suggestBox.innerHTML = '';
-        
-        if(alternatives.length > 0) {
-            alternatives.forEach(t => {
-                const chip = document.createElement('div');
-                chip.className = 'chip';
-                chip.innerText = t;
-                chip.onclick = () => {
-                    document.getElementById('addTime').value = t;
-                    errBox.classList.remove('active');
-                };
-                suggestBox.appendChild(chip);
-            });
-        } else {
-            suggestBox.innerHTML = '<small>אין חלונות פנויים.</small>';
-        }
-        errBox.classList.add('active');
+    showConflictError(evt, date, dur) {
+        const alt = logic.findAlternativeSlots(date, dur);
+        document.getElementById('conflictMsg').innerText = `מתנגש עם '${evt.title}'`;
+        const sug = document.getElementById('conflictSuggestions'); sug.innerHTML='';
+        if(alt.length) alt.forEach(t=>{
+            sug.innerHTML += `<div class="chip" onclick="document.getElementById('addTime').value='${t}';document.getElementById('conflictError').classList.remove('active')">${t}</div>`;
+        }); else sug.innerHTML='<small>אין חלונות פנויים.</small>';
+        document.getElementById('conflictError').classList.add('active');
     },
-
-    openViewModal(eventObj, isSchool) {
+    openViewModal(e, isSchool) {
         document.getElementById('viewModal').classList.add('active');
-        document.getElementById('viewTitle').innerText = eventObj.title;
-        document.getElementById('viewDate').innerText = logic.addDays(eventObj.date, 0); // Format needed
-        document.getElementById('viewTime').innerText = eventObj.time || '08:00';
-        document.getElementById('viewDuration').innerText = eventObj.duration + ' שעות';
-        
+        document.getElementById('viewTitle').innerText = e.title;
+        document.getElementById('viewDate').innerText = logic.formatDateIL(e.date);
+        document.getElementById('viewTime').innerText = e.time;
+        document.getElementById('viewDuration').innerText = e.duration + ' שעות';
         const typeEl = document.getElementById('viewType');
-        
         if (isSchool) {
             typeEl.innerHTML = '<span class="tag school">אירוע בית ספר</span>';
             document.getElementById('btnDelete').style.display = 'none';
             document.getElementById('viewDesc').style.display = 'block';
-            document.getElementById('viewDesc').innerText = `${eventObj.audience}\n${eventObj.description || ''}`;
+            document.getElementById('viewDesc').innerText = `${e.audience}\n${e.description||''}\n${e.source==='google_sheets'?'☁️ מסונכרן אוטומטית':''}`;
         } else {
-            typeEl.innerHTML = `<span class="tag ${eventObj.type}">${eventObj.type}</span>`;
+            typeEl.innerHTML = `<span class="tag ${e.type}">${e.type}</span>`;
             document.getElementById('btnDelete').style.display = 'block';
-            document.getElementById('btnDelete').onclick = () => {
-                if(confirm('למחוק?')) {
-                    DB.deleteEvent(eventObj.id);
-                    ui.closeModals();
-                }
-            };
+            document.getElementById('btnDelete').onclick = () => { if(confirm('למחוק?')) { DB.deleteEvent(e.id); ui.closeModals(); }};
             document.getElementById('viewDesc').style.display = 'none';
         }
     },
-
-    closeModals() {
-        document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
-    }
+    setSyncStatus(state) {
+        // Simple visual feedback helper if needed during fetch
+    },
+    closeModals() { document.querySelectorAll('.modal-overlay').forEach(el=>el.classList.remove('active')); }
 };
 
-// Formatter Helpers
-logic.formatDateIL = (d) => { const [y,m,day] = d.split('-'); return `${day}/${m}`; };
-logic.getDayName = (d) => ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(d).getDay()];
-logic.getRelativeTime = (d) => {
-    const diff = Math.ceil((new Date(d) - new Date().setHours(0,0,0,0)) / (864e5));
-    return diff === 0 ? 'היום' : (diff === 1 ? 'מחר' : `עוד ${diff} ימים`);
-};
+logic.formatDateIL = d => { const [y,m,day]=d.split('-'); return `${day}/${m}`; };
+logic.getDayName = d => ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(d).getDay()];
+logic.getRelativeTime = d => { const df=Math.ceil((new Date(d)-new Date().setHours(0,0,0,0))/864e5); return df===0?'היום':(df===1?'מחר':`עוד ${df} ימים`); };
 
-/**
- * --- APP RENDERER ---
- */
+/** --- APP --- */
 const app = {
     currentPage: 'dashboard',
-
-    navigate(page) {
-        this.currentPage = page;
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        this.render();
-    },
-
+    navigate(p) { this.currentPage = p; document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); this.render(); },
     render() {
-        const container = document.getElementById('viewContainer');
-        container.innerHTML = '';
-        if(this.currentPage === 'dashboard') this.renderDashboard(container);
-        else if(this.currentPage === 'calendar') this.renderCalendar(container);
-        else this.renderSchool(container);
+        const con = document.getElementById('viewContainer'); con.innerHTML = '';
+        if(this.currentPage==='dashboard') this.renderDash(con);
+        else if(this.currentPage==='calendar') this.renderCal(con);
+        else this.renderSchool(con);
     },
-
-    renderDashboard(con) {
-        const today = new Date().toISOString().split('T')[0];
-        const upcoming = DB.data.personalEvents.filter(e => e.date >= today).sort((a,b) => a.date.localeCompare(b.date));
-        
-        let html = `<h1>דאשבורד ⚡</h1>`;
-        if(upcoming.length === 0) html += `<div class="card">היומן ריק. זה הזמן לנוח!</div>`;
-        else {
-            html += `<div class="card">`;
-            upcoming.slice(0, 5).forEach(e => {
-                html += this.buildRow(e, false);
-            });
-            html += `</div>`;
+    renderDash(con) {
+        const today=new Date().toISOString().split('T')[0];
+        const up = DB.data.personalEvents.filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+        let html = `<h1>דאשבורד ⚡</h1><div class="card">`;
+        if(up.length===0) html += `היומן ריק.`; else up.slice(0,5).forEach(e=> html+=this.row(e,false));
+        con.innerHTML = html + `</div>`;
+    },
+    renderCal(con) {
+        const all = [...DB.data.personalEvents.map(e=>({...e,s:'p'})), ...DB.data.schoolEvents.map(e=>({...e,s:'s',time:e.time||'08:00'}))];
+        const grp={}; all.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{ if(!grp[e.date])grp[e.date]=[]; grp[e.date].push(e); });
+        let html=`<h2>היומן שלי</h2>`;
+        for(let d in grp) {
+            html+=`<h3 style="margin-top:20px;font-size:1rem;color:#666">${logic.getDayName(d)} ${logic.formatDateIL(d)}</h3><div class="card">`;
+            grp[d].sort((a,b)=>a.time.localeCompare(b.time)).forEach(e=>html+=this.row(e,e.s==='s'));
+            html+=`</div>`;
         }
         con.innerHTML = html;
     },
-
-    renderCalendar(con) {
-        const all = [...DB.data.personalEvents.map(e=>({...e, s:'p'})), ...DB.data.schoolEvents.map(e=>({...e, s:'s', time: e.time || '08:00'}))];
-        const grouped = {};
-        all.sort((a,b) => a.date.localeCompare(b.date)).forEach(e => {
-            if(!grouped[e.date]) grouped[e.date] = [];
-            grouped[e.date].push(e);
-        });
-
-        let html = `<h2>היומן שלי</h2>`;
-        for(let d in grouped) {
-            html += `<h3 style="margin-top:20px; font-size:1rem; color:#666">${logic.getDayName(d)} ${logic.formatDateIL(d)}</h3><div class="card">`;
-            grouped[d].sort((a,b)=>a.time.localeCompare(b.time)).forEach(e => html += this.buildRow(e, e.s==='s'));
-            html += `</div>`;
-        }
-        con.innerHTML = html;
-    },
-
     renderSchool(con) {
+        // SYNC UI
+        const lastSync = DB.data.lastSync ? new Date(DB.data.lastSync).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'}) : 'מעולם לא';
+        const urlVal = DB.data.schoolSheetUrl || '';
+        
         con.innerHTML = `
-            <div class="import-header">
-                <h2>לוח בית ספר 🏫</h2>
-                <button class="btn btn-primary btn-sm" onclick="ui.openImportModal()">📥 ייבוא אירועים</button>
+            <h2>לוח בית ספר 🏫</h2>
+            
+            <div class="sync-box">
+                <div class="sync-header">
+                    <strong>☁️ סנכרון Google Sheets</strong>
+                    <div class="sync-status"><div class="status-dot ${DB.data.lastSync?'ok':'error'}"></div> עודכן: ${lastSync}</div>
+                </div>
+                <div class="input-group-row">
+                    <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pubhtml" value="${urlVal}">
+                    <button class="btn btn-primary btn-sm" onclick="logic.syncFromSheets(document.getElementById('sheetUrl').value)">סנכרן</button>
+                </div>
+                <small style="color:#666; display:block; margin-top:5px;">ודא שהגיליון מפורסם (File > Share > Publish to web)</small>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span>אירועים (${DB.data.schoolEvents.length})</span>
+                <button class="btn btn-ghost btn-sm" style="color:var(--text-muted)" onclick="ui.openImportModal()">ייבוא ידני (גיבוי)</button>
             </div>
         `;
         
-        if(DB.data.schoolEvents.length === 0) con.innerHTML += `<div class="card">אין אירועים. לחץ על ייבוא להוספה.</div>`;
+        if(DB.data.schoolEvents.length===0) con.innerHTML += `<div class="card">אין אירועים. התחבר ל-Sheets או יבא ידנית.</div>`;
         
-        // Sort school events
-        const sorted = [...DB.data.schoolEvents].sort((a,b) => a.date.localeCompare(b.date));
-        
-        sorted.forEach(e => {
-            const descSafe = e.description ? e.description.replace(/"/g, "&quot;") : "";
+        [...DB.data.schoolEvents].sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
             con.innerHTML += `<div class="card" onclick='ui.openViewModal(${JSON.stringify(e).replace(/'/g, "&#39;")}, true)'>
                 <div class="event-title">${e.title}</div>
-                <div class="event-meta">
-                    📅 ${logic.formatDateIL(e.date)} 
-                    <span class="tag school">${e.audience}</span>
-                    ${e.source === 'import' ? '<span style="font-size:0.7rem">📥</span>' : ''}
-                </div>
+                <div class="event-meta">📅 ${logic.formatDateIL(e.date)} <span class="tag school">${e.audience}</span> 
+                ${e.source==='google_sheets'?'<span style="font-size:0.7rem">☁️</span>':''}</div>
             </div>`;
         });
     },
-
-    buildRow(e, isSchool) {
-        const json = JSON.stringify(e).replace(/'/g, "&#39;");
-        return `<div class="event-row" onclick='ui.openViewModal(${json}, ${isSchool})'>
-            <div class="date-badge ${logic.getRelativeTime(e.date)==='היום'?'today':''}">
-                <span>${logic.formatDateIL(e.date)}</span>
-                <span style="font-weight:400; font-size:0.7rem">${e.time}</span>
-            </div>
-            <div class="event-info">
-                <div class="event-title">${e.title}</div>
-                <div class="event-meta">
-                    <span class="tag ${isSchool?'school':e.type}">${isSchool?'ביה"ס':e.type}</span>
-                    <span>${logic.getRelativeTime(e.date)}</span>
-                </div>
-            </div>
+    row(e, isSchool) {
+        return `<div class="event-row" onclick='ui.openViewModal(${JSON.stringify(e).replace(/'/g, "&#39;")}, ${isSchool})'>
+            <div class="date-badge ${logic.getRelativeTime(e.date)==='היום'?'today':''}"><span>${logic.formatDateIL(e.date)}</span><span style="font-weight:400;font-size:0.7rem">${e.time}</span></div>
+            <div class="event-info"><div class="event-title">${e.title}</div><div class="event-meta"><span class="tag ${isSchool?'school':e.type}">${isSchool?'ביה"ס':e.type}</span><span>${logic.getRelativeTime(e.date)}</span></div></div>
         </div>`;
     }
 };
 
-// Start
 DB.init();
 app.render();
-
 </script>
 </body>
 </html>
