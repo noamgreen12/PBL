@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v3.0</title>
+    <title>SmartStudent Pro v4.0 - Conflict Guard</title>
     <style>
         :root {
             --primary: #4361ee;
@@ -29,7 +29,6 @@
         /* --- Layout --- */
         .app-container { display: flex; height: 100%; width: 100%; }
         
-        /* Sidebar (Desktop) */
         .sidebar {
             width: 260px; background: var(--card-bg); padding: 25px;
             display: none; flex-direction: column; gap: 10px;
@@ -37,7 +36,6 @@
         }
         .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
         
-        /* Bottom Nav (Mobile) */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
             background: var(--card-bg); display: flex; justify-content: space-around; align-items: center;
@@ -52,25 +50,21 @@
         }
         .nav-item.active { color: var(--primary); background: var(--primary-light); }
         .nav-item i { font-size: 1.4rem; font-style: normal; }
-        
-        /* Desktop Sidebar Items */
         .sidebar .nav-item { flex-direction: row; justify-content: flex-start; font-size: 1rem; padding: 12px; }
 
         /* --- Main Content --- */
         .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; max-width: 1000px; margin: 0 auto; width: 100%; }
 
-        /* --- Typography & Components --- */
+        /* --- Components --- */
         h1, h2, h3 { margin: 0; }
-        h2 { font-size: 1.25rem; margin-bottom: 15px; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+        h2 { font-size: 1.25rem; margin-bottom: 15px; color: var(--text); }
         
         .card {
             background: var(--card-bg); border-radius: var(--radius); padding: 16px;
             margin-bottom: 16px; box-shadow: var(--shadow); position: relative;
             border: 1px solid rgba(0,0,0,0.02); transition: transform 0.2s;
         }
-        .card:active { transform: scale(0.98); }
 
-        /* Event Item Styles */
         .event-row {
             display: flex; align-items: flex-start; gap: 12px; padding: 12px 0;
             border-bottom: 1px solid #f1f3f5; cursor: pointer;
@@ -94,14 +88,18 @@
         .tag.school { background: var(--school-light); color: var(--school); }
         .tag.auto { background: linear-gradient(135deg, #4361ee, #3f37c9); color: white; }
 
-        /* AI Insight Box */
-        .ai-box {
-            background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
-            border-right: 4px solid var(--primary); padding: 16px; margin-bottom: 20px;
+        /* --- Error / Conflict Box --- */
+        .error-box {
+            background: #ffe3e3; border: 1px solid #ffc9c9; color: #c0392b;
+            padding: 12px; border-radius: 10px; margin-top: 15px; font-size: 0.9rem;
+            display: none; animation: shake 0.3s;
         }
+        .error-box.active { display: block; }
+        
+        .suggestion-chips { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .chip { background: white; border: 1px solid #c0392b; color: #c0392b; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; cursor: pointer; }
 
-        /* --- School Board Specific --- */
-        .school-header { background: var(--school); color: white; padding: 20px; border-radius: var(--radius); margin-bottom: 20px; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0); } }
 
         /* --- Modals --- */
         .modal-overlay {
@@ -116,7 +114,6 @@
             max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* FAB */
         .fab {
             position: fixed; bottom: 90px; left: 20px; width: 56px; height: 56px;
             background: var(--text); color: white; border-radius: 50%;
@@ -124,7 +121,6 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.2); cursor: pointer; z-index: 150;
         }
 
-        /* Forms & Buttons */
         input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #dee2e6; border-radius: 10px; font-size: 16px; font-family: var(--font); }
         label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
         
@@ -136,7 +132,7 @@
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @media (min-width: 768px) {
             .sidebar { display: flex; } .bottom-nav { display: none; }
-            .fab { left: 50%; margin-left: -400px; bottom: 40px; } /* Position relative to content */
+            .fab { left: 50%; margin-left: -400px; bottom: 40px; } 
             .modal-overlay { align-items: center; } .modal-content { border-radius: 24px; padding: 40px; }
         }
         
@@ -168,6 +164,14 @@
 <div class="modal-overlay" id="addModal">
     <div class="modal-content">
         <h2>הוספת אירוע חדש</h2>
+        
+        <div id="conflictError" class="error-box">
+            <strong>⚠️ התנגשות בזמן!</strong>
+            <div id="conflictMsg"></div>
+            <div style="margin-top:5px; font-weight:bold;">הצעות לזמן פנוי היום:</div>
+            <div id="conflictSuggestions" class="suggestion-chips"></div>
+        </div>
+
         <form onsubmit="return false;">
             <label>כותרת</label>
             <input type="text" id="addTitle" placeholder="מבחן בהיסטוריה / חוג...">
@@ -186,7 +190,6 @@
                     <option value="4" selected>בינוני (4 שעות)</option>
                     <option value="7">קשה (7 שעות)</option>
                 </select>
-                <small style="color:var(--primary)">ה-AI ייצור עבורך תוכנית לימוד אוטומטית</small>
             </div>
 
             <label>תאריך</label>
@@ -213,9 +216,7 @@
             <div>⏳ <span id="viewDuration"></span></div>
             <div id="viewType" style="margin-top:10px;"></div>
         </div>
-        
         <p id="viewDesc" style="background:#f8f9fa; padding:10px; border-radius:8px; display:none;"></p>
-
         <button class="btn btn-primary" onclick="ui.closeModals()">סגור</button>
         <button id="btnDelete" class="btn btn-danger" onclick="">🗑️ מחק אירוע</button>
     </div>
@@ -226,18 +227,13 @@
  * --- DATA LAYER ---
  */
 const DB = {
-    key: 'smartStudentV3',
-    data: {
-        personalEvents: [],
-        schoolEvents: []
-    },
+    key: 'smartStudentV4',
+    data: { personalEvents: [], schoolEvents: [] },
     
     init() {
         const stored = localStorage.getItem(this.key);
         if (stored) {
             this.data = JSON.parse(stored);
-            // Ensure structure integrity for upgrades
-            if (!this.data.schoolEvents) this.data.schoolEvents = [];
         } else {
             this.seed();
         }
@@ -250,125 +246,195 @@ const DB = {
 
     seed() {
         const today = new Date().toISOString().split('T')[0];
-        // Add sample school events
         this.data.schoolEvents = [
-            { id: 's1', title: 'טיול שנתי שכבה י׳', date: logic.addDays(today, 5), type: 'school', audience: 'שכבה י׳' },
-            { id: 's2', title: 'חלוקת תעודות', date: logic.addDays(today, 14), type: 'school', audience: 'כל ביה״ס' },
-            { id: 's3', title: 'מתכונת בלשון', date: logic.addDays(today, 2), type: 'school', audience: 'יב׳' }
+            { id: 's1', title: 'טיול שנתי', date: logic.addDays(today, 5), type: 'school', audience: 'שכבה י׳' }
         ];
-        // Add sample personal events
         this.data.personalEvents = [
-            { id: 101, title: 'חוג גיטרה', type: 'activity', date: today, time: '17:00', duration: 1, isAuto: false },
-            { id: 102, title: 'מבחן במתמטיקה', type: 'exam', date: logic.addDays(today, 3), time: '09:00', duration: 2, isAuto: false }
+            { id: 101, title: 'חוג גיטרה', type: 'activity', date: today, time: '17:00', duration: 1.5, isAuto: false }
         ];
         this.save();
     },
 
     deleteEvent(id) {
-        // 1. Check if it's an exam to delete linked study blocks
+        // Delete linked study blocks if exam
         const isExam = this.data.personalEvents.find(e => e.id == id && e.type === 'exam');
-        
         if (isExam) {
-            // Delete all linked study blocks
-            const initialCount = this.data.personalEvents.length;
             this.data.personalEvents = this.data.personalEvents.filter(e => e.linkedExamId != id);
-            console.log(`Deleted ${initialCount - this.data.personalEvents.length} linked study blocks.`);
         }
-
-        // 2. Delete the event itself
         this.data.personalEvents = this.data.personalEvents.filter(e => e.id != id);
         this.save();
     }
 };
 
 /**
- * --- LOGIC & HELPERS ---
+ * --- LOGIC: CONFLICT GUARD ---
  */
 const logic = {
+    // Utilities
     addDays(dateStr, days) {
         const d = new Date(dateStr);
         d.setDate(d.getDate() + days);
         return d.toISOString().split('T')[0];
     },
-
-    getRelativeTime(dateStr) {
-        const target = new Date(dateStr).setHours(0,0,0,0);
-        const today = new Date().setHours(0,0,0,0);
-        const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-        
-        if (diff < 0) return 'עבר';
-        if (diff === 0) return 'היום';
-        if (diff === 1) return 'מחר';
-        if (diff === 2) return 'מחרתיים';
-        return `בעוד ${diff} ימים`;
-    },
-
-    getDayName(dateStr) {
-        const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-        return days[new Date(dateStr).getDay()];
-    },
     
-    formatDateIL(dateStr) {
-        const [y, m, d] = dateStr.split('-');
-        return `${d}/${m}`;
+    // Time to Minutes helper (e.g., "16:30" -> 990)
+    toMin(timeStr) {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h * 60 + m;
     },
 
-    // Simple AI Planner (Heuristic)
-    runAIPlanner(examEvent) {
-        const daysBack = 4;
-        let createdBlocks = 0;
+    // Minutes to Time helper (e.g., 990 -> "16:30")
+    toTimeStr(min) {
+        const h = Math.floor(min / 60).toString().padStart(2, '0');
+        const m = (min % 60).toString().padStart(2, '0');
+        return `${h}:${m}`;
+    },
+
+    // CORE: Check Conflict
+    checkConflict(newEvent, existingEvents) {
+        const newStart = this.toMin(newEvent.time);
+        const newEnd = newStart + (newEvent.duration * 60);
+
+        for (let evt of existingEvents) {
+            // Check only same day, and not self (if editing)
+            if (evt.date === newEvent.date && evt.id !== newEvent.id) {
+                const evtStart = this.toMin(evt.time);
+                const evtEnd = evtStart + (evt.duration * 60);
+
+                // Intersection Formula: StartA < EndB && EndA > StartB
+                if (newStart < evtEnd && newEnd > evtStart) {
+                    return { hasConflict: true, conflictingEvent: evt };
+                }
+            }
+        }
+        return { hasConflict: false, conflictingEvent: null };
+    },
+
+    // CORE: Find Alternative Slots
+    findAlternativeSlots(date, durationHrs) {
+        const durationMin = durationHrs * 60;
+        const slots = [];
+        const existing = DB.data.personalEvents.filter(e => e.date === date);
         
-        // Try to find slots in previous days
+        // Scan from 14:00 to 22:00 in 30 min jumps
+        for (let time = 14 * 60; time <= 22 * 60; time += 30) {
+            const tempEvent = { date, time: this.toTimeStr(time), duration: durationHrs, id: -1 };
+            const check = this.checkConflict(tempEvent, existing);
+            
+            if (!check.hasConflict) {
+                slots.push(this.toTimeStr(time));
+                if (slots.length >= 3) break;
+            }
+        }
+        return slots;
+    },
+
+    // AI Planner (Now Safe)
+    runAIPlanner(examEvent) {
+        const daysBack = 5;
+        let createdBlocks = 0;
+        let difficultyHours = examEvent.difficulty || 4;
+        let neededBlocks = Math.ceil(difficultyHours / 1.5); // Assume 1.5h blocks
+        let msg = '';
+
+        // Try to find slots
         for(let i=1; i<=daysBack; i++) {
+            if (createdBlocks >= neededBlocks) break;
+            
             const checkDate = this.addDays(examEvent.date, -i);
-            // Basic heuristic: Is date in future?
-            if (new Date(checkDate) < new Date()) continue;
+            if (new Date(checkDate) < new Date().setHours(0,0,0,0)) continue;
+
+            // Find free slots in this day
+            const freeSlots = this.findAlternativeSlots(checkDate, 1.5);
             
-            // Check load (fake heuristic for demo)
-            const dailyEvents = DB.data.personalEvents.filter(e => e.date === checkDate).length;
-            
-            if (dailyEvents < 2) {
-                // Add study block
-                DB.data.personalEvents.push({
+            if (freeSlots.length > 0) {
+                // Pick the first free slot
+                const newBlock = {
                     id: Date.now() + Math.random(),
                     title: `למידה ל${examEvent.title}`,
                     type: 'study',
                     date: checkDate,
-                    time: '16:00',
+                    time: freeSlots[0], // Safe slot
                     duration: 1.5,
                     isAuto: true,
                     linkedExamId: examEvent.id
-                });
+                };
+
+                DB.data.personalEvents.push(newBlock);
                 createdBlocks++;
-                if (createdBlocks >= 2) break; // Limit to 2 blocks
             }
         }
-        return createdBlocks;
+
+        if (createdBlocks < neededBlocks) {
+            msg = `הצלחתי לקבוע ${createdBlocks} בלוקים, אך חסר זמן ל-${neededBlocks - createdBlocks} נוספים. הלו"ז צפוף.`;
+        } else {
+            msg = `נקבעו ${createdBlocks} בלוקי למידה בהצלחה ללא התנגשויות.`;
+        }
+        return msg;
     },
 
+    // Main Save Handler
     handleAddEvent() {
         const title = document.getElementById('addTitle').value;
         const date = document.getElementById('addDate').value;
+        const time = document.getElementById('addTime').value;
+        const duration = parseFloat(document.getElementById('addDuration').value);
         const type = document.getElementById('addType').value;
-        
-        if(!title || !date) { alert('חסרים פרטים!'); return; }
+        const difficulty = document.getElementById('addDifficulty').value;
+
+        if(!title || !date || !time) { alert('נא למלא את כל השדות'); return; }
 
         const newEvent = {
             id: Date.now(),
-            title: title,
-            type: type,
-            date: date,
-            time: document.getElementById('addTime').value,
-            duration: parseFloat(document.getElementById('addDuration').value),
-            isAuto: false
+            title, type, date, time, duration, 
+            isAuto: false,
+            difficulty: type === 'exam' ? parseFloat(difficulty) : 0
         };
 
+        // 1. Conflict Check
+        const check = this.checkConflict(newEvent, DB.data.personalEvents);
+        
+        if (check.hasConflict) {
+            const conflictName = check.conflictingEvent.title;
+            const conflictTime = `${check.conflictingEvent.time}-${logic.toTimeStr(logic.toMin(check.conflictingEvent.time) + check.conflictingEvent.duration*60)}`;
+            
+            // Show Error UI
+            const errBox = document.getElementById('conflictError');
+            const errMsg = document.getElementById('conflictMsg');
+            const suggestBox = document.getElementById('conflictSuggestions');
+            
+            errMsg.innerText = `אי אפשר להוסיף: זה מתנגש עם '${conflictName}' (${conflictTime})`;
+            
+            // Find Alternatives
+            const alternatives = this.findAlternativeSlots(date, duration);
+            suggestBox.innerHTML = '';
+            
+            if(alternatives.length > 0) {
+                alternatives.forEach(t => {
+                    const chip = document.createElement('div');
+                    chip.className = 'chip';
+                    chip.innerText = t;
+                    chip.onclick = () => {
+                        document.getElementById('addTime').value = t;
+                        errBox.classList.remove('active'); // Clear error
+                    };
+                    suggestBox.appendChild(chip);
+                });
+            } else {
+                suggestBox.innerHTML = '<small>לא נמצאו חלונות פנויים ביום זה באורך המבוקש.</small>';
+            }
+
+            errBox.classList.add('active');
+            return; // STOP SAVE
+        }
+
+        // 2. Save if no conflict
         DB.data.personalEvents.push(newEvent);
 
-        // If Exam -> Trigger AI
+        // 3. Trigger AI if Exam
         if (type === 'exam') {
-            const blocks = this.runAIPlanner(newEvent);
-            if(blocks > 0) alert(`🤖 ה-AI יצר עבורך ${blocks} בלוקי למידה ביומן!`);
+            const aiMsg = this.runAIPlanner(newEvent);
+            setTimeout(() => alert(`🤖 ${aiMsg}`), 100);
         }
 
         DB.save();
@@ -389,27 +455,28 @@ const ui = {
     openAddModal() {
         document.getElementById('addModal').classList.add('active');
         document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('conflictError').classList.remove('active'); // Reset error
     },
 
     openViewModal(eventObj, isSchool) {
         document.getElementById('viewModal').classList.add('active');
         document.getElementById('viewTitle').innerText = eventObj.title;
-        document.getElementById('viewDate').innerText = `${logic.getDayName(eventObj.date)}, ${logic.formatDateIL(eventObj.date)} (${logic.getRelativeTime(eventObj.date)})`;
-        document.getElementById('viewTime').innerText = eventObj.time || 'כל היום';
+        document.getElementById('viewDate').innerText = `${logic.formatDateIL(eventObj.date)}`;
+        document.getElementById('viewTime').innerText = eventObj.time || '08:00';
         document.getElementById('viewDuration').innerText = eventObj.duration ? `${eventObj.duration} שעות` : '-';
         
         const typeEl = document.getElementById('viewType');
         
         if (isSchool) {
             typeEl.innerHTML = '<span class="tag school">אירוע בית ספר</span>';
-            document.getElementById('btnDelete').style.display = 'none'; // Cannot delete school events
+            document.getElementById('btnDelete').style.display = 'none';
             document.getElementById('viewDesc').style.display = 'block';
             document.getElementById('viewDesc').innerText = `קהל יעד: ${eventObj.audience}`;
         } else {
             typeEl.innerHTML = `<span class="tag ${eventObj.type}">${eventObj.type}</span>`;
             document.getElementById('btnDelete').style.display = 'block';
             document.getElementById('btnDelete').onclick = () => {
-                if(confirm('למחוק את האירוע? (אם זה מבחן, יימחקו גם זמני הלמידה)')) {
+                if(confirm('למחוק אירוע זה?')) {
                     DB.deleteEvent(eventObj.id);
                     ui.closeModals();
                 }
@@ -420,191 +487,105 @@ const ui = {
 
     closeModals() {
         document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
-        document.querySelector('form').reset();
     }
 };
 
+// Helper for date formatting
+logic.formatDateIL = (d) => { const [y,m,day] = d.split('-'); return `${day}/${m}`; };
+logic.getDayName = (d) => ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(d).getDay()];
+logic.getRelativeTime = (d) => {
+    const diff = Math.ceil((new Date(d) - new Date().setHours(0,0,0,0)) / (864e5));
+    return diff === 0 ? 'היום' : (diff === 1 ? 'מחר' : `עוד ${diff} ימים`);
+};
+
 /**
- * --- APP ROUTING & RENDERING ---
+ * --- APP ROUTING & RENDER ---
  */
 const app = {
     currentPage: 'dashboard',
 
     navigate(page) {
         this.currentPage = page;
-        // Update Nav Active State
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        // Simple logic to find active nav items (based on order or manual check - keeping it simple)
-        // Re-rendering handles content
         this.render();
     },
 
     render() {
         const container = document.getElementById('viewContainer');
         container.innerHTML = '';
-        
-        switch(this.currentPage) {
-            case 'dashboard': this.renderDashboard(container); break;
-            case 'calendar': this.renderCalendar(container); break;
-            case 'school': this.renderSchoolBoard(container); break;
-        }
+        if(this.currentPage === 'dashboard') this.renderDashboard(container);
+        else if(this.currentPage === 'calendar') this.renderCalendar(container);
+        else this.renderSchool(container);
     },
 
-    renderDashboard(container) {
+    renderDashboard(con) {
         const today = new Date().toISOString().split('T')[0];
+        const upcoming = DB.data.personalEvents.filter(e => e.date >= today).sort((a,b) => a.date.localeCompare(b.date));
         
-        // Filter Events
-        const upcoming = DB.data.personalEvents
-            .filter(e => e.date >= today)
-            .sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+        let html = `<h1>דאשבורד ⚡</h1>`;
         
-        const nextExam = upcoming.find(e => e.type === 'exam');
-        const todaysEvents = upcoming.filter(e => e.date === today);
-
-        // --- HTML GEN ---
-        let html = `<h1>בוקר טוב 👋</h1>`;
-        
-        // 1. AI Insight
-        html += `<div class="card ai-box">
-            <strong>🤖 התובנה היומית (${logic.formatDateIL(today)}):</strong><br>
-            ${todaysEvents.length > 3 
-                ? 'היום שלך עמוס מאוד! נסה להתמקד רק בדברים החשובים.' 
-                : 'היום נראה רגוע יחסית. זמן טוב להשלים פערים.'}
-        </div>`;
-
-        // 2. Next Exam
-        if (nextExam) {
-            html += `
-            <div class="card" style="border-right: 4px solid var(--danger);">
-                <div style="font-size:0.8rem; color:var(--danger); font-weight:bold; margin-bottom:5px;">מבחן קרוב</div>
-                <div style="font-size:1.2rem; font-weight:bold;">${nextExam.title}</div>
-                <div style="margin-top:5px; color:var(--text-muted);">
-                    📅 ${logic.getDayName(nextExam.date)} ${logic.formatDateIL(nextExam.date)} 
-                    <span style="background: #ffe3e3; color: #c0392b; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">${logic.getRelativeTime(nextExam.date)}</span>
-                </div>
-            </div>`;
-        }
-
-        // 3. Upcoming List
-        html += `<h3>האירועים הבאים</h3>`;
-        if (upcoming.length === 0) {
-            html += `<p style="color:var(--text-muted); margin-top:10px;">אין אירועים קרובים. איזה כיף!</p>`;
-        } else {
+        if(upcoming.length === 0) html += `<div class="card">היומן ריק. זה הזמן לנוח!</div>`;
+        else {
             html += `<div class="card">`;
             upcoming.slice(0, 5).forEach(e => {
-                html += this.buildEventRow(e, false);
+                html += this.buildRow(e, false);
             });
             html += `</div>`;
         }
-        
-        container.innerHTML = html;
+        con.innerHTML = html;
     },
 
-    renderCalendar(container) {
-        // Merge Personal + School for display
-        const allEvents = [
-            ...DB.data.personalEvents.map(e => ({...e, source: 'personal'})),
-            ...DB.data.schoolEvents.map(e => ({...e, source: 'school', time: '08:00'})) // School events usually morning
-        ];
-        
-        // Group by Date
+    renderCalendar(con) {
+        // Sort all events by date
+        const all = [...DB.data.personalEvents.map(e=>({...e, s:'p'})), ...DB.data.schoolEvents.map(e=>({...e, s:'s', time:'08:00'}))];
         const grouped = {};
-        allEvents.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(e => {
+        all.sort((a,b) => a.date.localeCompare(b.date)).forEach(e => {
             if(!grouped[e.date]) grouped[e.date] = [];
             grouped[e.date].push(e);
         });
 
-        let html = `<h2>היומן המלא</h2>`;
-        const dates = Object.keys(grouped).sort();
-
-        if (dates.length === 0) html += `<p>היומן ריק.</p>`;
-
-        dates.forEach(date => {
-            const isToday = date === new Date().toISOString().split('T')[0];
-            html += `<h3 style="margin-top:20px; font-size:1rem; color:${isToday ? 'var(--primary)' : '#666'}">
-                ${logic.getDayName(date)} ${logic.formatDateIL(date)} ${isToday ? '(היום)' : ''}
-            </h3>`;
-            html += `<div class="card">`;
-            grouped[date].sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
-                html += this.buildEventRow(e, e.source === 'school');
-            });
+        let html = `<h2>היומן שלי</h2>`;
+        for(let d in grouped) {
+            html += `<h3 style="margin-top:20px; font-size:1rem; color:#666">${logic.getDayName(d)} ${logic.formatDateIL(d)}</h3><div class="card">`;
+            grouped[d].sort((a,b)=>a.time.localeCompare(b.time)).forEach(e => html += this.buildRow(e, e.s==='s'));
             html += `</div>`;
-        });
-        
-        container.innerHTML = html;
-    },
-
-    renderSchoolBoard(container) {
-        const events = DB.data.schoolEvents.sort((a,b) => new Date(a.date) - new Date(b.date));
-        
-        let html = `
-            <div class="school-header">
-                <h2>🏫 לוח אירועי בית ספר</h2>
-                <p style="margin:0; opacity:0.9">לוח זה מנוהל ע"י ביה"ס ולא ניתן לעריכה.</p>
-            </div>
-        `;
-
-        if (events.length === 0) {
-            html += `<div class="card">אין הודעות חדשות מבית הספר.</div>`;
-        } else {
-            events.forEach(e => {
-                html += `
-                <div class="card" onclick="ui.openViewModal({title:'${e.title}', date:'${e.date}', time:'${e.audience}', duration: '', audience: '${e.audience}'}, true)">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <div>
-                            <div class="event-title">${e.title}</div>
-                            <div class="event-meta">
-                                <span>📅 ${logic.getDayName(e.date)} ${logic.formatDateIL(e.date)}</span>
-                                <span class="tag school">${e.audience}</span>
-                            </div>
-                        </div>
-                        <span style="font-size:0.8rem; background:#f3e5f5; color:#7209b7; padding:4px 8px; border-radius:6px;">
-                            ${logic.getRelativeTime(e.date)}
-                        </span>
-                    </div>
-                </div>`;
-            });
         }
-        container.innerHTML = html;
+        con.innerHTML = html;
     },
 
-    buildEventRow(e, isSchool) {
-        // Helper to generate the HTML for a single event row
-        const timeDisplay = e.time || 'יום מלא';
-        const tagClass = isSchool ? 'school' : e.type;
-        const tagName = isSchool ? 'ביה"ס' : (e.type === 'exam' ? 'מבחן' : (e.type === 'study' ? 'למידה' : 'אחר'));
-        
-        // Pass the object safely to onclick by storing ID and lookup or passing primitives. 
-        // For simplicity in this single file, we'll recreate the object in the onclick handler or fetch by ID.
-        // Best approach here: fetch by ID.
-        
-        // Hack for passing object to modal without complexity:
-        const safeTitle = e.title.replace(/'/g, "\\'"); 
-        
-        // Using a data attribute approach would be cleaner, but inline for single file speed:
-        return `
-            <div class="event-row" onclick='ui.openViewModal(${JSON.stringify(e)}, ${isSchool})'>
-                <div class="date-badge ${logic.getRelativeTime(e.date) === 'היום' ? 'today' : ''}">
-                    <span>${logic.formatDateIL(e.date)}</span>
-                    <span style="font-weight:400; font-size:0.7rem">${e.time}</span>
-                </div>
-                <div class="event-info">
-                    <div class="event-title">${e.title}</div>
-                    <div class="event-meta">
-                        <span class="tag ${tagClass}">${tagName}</span>
-                        ${e.isAuto ? '<span class="tag auto">AI</span>' : ''}
-                        <span>${logic.getRelativeTime(e.date)}</span>
-                    </div>
+    renderSchool(con) {
+        con.innerHTML = `<h2>לוח בית ספר 🏫</h2>`;
+        if(DB.data.schoolEvents.length === 0) con.innerHTML += `<div class="card">אין אירועים.</div>`;
+        DB.data.schoolEvents.forEach(e => {
+            con.innerHTML += `<div class="card" onclick='ui.openViewModal(${JSON.stringify(e)}, true)'>
+                <div class="event-title">${e.title}</div>
+                <div class="event-meta">📅 ${e.date} <span class="tag school">${e.audience}</span></div>
+            </div>`;
+        });
+    },
+
+    buildRow(e, isSchool) {
+        // Safe stringify
+        const json = JSON.stringify(e).replace(/'/g, "&#39;");
+        return `<div class="event-row" onclick='ui.openViewModal(${json}, ${isSchool})'>
+            <div class="date-badge ${logic.getRelativeTime(e.date)==='היום'?'today':''}">
+                <span>${logic.formatDateIL(e.date)}</span>
+                <span style="font-weight:400; font-size:0.7rem">${e.time}</span>
+            </div>
+            <div class="event-info">
+                <div class="event-title">${e.title}</div>
+                <div class="event-meta">
+                    <span class="tag ${isSchool?'school':e.type}">${isSchool?'ביה"ס':e.type}</span>
+                    <span>${logic.getRelativeTime(e.date)}</span>
                 </div>
             </div>
-        `;
+        </div>`;
     }
 };
 
-// Start App
+// Init
 DB.init();
 app.render();
-
 </script>
 </body>
 </html>
