@@ -246,12 +246,6 @@ const DB = {
 
     seed() {
         const today = new Date().toISOString().split('T')[0];
-        this.data.schoolEvents = [
-            { id: 's1', title: 'טיול שנתי', date: logic.addDays(today, 5), type: 'school', audience: 'שכבה י׳' }
-        ];
-        this.data.personalEvents = [
-            { id: 101, title: 'חוג גיטרה', type: 'activity', date: today, time: '17:00', duration: 1.5, isAuto: false }
-        ];
         this.save();
     },
 
