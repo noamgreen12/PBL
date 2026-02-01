@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v10.0 - Dual Calendars</title>
+    <title>SmartStudent Pro v11.0 - AI Planner Restored</title>
     <style>
         :root {
             --primary: #4361ee;
@@ -136,6 +136,17 @@
         .input-group-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .input-group-row select, .input-group-row input { flex: 1; margin:0; padding:10px; border:1px solid #ddd; border-radius:8px; }
 
+        /* --- AI PLANNER UI --- */
+        .ai-proposal-card {
+            background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 8px; padding: 15px; margin-top: 10px;
+        }
+        .ai-proposal-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .ai-proposal-item {
+            background: white; border: 1px solid #b8daff; color: #004085;
+            padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 5px;
+        }
+        .ai-message { font-size: 0.95rem; line-height: 1.5; color: #004085; margin-bottom: 10px; }
+
         /* --- Modals & Global --- */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
         .modal-overlay.active { display: flex; }
@@ -146,6 +157,7 @@
         .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-ghost { background: transparent; color: var(--text-muted); }
+        .btn-magic { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; }
 
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @media (min-width: 768px) {
@@ -192,10 +204,10 @@
             <select id="addType" onchange="ui.toggleExamFields()" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd">
                 <option value="activity">פעילות / חוג</option>
                 <option value="assignment">מטלה</option>
-                <option value="exam">מבחן (AI)</option>
+                <option value="exam">מבחן (AI Planner)</option>
             </select>
             <div id="examFields" class="hidden" style="background:#f0f4ff;padding:10px;border-radius:8px;margin-top:10px">
-                <label>רמת קושי</label>
+                <label>רמת קושי (AI)</label>
                 <select id="addDifficulty" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd">
                     <option value="2">קל (2 שעות)</option>
                     <option value="4" selected>בינוני (4 שעות)</option>
@@ -214,6 +226,21 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="aiModal">
+    <div class="modal-content">
+        <h2>🤖 תוכנית לימוד מוצעת</h2>
+        <div class="ai-proposal-card">
+            <div id="aiMessage" class="ai-message"></div>
+            <div id="aiBlocksList" class="ai-proposal-list"></div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px; flex-direction:column;">
+            <button class="btn btn-magic" onclick="logic.ai.confirmPlan()">✅ אשר תוכנית ושמור</button>
+            <button class="btn btn-ghost" onclick="logic.ai.retryPlan()">🎲 נסה שעות אחרות</button>
+            <button class="btn btn-ghost" onclick="logic.ai.cancelPlan()">שמור ללא תכנון</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="viewModal">
     <div class="modal-content">
         <h2 id="viewTitle"></h2>
@@ -223,9 +250,17 @@
             <div>⏳ <span id="viewDuration"></span></div>
             <div id="viewType" style="margin-top:10px;"></div>
         </div>
+        
+        <div id="aiActions" style="display:none; margin-bottom:15px; border-top:1px solid #eee; padding-top:10px;">
+            <button class="btn btn-magic" style="width:100%; font-size:0.9rem;" onclick="logic.ai.planFromView()">📅 תכנן למידה למבחן זה</button>
+        </div>
+        <div id="aiDeleteActions" style="display:none; margin-bottom:15px; border-top:1px solid #eee; padding-top:10px;">
+             <button class="btn btn-ghost" style="width:100%; font-size:0.9rem; color:#e67e22" onclick="logic.ai.deletePlanFromView()">🗑️ מחק רק את תוכנית הלמידה</button>
+        </div>
+
         <p id="viewDesc" style="background:#f8f9fa; padding:10px; border-radius:8px; display:none;"></p>
         <button class="btn btn-primary" style="width:100%" onclick="ui.closeModals()">סגור</button>
-        <button id="btnDelete" class="btn btn-ghost" style="width:100%; color:red; margin-top:10px;" onclick="">🗑️ מחק</button>
+        <button id="btnDelete" class="btn btn-ghost" style="width:100%; color:red; margin-top:10px;" onclick="">🗑️ מחק אירוע</button>
     </div>
 </div>
 
@@ -233,18 +268,14 @@
 /** CONFIG */
 const SCHOOL_SHEETS = {
   "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv", 
-  "שכבה יא'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS.../pub?output=csv",
-  "כל בית הספר": "https://docs.google.com/spreadsheets/d/e/2PACX-1vU.../pub?output=csv"
 };
 
 /** STATE & DB */
 const DB = {
-    key: 'smartStudentV10',
+    key: 'smartStudentV11',
     data: { 
         personalEvents: [], schoolEvents: [], schoolSheetUrl: '', selectedSheetKey: '', lastSync: null,
-        // Personal Calendar State
         calendarView: 'week', calendarAnchor: Date.now(),
-        // School Calendar State (NEW)
         schoolView: 'week', schoolAnchor: Date.now()
     },
     
@@ -253,13 +284,7 @@ const DB = {
         if (stored) {
             this.data = JSON.parse(stored);
             if (!this.data.schoolEvents) this.data.schoolEvents = [];
-            // Defaults
             if (!this.data.calendarView) this.data.calendarView = 'week';
-            if (!this.data.calendarAnchor) this.data.calendarAnchor = Date.now();
-            if (!this.data.schoolView) this.data.schoolView = 'week';
-            if (!this.data.schoolAnchor) this.data.schoolAnchor = Date.now();
-            
-            // Auto sync
             if (this.data.schoolSheetUrl && (!this.data.lastSync || Date.now() - this.data.lastSync > 21600000)) {
                 logic.syncFromSheets(this.data.schoolSheetUrl, true);
             }
@@ -274,11 +299,12 @@ const DB = {
 
     seed() {
         const today = new Date().toISOString().split('T')[0];
-        this.data.personalEvents = [{ id: 101, title: 'חוג גיטרה', type: 'activity', date: today, time: '17:00', duration: 1.5, isAuto: false }];
+        this.data.personalEvents = [];
         this.save();
     },
 
     deleteEvent(id) {
+        // Delete linked study blocks first
         const isExam = this.data.personalEvents.find(e => e.id == id && e.type === 'exam');
         if (isExam) this.data.personalEvents = this.data.personalEvents.filter(e => e.linkedExamId != id);
         this.data.personalEvents = this.data.personalEvents.filter(e => e.id != id);
@@ -294,24 +320,20 @@ const logic = {
     formatDateIL(d) { const [y,m,day]=d.split('-'); return `${day}/${m}`; },
     getDayName(d) { return ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(d).getDay()]; },
     toMin(t) { if(!t)return 0; const[h,m]=t.split(':').map(Number); return h*60+m; },
+    toTimeStr(min) { const h = Math.floor(min/60).toString().padStart(2,'0'); const m = (min%60).toString().padStart(2,'0'); return `${h}:${m}`; },
 
-    // --- Calendar Nav (Dual Mode) ---
-    // mode: 'personal' or 'school'
     navCalendar(direction, mode) {
         const keyAnchor = mode === 'school' ? 'schoolAnchor' : 'calendarAnchor';
         const keyView = mode === 'school' ? 'schoolView' : 'calendarView';
-        
         const d = new Date(DB.data[keyAnchor]);
         const view = DB.data[keyView];
-        
         if (view === 'day') d.setDate(d.getDate() + direction);
         else if (view === 'week') d.setDate(d.getDate() + (direction * 7));
         else if (view === 'month') d.setMonth(d.getMonth() + direction);
         else if (view === 'year') d.setFullYear(d.getFullYear() + direction);
-        
         DB.data[keyAnchor] = d.getTime();
         DB.save();
-        app.render(); // Re-render current page
+        app.render();
     },
     
     setView(view, mode) {
@@ -338,7 +360,6 @@ const logic = {
         app.render();
     },
 
-    // --- Sync ---
     handleSheetSelection(key) {
         if (!key) return;
         const url = SCHOOL_SHEETS[key];
@@ -386,9 +407,8 @@ const logic = {
         }).filter(Boolean);
     },
 
-    // --- Events ---
-    checkConflict(newE) {
-        const all = [...DB.data.personalEvents, ...DB.data.schoolEvents];
+    checkConflict(newE, extraEvents = []) {
+        const all = [...DB.data.personalEvents, ...DB.data.schoolEvents, ...extraEvents];
         const nS = this.toMin(newE.time);
         const nE = nS + (newE.duration*60);
         for(let e of all) {
@@ -408,7 +428,8 @@ const logic = {
             time: document.getElementById('addTime').value,
             duration: parseFloat(document.getElementById('addDuration').value),
             type: document.getElementById('addType').value,
-            isAuto: false
+            isAuto: false,
+            difficulty: document.getElementById('addDifficulty').value
         };
         if(!newE.title || !newE.date || !newE.time) return alert('חסר מידע');
         
@@ -418,12 +439,157 @@ const logic = {
             document.getElementById('conflictError').style.display = 'block';
             return;
         }
+
+        // If Exam -> Trigger AI
+        if (newE.type === 'exam') {
+            ui.closeModals(); // Close add modal
+            this.ai.preparePlan(newE); // Open AI modal
+            return;
+        }
         
         DB.data.personalEvents.push(newE);
-        if(newE.type==='exam') alert('🤖 AI Planner: המבחן נרשם');
         DB.save();
         ui.closeModals();
         app.render();
+    },
+
+    /** AI PLANNER MODULE */
+    ai: {
+        tempExam: null,
+        tempBlocks: [],
+        
+        preparePlan(examEvent, randomize = false) {
+            this.tempExam = examEvent;
+            const plan = this.generatePlan(examEvent, randomize);
+            this.tempBlocks = plan.blocks;
+            
+            // Show UI
+            document.getElementById('aiMessage').innerHTML = plan.message;
+            const list = document.getElementById('aiBlocksList');
+            list.innerHTML = '';
+            plan.blocks.forEach(b => {
+                list.innerHTML += `<div class="ai-proposal-item">📅 ${logic.formatDateIL(b.date)} ⏰ ${b.time} (${b.duration}ש')</div>`;
+            });
+            document.getElementById('aiModal').classList.add('active');
+        },
+
+        generatePlan(exam, randomize) {
+            const hoursNeeded = parseInt(exam.difficulty) || 4;
+            let currentNeeded = hoursNeeded;
+            const blocks = [];
+            const daysBack = 7;
+            const candidates = [];
+
+            // 1. Scan days backward
+            for (let i = 1; i <= daysBack; i++) {
+                const d = logic.addDays(exam.date, -i);
+                if (new Date(d) < new Date().setHours(0,0,0,0)) continue;
+                
+                // Scan times 16:00 - 21:00
+                for (let t = 16*60; t <= 21*60; t+=30) {
+                    const timeStr = logic.toTimeStr(t);
+                    const dur = 1.5; // Study block duration
+                    
+                    // Check Conflict
+                    const tempBlock = { id: -1, date: d.toISOString().split('T')[0], time: timeStr, duration: dur };
+                    const conf = logic.checkConflict(tempBlock, blocks); // Check against DB + already planned blocks
+                    
+                    if (!conf.conflict) {
+                        let score = 100 - (i * 5); // Earlier is better
+                        if (t >= 17*60 && t <= 19*60) score += 20; // Preferred hours
+                        if (randomize) score += Math.random() * 50; // Randomize for "Try Again"
+                        
+                        candidates.push({ ...tempBlock, score });
+                    }
+                }
+            }
+
+            // 2. Sort & Pick
+            candidates.sort((a,b) => b.score - a.score);
+            
+            // Pick non-overlapping from candidates
+            for (let cand of candidates) {
+                if (currentNeeded <= 0) break;
+                // Check internal overlap with selected blocks
+                const overlap = blocks.some(b => b.date === cand.date && 
+                    ((logic.toMin(b.time) < logic.toMin(cand.time)+90) && (logic.toMin(b.time)+90 > logic.toMin(cand.time))));
+                
+                if (!overlap) {
+                    blocks.push(cand);
+                    currentNeeded -= 1.5;
+                }
+            }
+
+            // 3. Message
+            const dayNames = [...new Set(blocks.map(b => logic.getDayName(b.date)))];
+            const msg = blocks.length > 0 
+                ? `יש לך מבחן ב-${logic.getDayName(exam.date)}. מצאתי ${blocks.length} חלונות למידה בימים: <b>${dayNames.join(', ')}</b>.`
+                : `לא מצאתי מספיק זמן פנוי השבוע. נסה לפנות זמן ביומן.`;
+
+            return { blocks, message: msg };
+        },
+
+        confirmPlan() {
+            // Save Exam
+            // Check if exam exists (update) or new
+            const existingIdx = DB.data.personalEvents.findIndex(e => e.id === this.tempExam.id);
+            if (existingIdx > -1) DB.data.personalEvents[existingIdx] = this.tempExam;
+            else DB.data.personalEvents.push(this.tempExam);
+
+            // Save Blocks
+            const finalBlocks = this.tempBlocks.map(b => ({
+                id: Date.now() + Math.random(),
+                title: `למידה ל${this.tempExam.title}`,
+                type: 'study',
+                date: b.date,
+                time: b.time,
+                duration: b.duration,
+                isAuto: true,
+                linkedExamId: this.tempExam.id
+            }));
+            
+            DB.data.personalEvents.push(...finalBlocks);
+            DB.save();
+            document.getElementById('aiModal').classList.remove('active');
+            app.render();
+            alert('✅ המבחן ותוכנית הלמידה נשמרו בהצלחה!');
+        },
+
+        retryPlan() {
+            this.preparePlan(this.tempExam, true);
+        },
+
+        cancelPlan() {
+            // Save only exam
+            const existingIdx = DB.data.personalEvents.findIndex(e => e.id === this.tempExam.id);
+            if (existingIdx > -1) DB.data.personalEvents[existingIdx] = this.tempExam;
+            else DB.data.personalEvents.push(this.tempExam);
+            
+            DB.save();
+            document.getElementById('aiModal').classList.remove('active');
+            app.render();
+        },
+        
+        planFromView() {
+             // Fetch current view event
+             const title = document.getElementById('viewTitle').innerText;
+             const evt = DB.data.personalEvents.find(e => e.title === title && e.type === 'exam');
+             if(evt) {
+                 ui.closeModals();
+                 this.preparePlan(evt);
+             }
+        },
+
+        deletePlanFromView() {
+            const title = document.getElementById('viewTitle').innerText;
+             const evt = DB.data.personalEvents.find(e => e.title === title && e.type === 'exam');
+             if(evt && confirm('למחוק את כל בלוקי הלמידה של המבחן הזה?')) {
+                 DB.data.personalEvents = DB.data.personalEvents.filter(e => e.linkedExamId !== evt.id);
+                 DB.save();
+                 ui.closeModals();
+                 app.render();
+             }
+        }
     }
 };
 
@@ -446,8 +612,26 @@ const ui = {
         document.getElementById('viewType').innerHTML = `<span class="tag ${isSchool?'school':e.type}">${e.type}</span>`;
         
         const btn = document.getElementById('btnDelete');
-        if(isSchool) btn.style.display = 'none';
-        else { btn.style.display = 'block'; btn.onclick=()=>{ if(confirm('למחוק?')) DB.deleteEvent(e.id); }; }
+        const aiActions = document.getElementById('aiActions');
+        const aiDel = document.getElementById('aiDeleteActions');
+        
+        // Reset
+        aiActions.style.display = 'none';
+        aiDel.style.display = 'none';
+
+        if(isSchool) {
+            btn.style.display = 'none';
+        } else {
+            btn.style.display = 'block'; 
+            btn.onclick=()=>{ if(confirm('למחוק?')) DB.deleteEvent(e.id); };
+            
+            // AI Planner Buttons for Exams
+            if(e.type === 'exam') {
+                const hasBlocks = DB.data.personalEvents.some(b => b.linkedExamId === e.id);
+                if(!hasBlocks) aiActions.style.display = 'block';
+                else aiDel.style.display = 'block';
+            }
+        }
     },
     
     getEvtColor(t) {
@@ -495,23 +679,12 @@ const app = {
         con.innerHTML = html;
     },
 
-    // --- GENERIC CALENDAR BUILDER (USED BY BOTH TABS) ---
     renderGenericCalendar(con, mode) {
-        // mode: 'personal' or 'school'
         const isSchool = mode === 'school';
-        
-        // 1. Determine Data Source
-        // Personal: Personal + School events
-        // School: ONLY School events
-        const events = isSchool 
-            ? DB.data.schoolEvents 
-            : [...DB.data.personalEvents, ...DB.data.schoolEvents];
-
-        // 2. Determine State
+        const events = isSchool ? DB.data.schoolEvents : [...DB.data.personalEvents, ...DB.data.schoolEvents];
         const anchor = new Date(isSchool ? DB.data.schoolAnchor : DB.data.calendarAnchor);
         const view = isSchool ? DB.data.schoolView : DB.data.calendarView;
 
-        // 3. Header
         let titleRange = '';
         if (view === 'day') titleRange = `${logic.formatDateIL(anchor.toISOString().split('T')[0])}`;
         else if (view === 'week') {
@@ -522,9 +695,7 @@ const app = {
         else if (view === 'month') titleRange = anchor.toLocaleDateString('he-IL', { month:'long', year:'numeric' });
         else if (view === 'year') titleRange = anchor.getFullYear();
 
-        let html = '';
-        if(isSchool) html += `<h2>לוח בית ספר 🏫</h2>`;
-        else html += `<h2>היומן שלי</h2>`;
+        let html = isSchool ? `<h2>לוח בית ספר 🏫</h2>` : `<h2>היומן שלי</h2>`;
 
         html += `
         <div class="cal-controls">
@@ -544,7 +715,6 @@ const app = {
             </div>
         </div>`;
 
-        // 4. Grid Views
         if (view === 'day') {
             const dStr = anchor.toISOString().split('T')[0];
             const dayEvts = events.filter(e => e.date === dStr).sort((a,b) => a.time.localeCompare(b.time));
@@ -621,7 +791,6 @@ const app = {
         }
 
         if(isSchool) {
-            // Prepend Sync Box
             let opts = `<option value="">-- בחר לוח --</option>`;
             for(let k in SCHOOL_SHEETS) opts += `<option value="${k}" ${DB.data.selectedSheetKey===k?'selected':''}>${k}</option>`;
             const lastSync = DB.data.lastSync ? new Date(DB.data.lastSync).toLocaleTimeString() : '...';
@@ -636,7 +805,6 @@ const app = {
     },
 
     renderSchool(con) {
-        // Now uses generic renderer with 'school' mode
         this.renderGenericCalendar(con, 'school');
     }
 };
