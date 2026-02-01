@@ -240,7 +240,9 @@
 <script>
 /** CONFIG: SCHOOL SHEETS */
 const SCHOOL_SHEETS = {
-  "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv"
+  "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6.../pub?output=csv", 
+  "שכבה יא'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS.../pub?output=csv",
+  "כל בית הספר": "https://docs.google.com/spreadsheets/d/e/2PACX-1vU.../pub?output=csv"
 };
 
 /** STATE & DB */
@@ -345,7 +347,7 @@ const logic = {
         let url = rawUrl;
         if(rawUrl.includes('/d/') && !rawUrl.includes('output=csv')) {
              const m = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-             if(m) url = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`;
+             if(m) url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv`;
         }
         try {
             const res = await fetch(url);
