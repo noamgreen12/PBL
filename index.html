@@ -214,9 +214,7 @@
 /** CONFIG */
 const CONFIG = {
     sheets: {
-        "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6.../pub?output=csv",
-        "שכבה יא'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS.../pub?output=csv",
-        "כל בית הספר": "https://docs.google.com/spreadsheets/d/e/2PACX-1vU.../pub?output=csv"
+        "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv"
     },
     colors: { exam:'t-exam', study:'t-study', activity:'t-activity', trip:'t-trip', school:'t-school' }
 };
@@ -244,7 +242,7 @@ const Store = {
     save() { localStorage.setItem(this.key, JSON.stringify(this.state)); },
     seed() {
         const today = new Date().toISOString().split('T')[0];
-        this.state.personal = [{ id:1, title:'חוג', type:'activity', date:today, time:'16:00', duration:1.5, isAuto:false }];
+        this.state.personal = [];
         this.save();
     },
     addEvent(e) { this.state.personal.push(e); this.save(); ui.render(); },
