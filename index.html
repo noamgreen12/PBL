@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v19.0 - Final Complete</title>
+    <title>SmartStudent Pro v20.0 - Monthly Text</title>
     <style>
         :root {
             /* Palette */
@@ -73,19 +73,29 @@
         /* Month */
         .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .month-header-cell { text-align: center; font-size: 0.8rem; font-weight: bold; color: var(--text-muted); padding: 5px 0; }
-        .month-cell { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; aspect-ratio: 1; padding: 4px; cursor: pointer; position: relative; display: flex; flex-direction: column; }
+        /* Updated Month Cell for Text Display */
+        .month-cell { 
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; 
+            min-height: 90px; /* Taller for text */
+            padding: 4px; cursor: pointer; position: relative; display: flex; flex-direction: column; overflow: hidden;
+        }
         .month-cell.today { border: 2px solid var(--primary); }
         .month-cell.empty { background: transparent; border: none; }
-        .month-num { font-size: 0.8rem; font-weight: bold; margin-bottom: 2px; }
-        .dots { display: flex; gap: 2px; flex-wrap: wrap; margin-top: auto; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .month-num { font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; }
+        
+        /* New Text Event in Month */
+        .month-event-text {
+            font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            color: #fff; font-weight: 500; line-height: 1.2;
+        }
 
         /* Week */
         .week-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .week-grid { display: grid; grid-template-columns: repeat(7, minmax(130px, 1fr)); gap: 8px; min-width: 900px; }
         .day-col { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; min-height: 300px; display: flex; flex-direction: column; }
         .day-head { background: var(--primary-light); color: var(--primary); padding: 8px; text-align: center; font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
-        .day-body { padding: 6px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .day-body { padding: 6px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
 
         /* Day */
         .day-list { display: flex; flex-direction: column; gap: 10px; }
@@ -214,14 +224,14 @@
 /** CONFIG */
 const CONFIG = {
     sheets: {
-        "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv"
+        "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6.../pub?output=csvhttps://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv",
     },
     colors: { exam:'t-exam', study:'t-study', activity:'t-activity', trip:'t-trip', school:'t-school' }
 };
 
 /** STORE */
 const Store = {
-    key: 'SmartStudent_v19',
+    key: 'SmartStudent_v20',
     state: {
         personal: [], school: [], view: 'dashboard', 
         calView: 'week', schoolView: 'week',
@@ -267,7 +277,6 @@ const logic = {
     toMin: t => { if(!t)return 0; const[h,m]=t.split(':').map(Number); return h*60+m; },
     minToStr: m => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`,
 
-    // --- Core Logic ---
     checkConflict(newEvt, excludeId=null) {
         const all = [...Store.state.personal, ...Store.state.school];
         const nS = logic.toMin(newEvt.time), nE = nS + (newEvt.duration*60);
@@ -301,7 +310,6 @@ const logic = {
         Store.addEvent(newEvt); ui.modals.closeAll();
     },
 
-    // --- AI Planner ---
     ai: {
         targetExam: null, proposedBlocks: [],
         start(exam, rnd=false) { this.targetExam=exam; const p=this.calc(exam, rnd); this.proposedBlocks=p.blocks; ui.modals.showAI(p.msg, p.blocks); },
@@ -348,33 +356,25 @@ const logic = {
         deletePlanFromView(){ const t=document.getElementById('viewTitle').innerText, e=Store.state.personal.find(x=>x.title===t); if(e && confirm('למחוק תוכנית?')){ Store.state.personal=Store.state.personal.filter(x=>x.linkedExamId!=e.id); Store.save(); ui.modals.closeAll(); ui.render(); } }
     },
 
-    // --- Sync Engine (ROBUST) ---
     sync: {
         async run(url, isAuto) {
             const btn = document.getElementById('btnRefresh');
             if(btn) { btn.innerText='טוען...'; btn.disabled=true; }
             if(!url) { if(!isAuto) alert("נא לבחור לוח"); if(btn){btn.innerText='רענן';btn.disabled=false;} return; }
 
-            // 1. URL Fix
             let fetchUrl = url;
             if(url.includes('/d/') && !url.includes('output=csv')) {
                 const id = url.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
                 if(id) fetchUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
             }
-            // 2. Cache Busting
             const sep = fetchUrl.includes('?') ? '&' : '?';
             fetchUrl += `${sep}t=${Date.now()}`;
 
             try {
                 const res = await fetch(fetchUrl);
                 const text = await res.text();
+                if(text.trim().startsWith('<!DOCTYPE') || text.includes('<html')) throw new Error('PRIVATE_SHEET');
                 
-                // 3. Private Link Detection
-                if(text.trim().startsWith('<!DOCTYPE') || text.includes('<html')) {
-                    throw new Error('PRIVATE_SHEET');
-                }
-
-                // Debug
                 const dbg = document.getElementById('debugBox');
                 if(dbg) dbg.innerText = "RAW:\n" + text.slice(0, 300) + "...";
 
@@ -384,14 +384,8 @@ const logic = {
                     Store.state.school = events;
                     Store.state.lastSync = Date.now();
                     Store.state.sheetUrl = url;
-                    
-                    // 4. Auto Jump to First Event Date
                     const firstEvt = events.sort((a,b)=>a.date.localeCompare(b.date))[0];
-                    if(firstEvt) {
-                        const d = new Date(firstEvt.date);
-                        Store.state.schoolAnchorDate = d.getTime();
-                    }
-                    
+                    if(firstEvt) Store.state.schoolAnchorDate = new Date(firstEvt.date).getTime();
                     Store.save();
                     if(!isAuto) { alert(`✅ סנכרון הצליח! נטענו ${events.length} אירועים.`); ui.render(); }
                 } else {
@@ -409,7 +403,6 @@ const logic = {
 
         parse(txt) {
             const rows = txt.split(/\r?\n/);
-            // Header normalization
             const h = rows[0].toLowerCase().split(',').map(s=>s.replace(/^"|"$/g,'').trim());
             const idx = { 
                 t: h.findIndex(x=>x.includes('title')), 
@@ -421,38 +414,28 @@ const logic = {
                 aud: h.findIndex(x=>x.includes('audience'))
             };
 
-            if(idx.t<0 || idx.d<0) return []; // Critical fail
+            if(idx.t<0 || idx.d<0) return [];
 
             return rows.slice(1).map((r, i) => {
-                // CSV Split (handle commas inside quotes)
                 const cols = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s=>s.replace(/^"|"$/g,'').trim());
                 if(cols.length<2) return null;
 
                 const title = cols[idx.t];
                 let dStr = cols[idx.d];
-                
-                // --- HARDCODED IL DATE PARSER (DD/MM/YYYY) ---
                 let dObj = null;
                 if(dStr) {
-                    // Normalize separators
                     dStr = dStr.replace(/\./g, '/').replace(/-/g, '/');
                     const parts = dStr.split('/');
                     if(parts.length===3) {
-                        // Assuming DD/MM/YYYY
                         let d = parseInt(parts[0]), m = parseInt(parts[1]), y = parseInt(parts[2]);
-                        // Fix 2-digit year
                         if(y < 100) y += 2000;
-                        
-                        // Safety check if user used YYYY/MM/DD
                         if(d > 2000) { let tmp=d; d=y; y=tmp; } 
-                        
                         dObj = new Date(y, m-1, d);
                     }
                 }
 
                 if(!title || !dObj || isNaN(dObj.getTime())) return null;
 
-                // Map Hebrew Types
                 let typeRaw = (cols[idx.ty]||'').toLowerCase();
                 let type = 'school';
                 if(typeRaw.includes('מבחן')) type='exam';
@@ -461,7 +444,6 @@ const logic = {
                 else if(typeRaw.includes('שיעור')) type='study';
 
                 let dur = parseFloat(cols[idx.dur]) || 1;
-                // Heuristic: if duration > 12, assume minutes
                 if(dur > 12) dur = dur/60;
 
                 return {
@@ -578,9 +560,16 @@ const ui = {
                 for(let i=0; i<pad; i++) h+=`<div class="month-cell empty"></div>`;
                 for(let d=1; d<=dim; d++) {
                     const cd=new Date(y,m,d), dStr=logic.fmt.iso(cd), dev=evs.filter(e=>e.date===dStr), isT=dStr===logic.fmt.iso(new Date());
-                    h+=`<div class="month-cell ${isT?'today':''}" onclick="Store.state.${k}=${cd.getTime()};ui.nav.setView('day')"><div class="month-num">${d}</div><div class="dots">`;
-                    dev.slice(0,4).forEach(e=>{ let c='#7e22ce'; if(e.type==='exam')c='#b45309'; if(e.type==='study')c='#1d4ed8'; h+=`<div class="dot" style="background:${c}"></div>`; });
-                    h+=`</div></div>`;
+                    h+=`<div class="month-cell ${isT?'today':''}" onclick="Store.state.${k}=${cd.getTime()};ui.nav.setView('day')"><div class="month-num">${d}</div>`;
+                    
+                    // --- Text Tags for Month View ---
+                    dev.slice(0,3).forEach(e=>{
+                        let bg='#7e22ce'; if(e.type==='exam')bg='#b45309'; if(e.type==='study')bg='#1d4ed8'; if(e.type==='activity')bg='#0f766e';
+                        h+=`<div class="month-event-text" style="background:${bg}">${e.time||''} ${e.title}</div>`;
+                    });
+                    if(dev.length>3) h+=`<div style="font-size:0.6rem;color:#666;margin-top:auto">+${dev.length-3} נוספים</div>`;
+                    
+                    h+=`</div>`;
                 }
                 h+=`</div>`;
             }
