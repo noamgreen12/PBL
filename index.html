@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v9.0 - Full Calendar</title>
+    <title>SmartStudent Pro v10.0 - Dual Calendars</title>
     <style>
         :root {
             --primary: #4361ee;
@@ -70,7 +70,7 @@
             border: 1px solid rgba(0,0,0,0.02); transition: transform 0.2s;
         }
 
-        /* --- CALENDAR HEADER & CONTROLS --- */
+        /* --- CALENDAR COMPONENTS --- */
         .cal-controls {
             background: white; padding: 10px; border-radius: 12px; box-shadow: var(--shadow);
             margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;
@@ -92,9 +92,7 @@
         .btn-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 50%; cursor: pointer; border: 1px solid #dee2e6; }
         .btn-today { font-size: 0.8rem; padding: 4px 10px; border-radius: 20px; background: var(--primary-light); color: var(--primary); border: none; font-weight: bold; cursor: pointer; }
 
-        /* --- CALENDAR GRIDS --- */
-        
-        /* General Grid Tag */
+        /* --- GRIDS --- */
         .cal-tag {
             font-size: 0.75rem; padding: 4px; border-radius: 4px; margin-bottom: 2px;
             cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
@@ -105,7 +103,7 @@
         .ct-activity { background: var(--tag-activity); color: var(--tag-activity-text); }
         .ct-school { background: var(--tag-trip); color: var(--tag-trip-text); }
 
-        /* Month View */
+        /* Month */
         .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .month-header-cell { text-align: center; font-size: 0.8rem; font-weight: bold; color: var(--text-muted); padding: 5px 0; }
         .month-day {
@@ -116,24 +114,24 @@
         .month-day-num { font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; text-align: left; }
         .month-day.other-month { opacity: 0.4; background: #f9f9f9; }
 
-        /* Week View (Similar to School Board but responsive) */
+        /* Week */
         .week-grid-container { overflow-x: auto; }
         .week-grid { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); gap: 6px; min-width: 800px; }
         .week-col { background: white; border: 1px solid #eee; border-radius: 8px; min-height: 200px; display: flex; flex-direction: column; }
         .week-header { background: #f8f9fa; padding: 8px; text-align: center; font-weight: bold; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         .week-body { padding: 5px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
 
-        /* Day View */
+        /* Day */
         .day-view-list { display: flex; flex-direction: column; gap: 10px; }
         .day-time-slot { display: flex; gap: 15px; padding: 10px; border-bottom: 1px solid #eee; background: white; border-radius: 8px; }
         .dt-time { font-weight: bold; width: 50px; color: var(--primary); }
 
-        /* Year View */
+        /* Year */
         .year-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .year-month { background: white; border: 1px solid #eee; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
         .year-month:hover { border-color: var(--primary); background: var(--primary-light); }
         
-        /* --- SYNC & SCHOOL BOARD SPECIFIC --- */
+        /* --- SYNC --- */
         .sync-box { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); border-radius: var(--radius); padding: 15px; margin-bottom: 20px; }
         .input-group-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .input-group-row select, .input-group-row input { flex: 1; margin:0; padding:10px; border:1px solid #ddd; border-radius:8px; }
@@ -190,14 +188,12 @@
         <form onsubmit="return false;">
             <label style="display:block;margin-top:10px">כותרת</label>
             <input type="text" id="addTitle" placeholder="שם האירוע..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd">
-            
             <label style="display:block;margin-top:10px">סוג</label>
             <select id="addType" onchange="ui.toggleExamFields()" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd">
                 <option value="activity">פעילות / חוג</option>
                 <option value="assignment">מטלה</option>
                 <option value="exam">מבחן (AI)</option>
             </select>
-            
             <div id="examFields" class="hidden" style="background:#f0f4ff;padding:10px;border-radius:8px;margin-top:10px">
                 <label>רמת קושי</label>
                 <select id="addDifficulty" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd">
@@ -206,16 +202,12 @@
                     <option value="7">קשה (7 שעות)</option>
                 </select>
             </div>
-            
             <label style="display:block;margin-top:10px">תאריך</label>
             <input type="date" id="addDate" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd">
-            
             <label style="display:block;margin-top:10px">שעה</label>
             <input type="time" id="addTime" value="16:00" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd">
-            
             <label style="display:block;margin-top:10px">משך (שעות)</label>
             <input type="number" id="addDuration" value="1" step="0.5" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd">
-            
             <button class="btn btn-primary" style="width:100%; margin-top:20px" onclick="logic.handleAddEvent()">שמור</button>
             <button class="btn btn-ghost" style="width:100%; margin-top:5px" onclick="ui.closeModals()">ביטול</button>
         </form>
@@ -238,21 +230,22 @@
 </div>
 
 <script>
-/** CONFIG: SCHOOL SHEETS */
+/** CONFIG */
 const SCHOOL_SHEETS = {
-  "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6.../pub?output=csv", 
+  "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv", 
   "שכבה יא'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS.../pub?output=csv",
   "כל בית הספר": "https://docs.google.com/spreadsheets/d/e/2PACX-1vU.../pub?output=csv"
 };
 
 /** STATE & DB */
 const DB = {
-    key: 'smartStudentV9',
+    key: 'smartStudentV10',
     data: { 
         personalEvents: [], schoolEvents: [], schoolSheetUrl: '', selectedSheetKey: '', lastSync: null,
-        // New Calendar State
-        calendarView: 'week', // day, week, month, year
-        calendarAnchor: Date.now() // timestamp
+        // Personal Calendar State
+        calendarView: 'week', calendarAnchor: Date.now(),
+        // School Calendar State (NEW)
+        schoolView: 'week', schoolAnchor: Date.now()
     },
     
     init() {
@@ -260,9 +253,13 @@ const DB = {
         if (stored) {
             this.data = JSON.parse(stored);
             if (!this.data.schoolEvents) this.data.schoolEvents = [];
+            // Defaults
             if (!this.data.calendarView) this.data.calendarView = 'week';
             if (!this.data.calendarAnchor) this.data.calendarAnchor = Date.now();
+            if (!this.data.schoolView) this.data.schoolView = 'week';
+            if (!this.data.schoolAnchor) this.data.schoolAnchor = Date.now();
             
+            // Auto sync
             if (this.data.schoolSheetUrl && (!this.data.lastSync || Date.now() - this.data.lastSync > 21600000)) {
                 logic.syncFromSheets(this.data.schoolSheetUrl, true);
             }
@@ -287,52 +284,61 @@ const DB = {
         this.data.personalEvents = this.data.personalEvents.filter(e => e.id != id);
         this.save();
         ui.closeModals();
-        app.render(); // Global Refresh
+        app.render(); 
     }
 };
 
-/** LOGIC ENGINE */
+/** LOGIC */
 const logic = {
     addDays(d, n) { const date = new Date(d); date.setDate(date.getDate() + n); return date; },
     formatDateIL(d) { const [y,m,day]=d.split('-'); return `${day}/${m}`; },
     getDayName(d) { return ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(d).getDay()]; },
     toMin(t) { if(!t)return 0; const[h,m]=t.split(':').map(Number); return h*60+m; },
 
-    // --- Calendar Navigation Logic (Bug Fix & Feature) ---
-    navCalendar(direction) {
-        const d = new Date(DB.data.calendarAnchor);
-        const view = DB.data.calendarView;
+    // --- Calendar Nav (Dual Mode) ---
+    // mode: 'personal' or 'school'
+    navCalendar(direction, mode) {
+        const keyAnchor = mode === 'school' ? 'schoolAnchor' : 'calendarAnchor';
+        const keyView = mode === 'school' ? 'schoolView' : 'calendarView';
+        
+        const d = new Date(DB.data[keyAnchor]);
+        const view = DB.data[keyView];
         
         if (view === 'day') d.setDate(d.getDate() + direction);
         else if (view === 'week') d.setDate(d.getDate() + (direction * 7));
         else if (view === 'month') d.setMonth(d.getMonth() + direction);
         else if (view === 'year') d.setFullYear(d.getFullYear() + direction);
         
-        DB.data.calendarAnchor = d.getTime();
+        DB.data[keyAnchor] = d.getTime();
         DB.save();
-        app.renderCalendar(document.getElementById('viewContainer'));
+        app.render(); // Re-render current page
     },
     
-    setCalendarView(view) {
-        DB.data.calendarView = view;
+    setView(view, mode) {
+        const keyView = mode === 'school' ? 'schoolView' : 'calendarView';
+        DB.data[keyView] = view;
         DB.save();
-        app.renderCalendar(document.getElementById('viewContainer'));
+        app.render();
     },
     
-    jumpToToday() {
-        DB.data.calendarAnchor = Date.now();
+    jumpToToday(mode) {
+        const keyAnchor = mode === 'school' ? 'schoolAnchor' : 'calendarAnchor';
+        DB.data[keyAnchor] = Date.now();
         DB.save();
-        app.renderCalendar(document.getElementById('viewContainer'));
+        app.render();
     },
     
-    jumpToMonth(m, y) {
-        const d = new Date(DB.data.calendarAnchor);
-        d.setMonth(m); d.setFullYear(y); d.setDate(1);
-        DB.data.calendarAnchor = d.getTime();
-        this.setCalendarView('month');
+    jumpToMonth(m, y, mode) {
+        const d = new Date(); d.setFullYear(y); d.setMonth(m); d.setDate(1);
+        const keyAnchor = mode === 'school' ? 'schoolAnchor' : 'calendarAnchor';
+        const keyView = mode === 'school' ? 'schoolView' : 'calendarView';
+        DB.data[keyAnchor] = d.getTime();
+        DB.data[keyView] = 'month';
+        DB.save();
+        app.render();
     },
 
-    // --- Google Sheets Sync ---
+    // --- Sync ---
     handleSheetSelection(key) {
         if (!key) return;
         const url = SCHOOL_SHEETS[key];
@@ -347,7 +353,7 @@ const logic = {
         let url = rawUrl;
         if(rawUrl.includes('/d/') && !rawUrl.includes('output=csv')) {
              const m = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-             if(m) url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv`;
+             if(m) url = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`;
         }
         try {
             const res = await fetch(url);
@@ -369,24 +375,18 @@ const logic = {
         const h = rows[0].toLowerCase().split(',').map(s=>s.trim().replace(/"/g,''));
         const idx = { t: h.indexOf('title'), dt: h.indexOf('date'), tm: h.indexOf('time'), ty: h.indexOf('type') };
         if(idx.t<0 || idx.dt<0) return [];
-        
         return rows.slice(1).map((r, i) => {
             const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s=>s.replace(/^"|"$/g,'').trim());
             if(c.length<3) return null;
             if(!c[idx.t] || isNaN(new Date(c[idx.dt]).getTime())) return null;
             return {
                 id: `sheet_${i}_${Date.now()}`,
-                title: c[idx.t],
-                date: c[idx.dt],
-                time: c[idx.tm]||'',
-                type: c[idx.ty]||'school',
-                duration: 1,
-                source: 'google_sheets'
+                title: c[idx.t], date: c[idx.dt], time: c[idx.tm]||'', type: c[idx.ty]||'school', duration: 1, source: 'google_sheets'
             };
         }).filter(Boolean);
     },
 
-    // --- Events & Conflict ---
+    // --- Events ---
     checkConflict(newE) {
         const all = [...DB.data.personalEvents, ...DB.data.schoolEvents];
         const nS = this.toMin(newE.time);
@@ -427,7 +427,7 @@ const logic = {
     }
 };
 
-/** UI HELPERS */
+/** UI */
 const ui = {
     openAddModal() {
         document.getElementById('addModal').classList.add('active');
@@ -465,7 +465,7 @@ const ui = {
     }
 };
 
-/** APP RENDERER */
+/** RENDERER */
 const app = {
     currentPage: 'dashboard',
     
@@ -482,7 +482,7 @@ const app = {
         const con = document.getElementById('viewContainer');
         con.innerHTML = '';
         if(this.currentPage === 'dashboard') this.renderDashboard(con);
-        else if(this.currentPage === 'calendar') this.renderCalendar(con);
+        else if(this.currentPage === 'calendar') this.renderGenericCalendar(con, 'personal');
         else this.renderSchool(con);
     },
 
@@ -495,12 +495,23 @@ const app = {
         con.innerHTML = html;
     },
 
-    // --- MAIN CALENDAR RENDER ---
-    renderCalendar(con) {
-        const anchor = new Date(DB.data.calendarAnchor);
-        const view = DB.data.calendarView;
+    // --- GENERIC CALENDAR BUILDER (USED BY BOTH TABS) ---
+    renderGenericCalendar(con, mode) {
+        // mode: 'personal' or 'school'
+        const isSchool = mode === 'school';
         
-        // --- 1. Header & Controls ---
+        // 1. Determine Data Source
+        // Personal: Personal + School events
+        // School: ONLY School events
+        const events = isSchool 
+            ? DB.data.schoolEvents 
+            : [...DB.data.personalEvents, ...DB.data.schoolEvents];
+
+        // 2. Determine State
+        const anchor = new Date(isSchool ? DB.data.schoolAnchor : DB.data.calendarAnchor);
+        const view = isSchool ? DB.data.schoolView : DB.data.calendarView;
+
+        // 3. Header
         let titleRange = '';
         if (view === 'day') titleRange = `${logic.formatDateIL(anchor.toISOString().split('T')[0])}`;
         else if (view === 'week') {
@@ -511,34 +522,35 @@ const app = {
         else if (view === 'month') titleRange = anchor.toLocaleDateString('he-IL', { month:'long', year:'numeric' });
         else if (view === 'year') titleRange = anchor.getFullYear();
 
-        let html = `
+        let html = '';
+        if(isSchool) html += `<h2>לוח בית ספר 🏫</h2>`;
+        else html += `<h2>היומן שלי</h2>`;
+
+        html += `
         <div class="cal-controls">
             <div class="cal-top-row">
-                <button class="btn-today" onclick="logic.jumpToToday()">היום</button>
+                <button class="btn-today" onclick="logic.jumpToToday('${mode}')">היום</button>
                 <div class="cal-nav-group">
-                    <button class="btn-icon" onclick="logic.navCalendar(-1)">❮</button>
+                    <button class="btn-icon" onclick="logic.navCalendar(-1, '${mode}')">❮</button>
                     <div class="cal-title">${titleRange}</div>
-                    <button class="btn-icon" onclick="logic.navCalendar(1)">❯</button>
+                    <button class="btn-icon" onclick="logic.navCalendar(1, '${mode}')">❯</button>
                 </div>
             </div>
             <div class="view-switcher">
-                <div class="view-btn ${view==='day'?'active':''}" onclick="logic.setCalendarView('day')">יום</div>
-                <div class="view-btn ${view==='week'?'active':''}" onclick="logic.setCalendarView('week')">שבוע</div>
-                <div class="view-btn ${view==='month'?'active':''}" onclick="logic.setCalendarView('month')">חודש</div>
-                <div class="view-btn ${view==='year'?'active':''}" onclick="logic.setCalendarView('year')">שנה</div>
+                <div class="view-btn ${view==='day'?'active':''}" onclick="logic.setView('day', '${mode}')">יום</div>
+                <div class="view-btn ${view==='week'?'active':''}" onclick="logic.setView('week', '${mode}')">שבוע</div>
+                <div class="view-btn ${view==='month'?'active':''}" onclick="logic.setView('month', '${mode}')">חודש</div>
+                <div class="view-btn ${view==='year'?'active':''}" onclick="logic.setView('year', '${mode}')">שנה</div>
             </div>
         </div>`;
 
-        // --- 2. Content Views ---
-        const allEvts = [...DB.data.personalEvents, ...DB.data.schoolEvents];
-
+        // 4. Grid Views
         if (view === 'day') {
             const dStr = anchor.toISOString().split('T')[0];
-            const evts = allEvts.filter(e => e.date === dStr).sort((a,b) => a.time.localeCompare(b.time));
-            
+            const dayEvts = events.filter(e => e.date === dStr).sort((a,b) => a.time.localeCompare(b.time));
             html += `<div class="day-view-list">`;
-            if(evts.length === 0) html += `<div class="card" style="text-align:center; color:#999">אין אירועים ליום זה</div>`;
-            evts.forEach(e => {
+            if(dayEvts.length === 0) html += `<div class="card" style="text-align:center; color:#999">אין אירועים ליום זה</div>`;
+            dayEvts.forEach(e => {
                 const eJson = JSON.stringify(e).replace(/'/g, "&#39;");
                 html += `
                 <div class="day-time-slot" onclick='ui.openViewModal(${eJson}, ${e.source==='google_sheets'})'>
@@ -554,16 +566,13 @@ const app = {
         } else if (view === 'week') {
             const start = ui.getStartOfWeek(anchor);
             html += `<div class="week-grid-container"><div class="week-grid">`;
-            
             for(let i=0; i<7; i++) {
                 const curr = logic.addDays(start, i);
                 const dStr = curr.toISOString().split('T')[0];
-                const dayEvts = allEvts.filter(e => e.date === dStr).sort((a,b)=>a.time.localeCompare(b.time));
-                
+                const dayEvts = events.filter(e => e.date === dStr).sort((a,b)=>a.time.localeCompare(b.time));
                 html += `<div class="week-col">
                     <div class="week-header">${logic.getDayName(dStr)} ${logic.formatDateIL(dStr)}</div>
                     <div class="week-body">`;
-                    
                 dayEvts.forEach(e => {
                     const eJson = JSON.stringify(e).replace(/'/g, "&#39;");
                     html += `<div class="cal-tag ${ui.getEvtColor(e.type)}" onclick='ui.openViewModal(${eJson}, ${e.source==='google_sheets'})'>
@@ -576,35 +585,28 @@ const app = {
 
         } else if (view === 'month') {
             const y = anchor.getFullYear(), m = anchor.getMonth();
-            const firstDay = new Date(y, m, 1);
             const daysInMonth = new Date(y, m + 1, 0).getDate();
-            const startPadding = firstDay.getDay(); // 0=Sun
+            const startPadding = new Date(y, m, 1).getDay();
             
             html += `<div class="month-grid">
                 <div class="month-header-cell">א'</div><div class="month-header-cell">ב'</div>
                 <div class="month-header-cell">ג'</div><div class="month-header-cell">ד'</div>
                 <div class="month-header-cell">ה'</div><div class="month-header-cell">ו'</div>
                 <div class="month-header-cell">ש'</div>`;
-            
-            // Empty slots
             for(let i=0; i<startPadding; i++) html += `<div class="month-day other-month"></div>`;
             
-            // Days
             const todayStr = new Date().toISOString().split('T')[0];
             for(let d=1; d<=daysInMonth; d++) {
-                const currStr = new Date(y, m, d+1).toISOString().split('T')[0]; // Safe calc
+                const currStr = new Date(y, m, d+1).toISOString().split('T')[0];
                 const isToday = currStr === todayStr;
-                const dayEvts = allEvts.filter(e => e.date === currStr);
+                const dayEvts = events.filter(e => e.date === currStr);
                 
-                html += `<div class="month-day ${isToday?'today':''}" onclick="DB.data.calendarAnchor=${new Date(y,m,d).getTime()};logic.setCalendarView('day')">
+                html += `<div class="month-day ${isToday?'today':''}" onclick="DB.data.${isSchool?'schoolAnchor':'calendarAnchor'}=${new Date(y,m,d).getTime()};logic.setView('day', '${mode}')">
                     <div class="month-day-num">${d}</div>`;
-                
-                // Dots for events
                 dayEvts.slice(0,3).forEach(e => {
                     html += `<div class="cal-tag ${ui.getEvtColor(e.type)}" style="height:6px; margin-bottom:2px; padding:0;"></div>`;
                 });
                 if(dayEvts.length > 3) html += `<div style="font-size:0.6rem; color:#999">+${dayEvts.length-3}</div>`;
-                
                 html += `</div>`;
             }
             html += `</div>`;
@@ -613,48 +615,34 @@ const app = {
             const months = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
             html += `<div class="year-grid">`;
             months.forEach((name, idx) => {
-                html += `<div class="year-month" onclick="logic.jumpToMonth(${idx}, ${anchor.getFullYear()})">${name}</div>`;
+                html += `<div class="year-month" onclick="logic.jumpToMonth(${idx}, ${anchor.getFullYear()}, '${mode}')">${name}</div>`;
             });
             html += `</div>`;
         }
 
-        con.innerHTML = html;
-    },
-
-    // --- SCHOOL BOARD (Independent View) ---
-    renderSchool(con) {
-        // Dropdown options
-        let opts = `<option value="">-- בחר לוח --</option>`;
-        for(let k in SCHOOL_SHEETS) opts += `<option value="${k}" ${DB.data.selectedSheetKey===k?'selected':''}>${k}</option>`;
-        
-        con.innerHTML = `
-        <h2>לוח בית ספר 🏫</h2>
-        <div class="sync-box">
-            <div class="input-group-row">
+        if(isSchool) {
+            // Prepend Sync Box
+            let opts = `<option value="">-- בחר לוח --</option>`;
+            for(let k in SCHOOL_SHEETS) opts += `<option value="${k}" ${DB.data.selectedSheetKey===k?'selected':''}>${k}</option>`;
+            const lastSync = DB.data.lastSync ? new Date(DB.data.lastSync).toLocaleTimeString() : '...';
+            const syncHtml = `<div class="sync-box"><div class="input-group-row">
                 <select onchange="logic.handleSheetSelection(this.value)">${opts}</select>
                 <button class="btn btn-primary" onclick="logic.syncFromSheets(DB.data.schoolSheetUrl)">רענן</button>
-            </div>
-            <div style="font-size:0.8rem; margin-top:5px; opacity:0.7">עודכן: ${DB.data.lastSync?new Date(DB.data.lastSync).toLocaleTimeString():'לא'}</div>
-        </div>`;
-        
-        // Simple List View for School Board (As previously requested, or Grid - keeping simple to ensure no regression on main calendar focus)
-        // Re-using the week grid logic briefly for consistency if needed, but sticking to List/Cards for School tab to differ from Calendar tab
-        const evts = DB.data.schoolEvents.sort((a,b)=>a.date.localeCompare(b.date));
-        if(!evts.length) con.innerHTML += `<div class="card">אין אירועים.</div>`;
-        
-        evts.forEach(e => {
-            const eJson = JSON.stringify(e).replace(/'/g, "&#39;");
-            con.innerHTML += `
-            <div class="card" onclick='ui.openViewModal(${eJson}, true)'>
-                <div style="font-weight:bold">${e.title}</div>
-                <div>${logic.formatDateIL(e.date)} | <span class="tag school">${e.audience}</span></div>
-            </div>`;
-        });
+            </div><div style="font-size:0.8rem;margin-top:5px;opacity:0.7">עודכן: ${lastSync}</div></div>`;
+            con.innerHTML = syncHtml + html;
+        } else {
+            con.innerHTML = html;
+        }
+    },
+
+    renderSchool(con) {
+        // Now uses generic renderer with 'school' mode
+        this.renderGenericCalendar(con, 'school');
     }
 };
 
 DB.init();
-app.navigate('calendar'); // Open improved calendar by default
+app.navigate('school');
 </script>
 </body>
 </html>
