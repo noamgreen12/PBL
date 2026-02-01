@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v16.0 - Refresh Fix</title>
+    <title>SmartStudent Pro v17.0 - Debug Mode</title>
     <style>
         :root {
             /* Palette */
@@ -162,6 +162,12 @@
         
         .sync-panel { background: linear-gradient(to right, #f3e8ff, #e0e7ff); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #d8b4fe; }
 
+        /* Debug Box */
+        #debugBox {
+            margin-top: 20px; background: #222; color: #0f0; padding: 15px; font-family: monospace; font-size: 0.8rem;
+            border-radius: 8px; display: none; white-space: pre-wrap;
+        }
+
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @media (min-width: 768px) {
             .sidebar { display: flex; } .bottom-nav { display: none; }
@@ -300,7 +306,9 @@
 const CONFIG = {
     // Add your school board links here
     sheets: {
-        "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv"
+        "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6.../pub?output=csv",
+        "שכבה יא'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS.../pub?output=csv",
+        "כל בית הספר": "https://docs.google.com/spreadsheets/d/e/2PACX-1vU.../pub?output=csv"
     },
     colors: {
         exam: 't-exam',
@@ -317,7 +325,7 @@ const CONFIG = {
  * =================================================================
  */
 const Store = {
-    key: 'SmartStudent_v16',
+    key: 'SmartStudent_v17',
     state: {
         personal: [],
         school: [],
@@ -360,6 +368,7 @@ const Store = {
     seed() {
         const today = new Date().toISOString().split('T')[0];
         this.state.personal = [
+            { id: 1, title: 'חוג כדורסל', type: 'activity', date: today, time: '16:00', duration: 1.5, isAuto: false }
         ];
         this.save();
     },
@@ -589,24 +598,25 @@ const logic = {
         }
     },
 
-    // --- Sync (FIXED) ---
+    // --- Sync (DEBUGGED & ROBUST) ---
     sync: {
         async run(url, isAuto) {
-            if (!url) return;
+            const btnRefresh = document.getElementById('btnRefresh');
+            if(btnRefresh) { btnRefresh.innerText = "טוען..."; btnRefresh.disabled = true; }
+
+            if (!url) {
+                if(!isAuto) alert("לא נבחר לוח.");
+                return;
+            }
             
             let fetchUrl = url;
-            
-            // FIX: Don't break "Publish to Web" links
-            if (url.includes('output=csv') || url.includes('pub?')) {
-                fetchUrl = url;
-            } 
-            // Only try to fix "Edit" links
-            else if (url.includes('/d/')) {
+            // Handle /d/ edit links
+            if (url.includes('/d/') && !url.includes('output=csv')) {
                 const id = url.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
                 if (id) fetchUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
             }
 
-            // CACHE BUSTING
+            // Cache Busting
             const separator = fetchUrl.includes('?') ? '&' : '?';
             fetchUrl += `${separator}_=${Date.now()}`; 
 
@@ -614,12 +624,17 @@ const logic = {
                 const res = await fetch(fetchUrl);
                 if (!res.ok) throw new Error('Fetch failed');
                 const text = await res.text();
+                
+                // Debug Log
+                const debugBox = document.getElementById('debugBox');
+                if(debugBox) debugBox.innerText = "RAW CSV (First 3 lines):\n" + text.split('\n').slice(0,3).join('\n') + "\n...";
+
                 const events = this.parse(text);
                 
                 if (events.length) {
                     Store.state.school = events;
                     Store.state.lastSync = Date.now();
-                    Store.state.sheetUrl = url; // Save original URL
+                    Store.state.sheetUrl = url; // Keep original selection
                     Store.save();
                     if (!isAuto) {
                         alert(`✅ סנכרון הצליח! נטענו ${events.length} אירועים.`);
@@ -631,6 +646,8 @@ const logic = {
             } catch (e) {
                 console.error(e);
                 if (!isAuto) alert('❌ שגיאה בסנכרון. ודא שהקובץ מפורסם (Publish to web).');
+            } finally {
+                if(btnRefresh) { btnRefresh.innerText = "רענן"; btnRefresh.disabled = false; }
             }
         },
 
@@ -638,48 +655,64 @@ const logic = {
             const rows = csvText.split(/\r?\n/);
             const headers = rows[0].toLowerCase().split(',').map(s => s.trim().replace(/"/g,''));
             
-            // Map columns
             const idx = { 
                 t: headers.indexOf('title'), 
                 d: headers.indexOf('date'), 
                 tm: headers.indexOf('time'),
                 ty: headers.indexOf('type'),
                 aud: headers.indexOf('audience'),
-                desc: headers.indexOf('description')
+                desc: headers.indexOf('description'),
+                dur: headers.indexOf('duration')
             };
 
             if (idx.t < 0 || idx.d < 0) return [];
 
             return rows.slice(1).map((row, i) => {
-                // Regex to handle commas inside quotes
                 const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g,'').trim());
                 if (cols.length < 2) return null;
 
                 const title = cols[idx.t];
                 let dateStr = cols[idx.d];
                 
-                // Date Parsing (Robust)
+                // --- Robust Date Parser ---
                 let dateObj = null;
                 if (dateStr) {
-                    // Try YYYY-MM-DD
-                    if (dateStr.includes('-')) dateObj = new Date(dateStr);
-                    // Try DD/MM/YYYY
-                    else if (dateStr.includes('/')) {
+                    // Try DD/MM/YYYY (Common in Israel)
+                    if (dateStr.includes('/')) {
                         const parts = dateStr.split('/');
-                        // Assume DD/MM/YYYY if first part > 12 or based on locale context
-                        if (parts.length === 3) dateObj = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                        if(parts.length === 3) {
+                            // Assume day is first
+                            dateObj = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                        }
+                    } 
+                    // Fallback YYYY-MM-DD
+                    else if (dateStr.includes('-')) {
+                        dateObj = new Date(dateStr);
                     }
                 }
 
                 if (!title || !dateObj || isNaN(dateObj.getTime())) return null;
+
+                // --- Type Mapper ---
+                let rawType = cols[idx.ty] || '';
+                let type = 'school';
+                if(rawType.includes('מבחן')) type = 'exam';
+                else if(rawType.includes('פעילות')) type = 'activity';
+                else if(rawType.includes('טיול')) type = 'trip';
+                else if(rawType.includes('שיעור')) type = 'study';
+
+                // --- Duration Logic ---
+                let dur = parseFloat(cols[idx.dur]) || 1;
+                // If duration > 12, assume minutes and convert to hours
+                if (dur > 12) dur = dur / 60;
 
                 return {
                     id: `sheet_${i}_${Date.now()}`,
                     title: title,
                     date: logic.fmt.iso(dateObj),
                     time: cols[idx.tm] || '',
-                    duration: 1,
-                    type: cols[idx.ty] || 'school',
+                    duration: dur,
+                    type: type,
                     audience: idx.aud > -1 ? cols[idx.aud] : '',
                     description: idx.desc > -1 ? cols[idx.desc] : '',
                     source: 'google_sheets'
@@ -699,39 +732,32 @@ const ui = {
         to(page) {
             Store.state.view = page;
             Store.save();
-            
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             const idx = page === 'dashboard' ? 0 : page === 'calendar' ? 1 : 2;
             document.querySelectorAll('.sidebar .nav-item')[idx].classList.add('active');
             document.querySelectorAll('.bottom-nav .nav-item')[idx].classList.add('active');
-            
             ui.render();
         },
-        
         move(dir) {
             const isSchool = Store.state.view === 'school';
             const anchorKey = isSchool ? 'schoolAnchorDate' : 'anchorDate';
             const viewKey = isSchool ? 'schoolView' : 'calView';
             const view = Store.state[viewKey];
             const current = new Date(Store.state[anchorKey]);
-
             if (view === 'day') current.setDate(current.getDate() + dir);
             else if (view === 'week') current.setDate(current.getDate() + (dir * 7));
             else if (view === 'month') current.setMonth(current.getMonth() + dir);
             else if (view === 'year') current.setFullYear(current.getFullYear() + dir);
-
             Store.state[anchorKey] = current.getTime();
             Store.save();
             ui.render();
         },
-
         setView(v) {
             const isSchool = Store.state.view === 'school';
             Store.state[isSchool ? 'schoolView' : 'calView'] = v;
             Store.save();
             ui.render();
         },
-
         today() {
             const isSchool = Store.state.view === 'school';
             Store.state[isSchool ? 'schoolAnchorDate' : 'anchorDate'] = Date.now();
@@ -743,7 +769,6 @@ const ui = {
     render() {
         const container = document.getElementById('mainContainer');
         const view = Store.state.view;
-
         if (view === 'dashboard') this.views.dashboard(container);
         else if (view === 'calendar') this.views.calendar(container, false);
         else if (view === 'school') this.views.calendar(container, true);
@@ -756,11 +781,7 @@ const ui = {
                 .filter(e => e.date >= today)
                 .sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 
-            let html = `
-                <h2>דאשבורד</h2>
-                <div style="margin-top:10px">
-            `;
-
+            let html = `<h2>דאשבורד</h2><div style="margin-top:10px">`;
             if (allEvents.length === 0) {
                 html += `<div class="card" style="text-align:center; padding:30px; color:#aaa;">אין אירועים קרובים 🎉</div>`;
             } else {
@@ -770,13 +791,9 @@ const ui = {
                     const safeJson = JSON.stringify(e).replace(/'/g, "&#39;");
                     const badgeClass = isSchool ? 'b-school' : 'b-personal';
                     const badgeText = isSchool ? 'בית ספר' : 'אישי';
-                    
                     html += `
                     <div class="dash-item" onclick='ui.modals.openView(${safeJson})'>
-                        <div class="dash-date">
-                            <div class="dash-day">${logic.fmt.dayName(e.date)}</div>
-                            <div class="dash-num">${logic.fmt.il(e.date)}</div>
-                        </div>
+                        <div class="dash-date"><div class="dash-day">${logic.fmt.dayName(e.date)}</div><div class="dash-num">${logic.fmt.il(e.date)}</div></div>
                         <div class="dash-info">
                             <h4>${e.title}</h4>
                             <div class="dash-meta">
@@ -795,15 +812,10 @@ const ui = {
         calendar(con, isSchoolBoard) {
             const anchorKey = isSchoolBoard ? 'schoolAnchorDate' : 'anchorDate';
             const viewKey = isSchoolBoard ? 'schoolView' : 'calView';
-            
             const anchor = new Date(Store.state[anchorKey]);
             const view = Store.state[viewKey];
-            
-            const events = isSchoolBoard 
-                ? Store.state.school 
-                : [...Store.state.personal, ...Store.state.school];
+            const events = isSchoolBoard ? Store.state.school : [...Store.state.personal, ...Store.state.school];
 
-            // Header
             let header = `<h2>${isSchoolBoard ? 'לוח בית ספר' : 'היומן שלי'}</h2>`;
             
             if (isSchoolBoard) {
@@ -813,13 +825,14 @@ const ui = {
                 <div class="sync-panel">
                     <div style="display:flex; gap:10px; margin-bottom:5px;">
                         <select onchange="logic.sync.run(CONFIG.sheets[this.value]);Store.state.selectedSheetKey=this.value;Store.save();">${opts}</select>
-                        <button class="btn-primary" style="width:auto; padding:5px 15px; margin:0; font-size:0.8rem;" onclick="logic.sync.run(Store.state.sheetUrl)">רענן</button>
+                        <button id="btnRefresh" class="btn-primary" style="width:auto; padding:5px 15px; margin:0; font-size:0.8rem;" onclick="logic.sync.run(Store.state.sheetUrl)">רענן</button>
                     </div>
                     <small>עודכן לאחרונה: ${Store.state.lastSync ? new Date(Store.state.lastSync).toLocaleTimeString() : 'מעולם לא'}</small>
+                    <div style="margin-top:5px; cursor:pointer; color:#666; font-size:0.7rem;" onclick="document.getElementById('debugBox').style.display='block'">🐞 Debug Info</div>
+                    <div id="debugBox"></div>
                 </div>`;
             }
 
-            // Navigation
             let rangeTitle = '';
             if (view === 'day') rangeTitle = logic.fmt.il(logic.fmt.iso(anchor));
             else if (view === 'week') {
@@ -829,25 +842,8 @@ const ui = {
             } else if (view === 'month') rangeTitle = anchor.toLocaleDateString('he-IL', { month:'long', year:'numeric' });
             else rangeTitle = anchor.getFullYear();
 
-            header += `
-            <div class="header-bar">
-                <div class="header-top">
-                    <button class="btn-today" onclick="ui.nav.today()">היום</button>
-                    <div class="header-controls">
-                        <button class="btn-icon" onclick="ui.nav.move(-1)">❮</button>
-                        <div class="header-title">${rangeTitle}</div>
-                        <button class="btn-icon" onclick="ui.nav.move(1)">❯</button>
-                    </div>
-                </div>
-                <div class="view-tabs">
-                    <div class="view-tab ${view==='day'?'active':''}" onclick="ui.nav.setView('day')">יום</div>
-                    <div class="view-tab ${view==='week'?'active':''}" onclick="ui.nav.setView('week')">שבוע</div>
-                    <div class="view-tab ${view==='month'?'active':''}" onclick="ui.nav.setView('month')">חודש</div>
-                    <div class="view-tab ${view==='year'?'active':''}" onclick="ui.nav.setView('year')">שנה</div>
-                </div>
-            </div>`;
+            header += `<div class="header-bar"><div class="header-top"><button class="btn-today" onclick="ui.nav.today()">היום</button><div class="header-controls"><button class="btn-icon" onclick="ui.nav.move(-1)">❮</button><div class="header-title">${rangeTitle}</div><button class="btn-icon" onclick="ui.nav.move(1)">❯</button></div></div><div class="view-tabs"><div class="view-tab ${view==='day'?'active':''}" onclick="ui.nav.setView('day')">יום</div><div class="view-tab ${view==='week'?'active':''}" onclick="ui.nav.setView('week')">שבוע</div><div class="view-tab ${view==='month'?'active':''}" onclick="ui.nav.setView('month')">חודש</div><div class="view-tab ${view==='year'?'active':''}" onclick="ui.nav.setView('year')">שנה</div></div></div>`;
 
-            // Content Grid
             let content = '';
 
             if (view === 'day') {
@@ -857,14 +853,7 @@ const ui = {
                 if(daysEvents.length === 0) content += `<div class="card" style="text-align:center;color:#999;padding:20px;">אין אירועים היום</div>`;
                 daysEvents.forEach(e => {
                     const safeJson = JSON.stringify(e).replace(/'/g, "&#39;");
-                    content += `
-                    <div class="time-slot" onclick='ui.modals.openView(${safeJson})'>
-                        <div class="ts-time">${e.time || '--'}</div>
-                        <div style="flex:1">
-                            <div style="font-weight:bold">${e.title}</div>
-                            <span class="evt-tag ${CONFIG.colors[e.type] || 't-school'}">${e.type}</span>
-                        </div>
-                    </div>`;
+                    content += `<div class="time-slot" onclick='ui.modals.openView(${safeJson})'><div class="ts-time">${e.time || '--'}</div><div style="flex:1"><div style="font-weight:bold">${e.title}</div><span class="evt-tag ${CONFIG.colors[e.type] || 't-school'}">${e.type}</span></div></div>`;
                 });
                 content += `</div>`;
             }
@@ -876,11 +865,7 @@ const ui = {
                     const curr = logic.addDays(start, i);
                     const dStr = logic.fmt.iso(curr);
                     const dayEvts = events.filter(e => e.date === dStr).sort((a,b)=>a.time.localeCompare(b.time));
-                    
-                    content += `
-                    <div class="day-col">
-                        <div class="day-head">${logic.fmt.dayName(dStr)} ${logic.fmt.il(dStr)}</div>
-                        <div class="day-body">`;
+                    content += `<div class="day-col"><div class="day-head">${logic.fmt.dayName(dStr)} ${logic.fmt.il(dStr)}</div><div class="day-body">`;
                     dayEvts.forEach(e => {
                         const safeJson = JSON.stringify(e).replace(/'/g, "&#39;");
                         content += `<div class="evt-tag ${CONFIG.colors[e.type]||'t-school'}" onclick='ui.modals.openView(${safeJson})'>${e.time} ${e.title}</div>`;
@@ -894,7 +879,6 @@ const ui = {
                 const y = anchor.getFullYear(), m = anchor.getMonth();
                 const daysInMonth = new Date(y, m+1, 0).getDate();
                 const padding = new Date(y, m, 1).getDay();
-                
                 content = `<div class="month-grid">`;
                 ['א','ב','ג','ד','ה','ו','ש'].forEach(d => content+=`<div style="text-align:center; font-weight:bold; font-size:0.8rem; color:#aaa;">${d}</div>`);
                 for(let i=0; i<padding; i++) content += `<div class="month-cell empty"></div>`;
@@ -904,10 +888,7 @@ const ui = {
                     const dStr = logic.fmt.iso(currDate);
                     const dayEvts = events.filter(e => e.date === dStr);
                     const isToday = dStr === todayStr;
-                    
-                    content += `<div class="month-cell ${isToday?'today':''}" onclick="Store.state.${anchorKey}=${currDate.getTime()};ui.nav.setView('day')">
-                        <div class="month-num">${d}</div>
-                        <div class="dots">`;
+                    content += `<div class="month-cell ${isToday?'today':''}" onclick="Store.state.${anchorKey}=${currDate.getTime()};ui.nav.setView('day')"><div class="month-num">${d}</div><div class="dots">`;
                     dayEvts.slice(0,4).forEach(e => {
                         let color = '#7e22ce'; 
                         if (e.type === 'exam') color='#d97706'; if (e.type === 'study') color='#2563eb';
@@ -941,7 +922,6 @@ const ui = {
         openView(evt) {
             const m = document.getElementById('modalView');
             const isSchool = evt.source === 'google_sheets';
-            
             document.getElementById('viewTitle').innerText = evt.title;
             document.getElementById('viewDate').innerText = logic.fmt.il(evt.date);
             document.getElementById('viewTime').innerText = evt.time || 'יום שלם';
@@ -968,7 +948,6 @@ const ui = {
             } else {
                 btnDel.style.display = 'block';
                 btnDel.onclick = () => { if(confirm('למחוק אירוע זה?')) Store.deleteEvent(evt.id); };
-                
                 if (evt.type === 'exam') {
                     const hasPlan = Store.state.personal.some(e => e.linkedExamId === evt.id);
                     if (hasPlan) aiDel.classList.remove('hidden');
@@ -982,25 +961,17 @@ const ui = {
             const text = document.getElementById('conflictText');
             const sugg = document.getElementById('conflictSuggestions');
             const alert = document.getElementById('conflictAlert');
-            
             text.innerText = `מתנגש עם "${evt.title}"`;
             sugg.innerHTML = '';
-            
             const slots = logic.findFreeSlots(date, dur);
             if (slots.length) {
                 slots.forEach(t => {
                     const chip = document.createElement('div');
-                    chip.className = 'evt-tag t-study';
-                    chip.innerText = t;
-                    chip.onclick = () => {
-                        document.getElementById('evtTime').value = t;
-                        alert.classList.add('hidden');
-                    };
+                    chip.className = 'evt-tag t-study'; chip.innerText = t;
+                    chip.onclick = () => { document.getElementById('evtTime').value = t; alert.classList.add('hidden'); };
                     sugg.appendChild(chip);
                 });
-            } else {
-                sugg.innerHTML = '<small>לא נמצאו חלונות פנויים ביום זה.</small>';
-            }
+            } else sugg.innerHTML = '<small>אין חלונות פנויים.</small>';
             alert.classList.remove('hidden');
         },
 
@@ -1008,15 +979,11 @@ const ui = {
             document.getElementById('aiMsg').innerHTML = msg;
             const container = document.getElementById('aiBlocks');
             container.innerHTML = '';
-            blocks.forEach(b => {
-                container.innerHTML += `<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`;
-            });
+            blocks.forEach(b => { container.innerHTML += `<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`; });
             document.getElementById('modalAI').classList.add('active');
         },
 
-        closeAll() {
-            document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
-        }
+        closeAll() { document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active')); }
     },
 
     toggleExamFields() {
@@ -1027,9 +994,7 @@ const ui = {
     }
 };
 
-window.app = {
-    navTo: ui.nav.to
-};
+window.app = { navTo: ui.nav.to };
 Store.init();
 ui.nav.to('dashboard');
 
