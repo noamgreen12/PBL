@@ -329,6 +329,59 @@
 <div class="modal-overlay" id="modalSettings">
     <div class="modal-content">
         <h2>⚙️ הגדרות</h2>
+
+        <!-- המגמות שלי - עכשיו למעלה! -->
+        <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg, #eff6ff, #dbeafe);border:2px solid var(--primary)">
+            <div style="font-weight:800;margin-bottom:12px;font-size:1.1rem;color:var(--primary)">📚 המגמות שלי</div>
+            <small style="color:var(--text);display:block;margin-bottom:12px;font-weight:600">בחר את המגמות שאתה לומד כדי לראות רק מבחנים רלוונטיים</small>
+            <div style="display:flex;flex-direction:column;gap:10px" id="tracksContainer">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
+                    <input type="checkbox" class="track-checkbox" value="מדעים" style="width:20px;height:20px;cursor:pointer">
+                    <span style="font-weight:600;font-size:1rem">🔬 מדעים</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
+                    <input type="checkbox" class="track-checkbox" value="מחשבים" style="width:20px;height:20px;cursor:pointer">
+                    <span style="font-weight:600;font-size:1rem">💻 מחשבים</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
+                    <input type="checkbox" class="track-checkbox" value="אומניות" style="width:20px;height:20px;cursor:pointer">
+                    <span style="font-weight:600;font-size:1rem">🎨 אומניות</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
+                    <input type="checkbox" class="track-checkbox" value="ספורט" style="width:20px;height:20px;cursor:pointer">
+                    <span style="font-weight:600;font-size:1rem">⚽ ספורט</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
+                    <input type="checkbox" class="track-checkbox" value="מוזיקה" style="width:20px;height:20px;cursor:pointer">
+                    <span style="font-weight:600;font-size:1rem">🎵 מוזיקה</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- רמת לימודים -->
+        <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg, #fef3c7, #fde68a);border:2px solid #f59e0b">
+            <div style="font-weight:800;margin-bottom:12px;font-size:1.1rem;color:#b45309">🔢 רמת לימודים</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+                <div>
+                    <label style="font-weight:700;margin-bottom:8px;display:block;color:#b45309">מתמטיקה</label>
+                    <select id="mathUnitsSelect" onchange="ui.settings.updateUnits('math', this.value)" style="padding:12px;border-radius:10px;border:2px solid #f59e0b;width:100%;font-weight:600;background:white">
+                        <option value="3">3 יחידות</option>
+                        <option value="4">4 יחידות</option>
+                        <option value="5">5 יחידות</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight:700;margin-bottom:8px;display:block;color:#b45309">אנגלית</label>
+                    <select id="englishUnitsSelect" onchange="ui.settings.updateUnits('english', this.value)" style="padding:12px;border-radius:10px;border:2px solid #f59e0b;width:100%;font-weight:600;background:white">
+                        <option value="3">3 יחידות</option>
+                        <option value="4">4 יחידות</option>
+                        <option value="5">5 יחידות</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- הצגת לוח בית ספר -->
         <div class="card" style="margin-bottom:20px">
             <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
                 <div>
@@ -339,55 +392,7 @@
             </label>
         </div>
 
-        <div class="card" style="margin-bottom:20px">
-            <div style="font-weight:bold;margin-bottom:12px">📚 המגמות שלי</div>
-            <small style="color:var(--text-muted);display:block;margin-bottom:10px">בחר את המגמות שאתה לומד כדי לראות רק מבחנים רלוונטיים</small>
-            <div style="display:flex;flex-direction:column;gap:8px" id="tracksContainer">
-                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
-                    <input type="checkbox" class="track-checkbox" value="מדעים" style="width:auto;cursor:pointer">
-                    <span>🔬 מדעים</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
-                    <input type="checkbox" class="track-checkbox" value="מחשבים" style="width:auto;cursor:pointer">
-                    <span>💻 מחשבים</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
-                    <input type="checkbox" class="track-checkbox" value="אומניות" style="width:auto;cursor:pointer">
-                    <span>🎨 אומניות</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
-                    <input type="checkbox" class="track-checkbox" value="ספורט" style="width:auto;cursor:pointer">
-                    <span>⚽ ספורט</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
-                    <input type="checkbox" class="track-checkbox" value="מוזיקה" style="width:auto;cursor:pointer">
-                    <span>🎵 מוזיקה</span>
-                </label>
-            </div>
-        </div>
-
-        <div class="card" style="margin-bottom:20px">
-            <div style="font-weight:bold;margin-bottom:12px">🔢 רמת לימודים</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
-                <div>
-                    <label style="font-weight:600;margin-bottom:6px;display:block">מתמטיקה</label>
-                    <select id="mathUnitsSelect" onchange="ui.settings.updateUnits('math', this.value)" style="padding:10px;border-radius:10px;border:2px solid var(--border);width:100%">
-                        <option value="3">3 יחידות</option>
-                        <option value="4">4 יחידות</option>
-                        <option value="5">5 יחידות</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-weight:600;margin-bottom:6px;display:block">אנגלית</label>
-                    <select id="englishUnitsSelect" onchange="ui.settings.updateUnits('english', this.value)" style="padding:10px;border-radius:10px;border:2px solid var(--border);width:100%">
-                        <option value="3">3 יחידות</option>
-                        <option value="4">4 יחידות</option>
-                        <option value="5">5 יחידות</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
+        <!-- התראות -->
         <div class="card" style="margin-bottom:20px">
             <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
                 <div>
