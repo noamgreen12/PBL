@@ -586,19 +586,75 @@ const ui = {
 
     views: {
         dash(con) {
-            const today=logic.fmt.iso(new Date());
-            const all=[...Store.state.personal, ...Store.state.school].filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+            const today=new Date();
+            today.setHours(0,0,0,0);
+            const todayStr=logic.fmt.iso(today);
+            const all=[...Store.state.personal, ...Store.state.school].filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
+
             let h=`<h2>דאשבורד</h2><div style="margin-top:10px">`;
-            if(!all.length) h+=`<div class="card" style="text-align:center;padding:30px;color:#aaa">אין אירועים קרובים 🎉</div>`;
-            else all.forEach(e=>{
-                const cls = e.source==='google_sheets'?'b-school':'b-personal';
-                const tag = CONFIG.colors[e.type]||'t-school';
-                const safe = JSON.stringify(e).replace(/'/g,"&#39;");
-                h+=`<div class="dash-item" onclick='ui.modals.openView(${safe})'>
-                    <div class="dash-date"><div class="dash-day">${logic.fmt.dayName(e.date)}</div><div class="dash-num">${logic.fmt.il(e.date)}</div></div>
-                    <div class="dash-info"><h4>${e.title}</h4><div class="dash-meta"><span class="badge ${cls}">${e.source==='google_sheets'?'ביה"ס':'אישי'}</span> <span>${e.time||'יום שלם'}</span></div></div>
-                </div>`;
-            });
+
+            if(!all.length) {
+                h+=`<div class="card" style="text-align:center;padding:30px;color:#aaa">אין אירועים קרובים 🎉</div>`;
+            } else {
+                // Group events by weeks
+                const groups = {};
+                all.forEach(e=>{
+                    const eventDate = new Date(e.date);
+                    const diffDays = Math.floor((eventDate - today) / (1000 * 60 * 60 * 24));
+
+                    let groupKey, groupLabel;
+                    if(diffDays === 0) {
+                        groupKey = 'today';
+                        groupLabel = '📅 היום';
+                    } else if(diffDays === 1) {
+                        groupKey = 'tomorrow';
+                        groupLabel = '🔜 מחר';
+                    } else if(diffDays <= 7) {
+                        groupKey = 'thisWeek';
+                        groupLabel = '📆 השבוע';
+                    } else if(diffDays <= 14) {
+                        groupKey = 'nextWeek';
+                        groupLabel = '📅 שבוע הבא';
+                    } else if(diffDays <= 30) {
+                        groupKey = 'thisMonth';
+                        groupLabel = '📋 החודש';
+                    } else {
+                        const monthName = eventDate.toLocaleDateString('he-IL', {month: 'long'});
+                        groupKey = `month_${eventDate.getMonth()}_${eventDate.getFullYear()}`;
+                        groupLabel = `📅 ${monthName}`;
+                    }
+
+                    if(!groups[groupKey]) {
+                        groups[groupKey] = {label: groupLabel, events: [], order: diffDays};
+                    }
+                    groups[groupKey].events.push(e);
+                });
+
+                // Sort groups by order
+                const sortedGroups = Object.values(groups).sort((a,b) => a.order - b.order);
+
+                // Render each group
+                sortedGroups.forEach(group => {
+                    h += `<div style="margin-top:20px;margin-bottom:10px">
+                        <div style="font-weight:700;font-size:1rem;color:var(--primary);display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                            ${group.label}
+                            <span style="background:var(--primary-light);color:var(--primary);font-size:0.75rem;padding:2px 8px;border-radius:12px;font-weight:600">${group.events.length}</span>
+                        </div>
+                    `;
+
+                    group.events.forEach(e=>{
+                        const cls = e.source==='google_sheets'?'b-school':'b-personal';
+                        const safe = JSON.stringify(e).replace(/'/g,"&#39;");
+                        h+=`<div class="dash-item" onclick='ui.modals.openView(${safe})'>
+                            <div class="dash-date"><div class="dash-day">${logic.fmt.dayName(e.date)}</div><div class="dash-num">${logic.fmt.il(e.date)}</div></div>
+                            <div class="dash-info"><h4>${e.title}</h4><div class="dash-meta"><span class="badge ${cls}">${e.source==='google_sheets'?'ביה"ס':'אישי'}</span> <span>${e.time||'יום שלם'}</span></div></div>
+                        </div>`;
+                    });
+
+                    h += `</div>`;
+                });
+            }
+
             con.innerHTML = h+'</div>';
         },
         cal(con, isSc) {
