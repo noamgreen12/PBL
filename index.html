@@ -86,6 +86,15 @@
         .ct-trip { background: var(--tag-trip); color: var(--tag-trip-text); }
         .ct-school { background: var(--tag-school); color: var(--tag-school-text); }
 
+        /* Event tags with colors */
+        .evt-tag { font-size: 0.75rem; padding: 6px 8px; border-radius: 6px; margin-bottom: 4px; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 500; display: block; color: white; }
+        .t-exam { background: #b45309; }
+        .t-study { background: #1d4ed8; }
+        .t-activity { background: #0f766e; }
+        .t-trip { background: #7e22ce; }
+        .t-school { background: #be185d; }
+        .t-assignment { background: #d97706; }
+
         /* Month */
         .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .month-header-cell { text-align: center; font-size: 0.8rem; font-weight: bold; color: var(--text-muted); padding: 5px 0; }
@@ -281,7 +290,7 @@ const CONFIG = {
     sheets: {
         "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv"
     },
-    colors: { exam:'t-exam', study:'t-study', activity:'t-activity', trip:'t-trip', school:'t-school' }
+    colors: { exam:'t-exam', study:'t-study', activity:'t-activity', trip:'t-trip', school:'t-school', assignment:'t-assignment' }
 };
 
 /** STORE */
