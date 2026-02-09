@@ -191,17 +191,17 @@
         <div class="logo">🎓 SmartStudent</div>
         <a class="nav-item" onclick="app.navTo('dashboard')"><span class="nav-icon">📊</span> דאשבורד</a>
         <a class="nav-item" onclick="app.navTo('calendar')"><span class="nav-icon">📅</span> היומן שלי</a>
-        <a class="nav-item" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> לוח בית ספר</a>
-        <a class="nav-item" onclick="PWA.testNotification()" style="border-top:1px solid var(--border);margin-top:auto;padding-top:10px"><span class="nav-icon">🔔</span> בדיקת התראות</a>
+        <a class="nav-item" id="schoolNavSidebar" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> לוח בית ספר</a>
+        <a class="nav-item" onclick="ui.modals.openSettings()" style="border-top:1px solid var(--border);margin-top:auto;padding-top:10px"><span class="nav-icon">⚙️</span> הגדרות</a>
     </aside>
 
     <main class="main-content" id="mainContainer"></main>
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottomNav">
         <a class="nav-item" onclick="app.navTo('dashboard')"><span class="nav-icon">📊</span> דאשבורד</a>
         <a class="nav-item" onclick="app.navTo('calendar')"><span class="nav-icon">📅</span> יומן</a>
-        <a class="nav-item" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> ביה"ס</a>
-        <a class="nav-item" onclick="PWA.testNotification()"><span class="nav-icon">🔔</span> התראות</a>
+        <a class="nav-item" id="schoolNavBottom" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> ביה"ס</a>
+        <a class="nav-item" onclick="ui.modals.openSettings()"><span class="nav-icon">⚙️</span> הגדרות</a>
     </nav>
 </div>
 
@@ -249,6 +249,31 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="modalSettings">
+    <div class="modal-content">
+        <h2>⚙️ הגדרות</h2>
+        <div class="card" style="margin-bottom:20px">
+            <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                <div>
+                    <div style="font-weight:bold;margin-bottom:5px">🏫 הצג לוח בית ספר</div>
+                    <small style="color:var(--text-muted)">למי שלא תלמיד או לא צריך את לוח בית הספר</small>
+                </div>
+                <input type="checkbox" id="settingSchoolCalendar" onchange="ui.settings.toggleSchoolCalendar(this.checked)" style="width:auto;height:24px;cursor:pointer">
+            </label>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+            <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                <div>
+                    <div style="font-weight:bold;margin-bottom:5px">🔔 התראות</div>
+                    <small style="color:var(--text-muted)">תזכורות על אירועים קרובים</small>
+                </div>
+                <button class="btn-icon" onclick="PWA.testNotification()" style="background:var(--primary);color:white">בדוק</button>
+            </label>
+        </div>
+        <button class="btn btn-primary" onclick="ui.modals.closeAll()">סגור</button>
+    </div>
+</div>
+
 <script>
 /** CONFIG */
 const CONFIG = {
@@ -262,10 +287,11 @@ const CONFIG = {
 const Store = {
     key: 'SmartStudent_v20',
     state: {
-        personal: [], school: [], view: 'dashboard', 
+        personal: [], school: [], view: 'dashboard',
         calView: 'week', schoolView: 'week',
         anchorDate: Date.now(), schoolAnchorDate: Date.now(),
-        sheetUrl: '', selectedSheetKey: '', lastSync: null
+        sheetUrl: '', selectedSheetKey: '', lastSync: null,
+        showSchoolCalendar: true
     },
     init() {
         try {
@@ -632,12 +658,37 @@ const ui = {
             document.getElementById('conflictAlert').classList.remove('hidden');
         },
         showAI(msg, blks) { document.getElementById('aiMsg').innerHTML=msg; const c=document.getElementById('aiBlocks'); c.innerHTML=''; blks.forEach(b=>{c.innerHTML+=`<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`;}); document.getElementById('modalAI').classList.add('active'); },
+        openSettings() {
+            document.getElementById('settingSchoolCalendar').checked = Store.state.showSchoolCalendar;
+            document.getElementById('modalSettings').classList.add('active');
+        },
         closeAll() { document.querySelectorAll('.modal-overlay').forEach(e=>e.classList.remove('active')); }
     },
-    toggleExamFields() { const t=document.getElementById('evtType').value; document.getElementById('examExtraFields').classList.toggle('hidden', t!=='exam'); }
+    toggleExamFields() { const t=document.getElementById('evtType').value; document.getElementById('examExtraFields').classList.toggle('hidden', t!=='exam'); },
+
+    settings: {
+        toggleSchoolCalendar(show) {
+            Store.state.showSchoolCalendar = show;
+            Store.save();
+            this.updateUI();
+        },
+        updateUI() {
+            const show = Store.state.showSchoolCalendar;
+            const sidebar = document.getElementById('schoolNavSidebar');
+            const bottom = document.getElementById('schoolNavBottom');
+
+            if(sidebar) sidebar.style.display = show ? 'flex' : 'none';
+            if(bottom) bottom.style.display = show ? 'flex' : 'none';
+
+            // If currently on school view and it's being hidden, go to dashboard
+            if(!show && Store.state.view === 'school') {
+                app.navTo('dashboard');
+            }
+        }
+    }
 };
 
-window.app={navTo:ui.nav.to}; Store.init(); ui.nav.to('dashboard');
+window.app={navTo:ui.nav.to}; Store.init(); ui.nav.to('dashboard'); ui.settings.updateUI();
 
 /** PWA & NOTIFICATIONS */
 const PWA = {
