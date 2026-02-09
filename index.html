@@ -200,7 +200,7 @@
         .btn-magic { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
         .btn-magic:hover { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
 
-        .fab { position: fixed; bottom: 90px; left: 20px; width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: var(--shadow-xl); cursor: pointer; z-index: 150; transition: var(--transition); border: 3px solid white; }
+        .fab { position: fixed; bottom: 90px; left: 20px; width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; line-height: 0; box-shadow: var(--shadow-xl); cursor: pointer; z-index: 150; transition: var(--transition); border: 3px solid white; }
         .fab:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4); }
         .fab:active { transform: scale(0.95) rotate(90deg); }
 
@@ -240,7 +240,7 @@
         @media (min-width: 768px) {
             .sidebar { display: flex; }
             .bottom-nav { display: none; }
-            .fab { left: 50%; margin-left: -420px; bottom: 40px; }
+            .fab { left: 20px; bottom: 40px; }
             .modal-overlay { align-items: center; }
             .modal-content { border-radius: 28px; padding: 36px; max-width: 560px; }
             .year-grid { grid-template-columns: repeat(4, 1fr); }
@@ -293,9 +293,30 @@
         <form onsubmit="return false;">
             <div class="form-group"><label>כותרת</label><input type="text" id="evtTitle" required></div>
             <div class="form-group"><label>סוג</label><select id="evtType" onchange="ui.toggleExamFields()"><option value="activity">פעילות</option><option value="assignment">מטלה</option><option value="exam">מבחן (AI Planner)</option></select></div>
-            <div id="examExtraFields" class="hidden" style="background:#eff6ff;padding:10px;border-radius:8px;margin-bottom:15px;"><label>רמת קושי (AI)</label><select id="evtDifficulty"><option value="2">קל (2 ש')</option><option value="4" selected>בינוני (4 ש')</option><option value="7">קשה (7 ש')</option></select><small style="color:var(--primary);display:block;margin-top:5px;">💡 ה-AI יפזר את הלמידה (שעה ביום).</small></div>
-            <div class="form-group"><label>תאריך</label><input type="date" id="evtDate" required></div>
-            <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1"><label>שעה</label><input type="time" id="evtTime" value="16:00" required></div><div class="form-group" style="flex:1"><label>משך</label><input type="number" id="evtDuration" value="1" step="0.5" required></div></div>
+            <div class="form-group"><label>תאריך</label><input type="date" id="evtDate" required style="max-width:100%"></div>
+
+            <!-- AI Planner - עכשיו מעל שעה ומשך -->
+            <div id="examExtraFields" class="hidden" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);padding:14px;border-radius:12px;margin-bottom:15px;border:2px solid var(--primary);">
+                <label style="font-weight:700;color:var(--primary)">רמת קושי (AI)</label>
+                <select id="evtDifficulty" style="margin-top:8px">
+                    <option value="2">קל (2 ש')</option>
+                    <option value="4" selected>בינוני (4 ש')</option>
+                    <option value="7">קשה (7 ש')</option>
+                </select>
+                <small style="color:var(--primary);display:block;margin-top:8px;font-weight:600;">💡 ה-AI יפזר את הלמידה (שעה ביום).</small>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+                <div>
+                    <label style="display:block;margin-bottom:8px;font-weight:700;font-size:0.95rem;">שעה</label>
+                    <input type="time" id="evtTime" value="16:00" required style="margin:0">
+                </div>
+                <div>
+                    <label style="display:block;margin-bottom:8px;font-weight:700;font-size:0.95rem;">משך (שעות)</label>
+                    <input type="number" id="evtDuration" value="1" step="0.5" required style="margin:0">
+                </div>
+            </div>
+
             <button class="btn btn-primary" onclick="logic.saveEvent()">שמור</button>
             <button class="btn btn-ghost" onclick="ui.modals.closeAll()">ביטול</button>
         </form>
