@@ -3,7 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v20.0 - Monthly Text</title>
+    <title>SmartStudent Pro v20.0</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="SmartStudent Pro">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SmartStudent">
+    <meta name="description" content="Smart calendar and planner for students with AI-powered study scheduling">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4f46e5">
+
+    <!-- Manifest (inline base64) -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU21hcnRTdHVkZW50IFBybyIsInNob3J0X25hbWUiOiJTbWFydFN0dWRlbnQiLCJkZXNjcmlwdGlvbiI6IlNtYXJ0IGNhbGVuZGFyIGFuZCBwbGFubmVyIGZvciBzdHVkZW50cyB3aXRoIEFJLXBvd2VyZWQgc3R1ZHkgc2NoZWR1bGluZyIsInN0YXJ0X3VybCI6Ii9pbmRleC5odG1sIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2YzZjRmNiIsInRoZW1lX2NvbG9yIjoiIzRmNDZlNSIsIm9yaWVudGF0aW9uIjoicG9ydHJhaXQtcHJpbWFyeSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCBmaWxsPSclMjM0ZjQ2ZTUnIHdpZHRoPScxMDAnIGhlaWdodD0nMTAwJyByeD0nMjAnLz48dGV4dCB4PSc1MCcgeT0nNzAnIGZvbnQtc2l6ZT0nNjAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9J3doaXRlJz7wn46TPC90ZXh0Pjwvc3ZnPiIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIiwicHVycG9zZSI6ImFueSBtYXNrYWJsZSJ9LHsic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLDxzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTAwIDEwMCc+PHJlY3QgZmlsbD0nJTIzNGY0NmU1JyB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzIwJy8+PHRleHQgeD0nNTAnIHk9JzcwJyBmb250LXNpemU9JzYwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSd3aGl0ZSc+8J+OkzwvdGV4dD48L3N2Zz4iLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCIsInB1cnBvc2UiOiJhbnkgbWFza2FibGUifV0sImNhdGVnb3JpZXMiOlsiZWR1Y2F0aW9uIiwicHJvZHVjdGl2aXR5Il19">
+
+    <!-- App Icon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234f46e5' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🎓</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234f46e5' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🎓</text></svg>">
     <style>
         :root {
             /* Palette */
@@ -165,6 +181,7 @@
         <a class="nav-item" onclick="app.navTo('dashboard')"><span class="nav-icon">📊</span> דאשבורד</a>
         <a class="nav-item" onclick="app.navTo('calendar')"><span class="nav-icon">📅</span> היומן שלי</a>
         <a class="nav-item" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> לוח בית ספר</a>
+        <a class="nav-item" onclick="PWA.testNotification()" style="border-top:1px solid var(--border);margin-top:auto;padding-top:10px"><span class="nav-icon">🔔</span> בדיקת התראות</a>
     </aside>
 
     <main class="main-content" id="mainContainer"></main>
@@ -609,6 +626,192 @@ const ui = {
 };
 
 window.app={navTo:ui.nav.to}; Store.init(); ui.nav.to('dashboard');
+
+/** PWA & NOTIFICATIONS */
+const PWA = {
+    init() {
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            this.registerSW();
+        }
+
+        // Request notification permission on load
+        this.requestNotificationPermission();
+
+        // Schedule notifications for upcoming events
+        this.scheduleNotifications();
+    },
+
+    async registerSW() {
+        try {
+            const swCode = `
+                self.addEventListener('install', (e) => {
+                    console.log('Service Worker: Installed');
+                    self.skipWaiting();
+                });
+
+                self.addEventListener('activate', (e) => {
+                    console.log('Service Worker: Activated');
+                    return self.clients.claim();
+                });
+
+                self.addEventListener('fetch', (e) => {
+                    e.respondWith(
+                        caches.match(e.request).then(response => response || fetch(e.request))
+                    );
+                });
+
+                self.addEventListener('notificationclick', (e) => {
+                    e.notification.close();
+                    e.waitUntil(clients.openWindow('/'));
+                });
+            `;
+
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            const registration = await navigator.serviceWorker.register(swUrl);
+            console.log('✅ Service Worker registered:', registration);
+
+            // Store registration for notifications
+            this.swRegistration = registration;
+        } catch (error) {
+            console.error('Service Worker registration failed:', error);
+        }
+    },
+
+    async requestNotificationPermission() {
+        if (!('Notification' in window)) {
+            console.log('This browser does not support notifications');
+            return;
+        }
+
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            console.log('Notification permission:', permission);
+        }
+    },
+
+    showNotification(title, options) {
+        if (Notification.permission === 'granted') {
+            if (this.swRegistration) {
+                this.swRegistration.showNotification(title, options);
+            } else if ('Notification' in window) {
+                new Notification(title, options);
+            }
+        }
+    },
+
+    async testNotification() {
+        if (!('Notification' in window)) {
+            alert('הדפדפן שלך לא תומך בהתראות');
+            return;
+        }
+
+        if (Notification.permission === 'denied') {
+            alert('❌ הרשאות התראות נחסמו. אנא אפשר התראות בהגדרות הדפדפן.');
+            return;
+        }
+
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('❌ נדרשת הרשאה להתראות כדי לקבל תזכורות');
+                return;
+            }
+        }
+
+        this.showNotification('🎉 התראות פעילות!', {
+            body: 'תקבל תזכורות על אירועים קרובים',
+            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+            badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+            vibrate: [200, 100, 200]
+        });
+        alert('✅ התראות פועלות! תקבל תזכורות על אירועים קרובים.');
+    },
+
+    scheduleNotifications() {
+        const now = new Date();
+        const allEvents = [...Store.state.personal, ...Store.state.school];
+
+        allEvents.forEach(event => {
+            const eventDate = new Date(event.date + 'T' + (event.time || '09:00'));
+            const timeDiff = eventDate - now;
+
+            // Schedule notifications for events in the next 7 days
+            if (timeDiff > 0 && timeDiff < 7 * 24 * 60 * 60 * 1000) {
+
+                // 1 day before notification
+                const oneDayBefore = timeDiff - (24 * 60 * 60 * 1000);
+                if (oneDayBefore > 0 && oneDayBefore < 24 * 60 * 60 * 1000) {
+                    setTimeout(() => {
+                        this.showNotification('תזכורת: מחר יש לך אירוע! 📅', {
+                            body: `${event.title} - ${event.time || 'יום שלם'}`,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+                            badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+                            tag: 'event-reminder-' + event.id,
+                            requireInteraction: true,
+                            vibrate: [200, 100, 200]
+                        });
+                    }, oneDayBefore);
+                }
+
+                // 1 hour before notification
+                const oneHourBefore = timeDiff - (60 * 60 * 1000);
+                if (oneHourBefore > 0 && oneHourBefore < 24 * 60 * 60 * 1000) {
+                    setTimeout(() => {
+                        this.showNotification('תזכורת: בעוד שעה! ⏰', {
+                            body: `${event.title} - ${event.time || 'יום שלם'}`,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+                            badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+                            tag: 'event-hour-' + event.id,
+                            requireInteraction: true,
+                            vibrate: [200, 100, 200, 100, 200]
+                        });
+                    }, oneHourBefore);
+                }
+            }
+        });
+    }
+};
+
+// Override Store.addEvent to reschedule notifications
+const originalAddEvent = Store.addEvent;
+Store.addEvent = function(e) {
+    originalAddEvent.call(this, e);
+    PWA.scheduleNotifications();
+};
+
+// Initialize PWA
+PWA.init();
+
+// Show install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Show install banner after 3 seconds
+    setTimeout(() => {
+        if (confirm('💾 האם תרצה להתקין את SmartStudent כאפליקציה בטלפון שלך?')) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+            });
+        }
+    }, 3000);
+});
+
+// iOS install instructions
+if (window.navigator.standalone === false && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    setTimeout(() => {
+        alert('📲 להתקנה ב-iPhone: לחץ על כפתור השיתוף ⬆️ ובחר "Add to Home Screen"');
+    }, 5000);
+}
 </script>
 </body>
 </html>
