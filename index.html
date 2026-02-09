@@ -209,7 +209,7 @@
 
 <div class="modal-overlay" id="modalAdd">
     <div class="modal-content">
-        <h2>הוספת אירוע</h2>
+        <h2 id="modalAddTitle">הוספת אירוע</h2>
         <div id="conflictAlert" class="alert-box alert-error hidden">
             <span>⚠️</span>
             <div><strong>התנגשות בזמן!</strong> <span id="conflictText"></span><div id="conflictSuggestions" style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap;"></div></div>
@@ -234,6 +234,7 @@
         <div id="aiPlanActions" class="hidden" style="margin-bottom:15px;border-top:1px solid var(--border);padding-top:10px;"><button class="btn btn-magic" onclick="logic.ai.planFromView()">📅 תכנן למידה</button></div>
         <div id="aiDeletePlan" class="hidden" style="margin-bottom:15px;"><button class="btn btn-ghost" style="color:var(--warning)" onclick="logic.ai.deletePlanFromView()">🗑️ מחק תוכנית</button></div>
         <button class="btn btn-primary" onclick="ui.modals.closeAll()">סגור</button>
+        <button id="btnEdit" class="btn btn-ghost" onclick="">✏️ ערוך אירוע</button>
         <button id="btnDelete" class="btn btn-ghost" style="color:var(--danger)" onclick="">🗑️ מחק אירוע</button>
     </div>
 </div>
@@ -311,6 +312,14 @@ const Store = {
         this.save();
     },
     addEvent(e) { this.state.personal.push(e); this.save(); ui.render(); },
+    updateEvent(id, updatedData) {
+        const idx = this.state.personal.findIndex(e => e.id == id);
+        if (idx > -1) {
+            this.state.personal[idx] = { ...this.state.personal[idx], ...updatedData };
+            this.save();
+            ui.render();
+        }
+    },
     deleteEvent(id) {
         const evt = this.state.personal.find(e=>e.id==id);
         if(evt && evt.type==='exam') this.state.personal = this.state.personal.filter(e=>e.linkedExamId!=id);
@@ -354,15 +363,29 @@ const logic = {
         return c;
     },
 
+    editingEventId: null,
+
     saveEvent() {
         const t=document.getElementById('evtTitle').value, d=document.getElementById('evtDate').value, tm=document.getElementById('evtTime').value;
         if(!t||!d||!tm) return;
         const dur=parseFloat(document.getElementById('evtDuration').value), tp=document.getElementById('evtType').value;
-        const newEvt = { id:Date.now(), title:t, date:d, time:tm, duration:dur, type:tp, isAuto:false, difficulty:document.getElementById('evtDifficulty').value };
-        const conf = logic.checkConflict(newEvt);
-        if(conf.collision) { ui.modals.showConflict(conf.event, d, dur); return; }
-        if(tp==='exam') { ui.modals.closeAll(); logic.ai.start(newEvt); return; }
-        Store.addEvent(newEvt); ui.modals.closeAll();
+
+        if(this.editingEventId) {
+            // Update existing event
+            const updatedData = { title:t, date:d, time:tm, duration:dur, type:tp, difficulty:document.getElementById('evtDifficulty').value };
+            const conf = logic.checkConflict({ ...updatedData, id:this.editingEventId });
+            if(conf.collision) { ui.modals.showConflict(conf.event, d, dur); return; }
+            Store.updateEvent(this.editingEventId, updatedData);
+            this.editingEventId = null;
+            ui.modals.closeAll();
+        } else {
+            // Add new event
+            const newEvt = { id:Date.now(), title:t, date:d, time:tm, duration:dur, type:tp, isAuto:false, difficulty:document.getElementById('evtDifficulty').value };
+            const conf = logic.checkConflict(newEvt);
+            if(conf.collision) { ui.modals.showConflict(conf.event, d, dur); return; }
+            if(tp==='exam') { ui.modals.closeAll(); logic.ai.start(newEvt); return; }
+            Store.addEvent(newEvt); ui.modals.closeAll();
+        }
     },
 
     ai: {
@@ -639,16 +662,53 @@ const ui = {
     },
 
     modals: {
-        openAdd() { document.getElementById('modalAdd').classList.add('active'); document.getElementById('evtDate').value=logic.fmt.iso(new Date()); document.getElementById('conflictAlert').classList.add('hidden'); },
+        openAdd() {
+            logic.editingEventId = null;
+            document.getElementById('modalAddTitle').innerText = 'הוספת אירוע';
+            document.getElementById('modalAdd').classList.add('active');
+            document.getElementById('evtDate').value=logic.fmt.iso(new Date());
+            document.getElementById('evtTitle').value='';
+            document.getElementById('evtTime').value='16:00';
+            document.getElementById('evtDuration').value='1';
+            document.getElementById('evtType').value='activity';
+            document.getElementById('evtDifficulty').value='4';
+            ui.toggleExamFields();
+            document.getElementById('conflictAlert').classList.add('hidden');
+        },
+        openEdit(e) {
+            logic.editingEventId = e.id;
+            document.getElementById('modalAddTitle').innerText = 'עריכת אירוע';
+            document.getElementById('evtTitle').value = e.title;
+            document.getElementById('evtDate').value = e.date;
+            document.getElementById('evtTime').value = e.time;
+            document.getElementById('evtDuration').value = e.duration;
+            document.getElementById('evtType').value = e.type;
+            document.getElementById('evtDifficulty').value = e.difficulty || '4';
+            ui.toggleExamFields();
+            document.getElementById('conflictAlert').classList.add('hidden');
+            document.getElementById('modalAdd').classList.add('active');
+        },
         openView(e) {
             const m=document.getElementById('modalView'), isSc=e.source==='google_sheets';
             document.getElementById('viewTitle').innerText=e.title; document.getElementById('viewDate').innerText=logic.fmt.il(e.date);
             document.getElementById('viewTime').innerText=e.time||'--'; document.getElementById('viewDuration').innerText=e.duration+' שעות';
             document.getElementById('viewType').innerHTML=`<span class="evt-tag ${CONFIG.colors[e.type]||'t-school'}">${e.type}</span>`;
             const desc=document.getElementById('viewDesc'); if(e.description||e.audience){desc.style.display='block';desc.innerText=`${e.audience?`[${e.audience}] `:''}${e.description||''}`;}else desc.style.display='none';
-            const bd=document.getElementById('btnDelete'), ba=document.getElementById('aiPlanActions'), bad=document.getElementById('aiDeletePlan');
+            const bd=document.getElementById('btnDelete'), be=document.getElementById('btnEdit'), ba=document.getElementById('aiPlanActions'), bad=document.getElementById('aiDeletePlan');
             ba.classList.add('hidden'); bad.classList.add('hidden');
-            if(isSc) bd.style.display='none'; else { bd.style.display='block'; bd.onclick=()=>{if(confirm('למחוק?')) Store.deleteEvent(e.id);}; if(e.type==='exam'){ if(Store.state.personal.some(x=>x.linkedExamId===e.id)) bad.classList.remove('hidden'); else ba.classList.remove('hidden'); } }
+            if(isSc) {
+                bd.style.display='none';
+                be.style.display='none';
+            } else {
+                bd.style.display='block';
+                be.style.display='block';
+                bd.onclick=()=>{if(confirm('למחוק?')) Store.deleteEvent(e.id);};
+                be.onclick=()=>{ui.modals.closeAll(); ui.modals.openEdit(e);};
+                if(e.type==='exam'){
+                    if(Store.state.personal.some(x=>x.linkedExamId===e.id)) bad.classList.remove('hidden');
+                    else ba.classList.remove('hidden');
+                }
+            }
             m.classList.add('active');
         },
         showConflict(e,d,dur) {
