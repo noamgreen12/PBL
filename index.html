@@ -338,6 +338,56 @@
                 <input type="checkbox" id="settingSchoolCalendar" onchange="ui.settings.toggleSchoolCalendar(this.checked)" style="width:auto;height:24px;cursor:pointer">
             </label>
         </div>
+
+        <div class="card" style="margin-bottom:20px">
+            <div style="font-weight:bold;margin-bottom:12px">📚 המגמות שלי</div>
+            <small style="color:var(--text-muted);display:block;margin-bottom:10px">בחר את המגמות שאתה לומד כדי לראות רק מבחנים רלוונטיים</small>
+            <div style="display:flex;flex-direction:column;gap:8px" id="tracksContainer">
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
+                    <input type="checkbox" class="track-checkbox" value="מדעים" style="width:auto;cursor:pointer">
+                    <span>🔬 מדעים</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
+                    <input type="checkbox" class="track-checkbox" value="מחשבים" style="width:auto;cursor:pointer">
+                    <span>💻 מחשבים</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
+                    <input type="checkbox" class="track-checkbox" value="אומניות" style="width:auto;cursor:pointer">
+                    <span>🎨 אומניות</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
+                    <input type="checkbox" class="track-checkbox" value="ספורט" style="width:auto;cursor:pointer">
+                    <span>⚽ ספורט</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer">
+                    <input type="checkbox" class="track-checkbox" value="מוזיקה" style="width:auto;cursor:pointer">
+                    <span>🎵 מוזיקה</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+            <div style="font-weight:bold;margin-bottom:12px">🔢 רמת לימודים</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+                <div>
+                    <label style="font-weight:600;margin-bottom:6px;display:block">מתמטיקה</label>
+                    <select id="mathUnitsSelect" onchange="ui.settings.updateUnits('math', this.value)" style="padding:10px;border-radius:10px;border:2px solid var(--border);width:100%">
+                        <option value="3">3 יחידות</option>
+                        <option value="4">4 יחידות</option>
+                        <option value="5">5 יחידות</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight:600;margin-bottom:6px;display:block">אנגלית</label>
+                    <select id="englishUnitsSelect" onchange="ui.settings.updateUnits('english', this.value)" style="padding:10px;border-radius:10px;border:2px solid var(--border);width:100%">
+                        <option value="3">3 יחידות</option>
+                        <option value="4">4 יחידות</option>
+                        <option value="5">5 יחידות</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <div class="card" style="margin-bottom:20px">
             <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
                 <div>
@@ -368,7 +418,10 @@ const Store = {
         calView: 'week', schoolView: 'week',
         anchorDate: Date.now(), schoolAnchorDate: Date.now(),
         sheetUrl: '', selectedSheetKey: '', lastSync: null,
-        showSchoolCalendar: true
+        showSchoolCalendar: true,
+        selectedTracks: [], // מגמות שנבחרו
+        mathUnits: 3, // יחידות מתמטיקה (3/4/5)
+        englishUnits: 3 // יחידות אנגלית (3/4/5)
     },
     init() {
         try {
@@ -416,6 +469,39 @@ const logic = {
     getStartOfWeek: d => { const x=new Date(d); x.setDate(x.getDate()-x.getDay()); return x; },
     toMin: t => { if(!t)return 0; const[h,m]=t.split(':').map(Number); return h*60+m; },
     minToStr: m => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`,
+
+    // Filter school events by selected tracks and units
+    filterSchoolEvents(events) {
+        if(!Store.state.selectedTracks || Store.state.selectedTracks.length === 0) {
+            return events; // אם לא נבחרו מגמות, להציג הכל
+        }
+
+        return events.filter(e => {
+            if(!e.audience) return true; // אירועים ללא קהל יוצג = אירועי כיתה כללי
+
+            const aud = e.audience.toLowerCase();
+
+            // בדיקה אם זה מבחן מתמטיקה או אנגלית עם יחידות
+            if(aud.includes('מתמטיקה') || aud.includes('math')) {
+                if(aud.includes('3') && Store.state.mathUnits !== 3) return false;
+                if(aud.includes('4') && Store.state.mathUnits !== 4) return false;
+                if(aud.includes('5') && Store.state.mathUnits !== 5) return false;
+            }
+
+            if(aud.includes('אנגלית') || aud.includes('english')) {
+                if(aud.includes('3') && Store.state.englishUnits !== 3) return false;
+                if(aud.includes('4') && Store.state.englishUnits !== 4) return false;
+                if(aud.includes('5') && Store.state.englishUnits !== 5) return false;
+            }
+
+            // בדיקה אם האירוע שייך לאחת המגמות שנבחרו
+            const isRelevant = Store.state.selectedTracks.some(track =>
+                aud.includes(track.toLowerCase())
+            );
+
+            return isRelevant;
+        });
+    },
 
     checkConflict(newEvt, excludeId=null) {
         const all = [...Store.state.personal, ...Store.state.school];
@@ -656,7 +742,8 @@ const ui = {
             const today=new Date();
             today.setHours(0,0,0,0);
             const todayStr=logic.fmt.iso(today);
-            const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+            let schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+            schoolEvents = logic.filterSchoolEvents(schoolEvents); // פילטר לפי מגמות ויחידות
             const all=[...Store.state.personal, ...schoolEvents].filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
 
             let h=`<h2>דאשבורד</h2><div style="margin-top:10px">`;
@@ -728,8 +815,9 @@ const ui = {
         cal(con, isSc) {
             const k = isSc?'schoolAnchorDate':'anchorDate', vk=isSc?'schoolView':'calView';
             const anc=new Date(Store.state[k]), v=Store.state[vk];
-            const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
-            const evs=isSc?Store.state.school:[...Store.state.personal,...schoolEvents];
+            let schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+            schoolEvents = logic.filterSchoolEvents(schoolEvents); // פילטר לפי מגמות ויחידות
+            const evs=isSc?logic.filterSchoolEvents(Store.state.school):[...Store.state.personal,...schoolEvents];
             
             // Header
             let h=`<h2>${isSc?'לוח בית ספר':'היומן שלי'}</h2>`;
@@ -855,6 +943,17 @@ const ui = {
         showAI(msg, blks) { document.getElementById('aiMsg').innerHTML=msg; const c=document.getElementById('aiBlocks'); c.innerHTML=''; blks.forEach(b=>{c.innerHTML+=`<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`;}); document.getElementById('modalAI').classList.add('active'); },
         openSettings() {
             document.getElementById('settingSchoolCalendar').checked = Store.state.showSchoolCalendar;
+
+            // טען מגמות שנבחרו
+            document.querySelectorAll('.track-checkbox').forEach(cb => {
+                cb.checked = Store.state.selectedTracks.includes(cb.value);
+                cb.onchange = () => ui.settings.updateTracks();
+            });
+
+            // טען יחידות
+            document.getElementById('mathUnitsSelect').value = Store.state.mathUnits;
+            document.getElementById('englishUnitsSelect').value = Store.state.englishUnits;
+
             document.getElementById('modalSettings').classList.add('active');
         },
         closeAll() { document.querySelectorAll('.modal-overlay').forEach(e=>e.classList.remove('active')); }
@@ -867,6 +966,26 @@ const ui = {
             Store.save();
             this.updateUI();
             ui.render(); // Refresh the current view
+        },
+        updateTracks() {
+            const selected = [];
+            document.querySelectorAll('.track-checkbox:checked').forEach(cb => {
+                selected.push(cb.value);
+            });
+            Store.state.selectedTracks = selected;
+            Store.save();
+            ui.render(); // Refresh to show filtered events
+            PWA.scheduleNotifications(); // Update notifications
+        },
+        updateUnits(subject, value) {
+            if(subject === 'math') {
+                Store.state.mathUnits = parseInt(value);
+            } else if(subject === 'english') {
+                Store.state.englishUnits = parseInt(value);
+            }
+            Store.save();
+            ui.render(); // Refresh to show filtered events
+            PWA.scheduleNotifications(); // Update notifications
         },
         updateUI() {
             const show = Store.state.showSchoolCalendar;
@@ -990,7 +1109,8 @@ const PWA = {
 
     scheduleNotifications() {
         const now = new Date();
-        const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+        let schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+        schoolEvents = logic.filterSchoolEvents(schoolEvents); // פילטר לפי מגמות ויחידות
         const allEvents = [...Store.state.personal, ...schoolEvents];
 
         allEvents.forEach(event => {
