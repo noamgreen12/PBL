@@ -589,7 +589,8 @@ const ui = {
             const today=new Date();
             today.setHours(0,0,0,0);
             const todayStr=logic.fmt.iso(today);
-            const all=[...Store.state.personal, ...Store.state.school].filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
+            const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+            const all=[...Store.state.personal, ...schoolEvents].filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
 
             let h=`<h2>דאשבורד</h2><div style="margin-top:10px">`;
 
@@ -659,7 +660,9 @@ const ui = {
         },
         cal(con, isSc) {
             const k = isSc?'schoolAnchorDate':'anchorDate', vk=isSc?'schoolView':'calView';
-            const anc=new Date(Store.state[k]), v=Store.state[vk], evs=isSc?Store.state.school:[...Store.state.personal,...Store.state.school];
+            const anc=new Date(Store.state[k]), v=Store.state[vk];
+            const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+            const evs=isSc?Store.state.school:[...Store.state.personal,...schoolEvents];
             
             // Header
             let h=`<h2>${isSc?'לוח בית ספר':'היומן שלי'}</h2>`;
@@ -796,6 +799,7 @@ const ui = {
             Store.state.showSchoolCalendar = show;
             Store.save();
             this.updateUI();
+            ui.render(); // Refresh the current view
         },
         updateUI() {
             const show = Store.state.showSchoolCalendar;
@@ -919,7 +923,8 @@ const PWA = {
 
     scheduleNotifications() {
         const now = new Date();
-        const allEvents = [...Store.state.personal, ...Store.state.school];
+        const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+        const allEvents = [...Store.state.personal, ...schoolEvents];
 
         allEvents.forEach(event => {
             const eventDate = new Date(event.date + 'T' + (event.time || '09:00'));
