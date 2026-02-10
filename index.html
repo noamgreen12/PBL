@@ -459,14 +459,27 @@ const logic = {
         dayName: d => ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(d).getDay()],
         relative: d => { const df=Math.ceil((new Date(d)-new Date().setHours(0,0,0,0))/864e5); return df===0?'היום':(df===1?'מחר':`עוד ${df} ימים`); }
     },
-    addDays: (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; },
-    getStartOfWeek: d => {
-        // Ensure we work with local date to avoid timezone issues
-        const x = d instanceof Date ? new Date(d.getFullYear(), d.getMonth(), d.getDate()) : new Date(d);
-        const day = x.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-        // Go back to Sunday (start of Hebrew week)
-        x.setDate(x.getDate() - day);
+    addDays: (d,n) => {
+        const x=new Date(d);
+        x.setDate(x.getDate()+n);
         return x;
+    },
+    getStartOfWeek: d => {
+        // Create date from input - handle both Date objects and timestamps
+        const inputDate = d instanceof Date ? d : new Date(d);
+
+        // Get the current day of week (0=Sunday, 6=Saturday)
+        const currentDayOfWeek = inputDate.getDay();
+
+        // Calculate days to subtract to get to Sunday
+        const daysToSunday = currentDayOfWeek; // If Sunday (0), subtract 0. If Monday (1), subtract 1, etc.
+
+        // Create a new date at the start of the week (Sunday)
+        const startDate = new Date(inputDate);
+        startDate.setDate(startDate.getDate() - daysToSunday);
+
+        // Return date at midnight to ensure consistency
+        return new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
     },
     toMin: t => { if(!t)return 0; const[h,m]=t.split(':').map(Number); return h*60+m; },
     minToStr: m => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`,
