@@ -803,7 +803,7 @@ const logic = {
                 return {
                     id: `sh_${i}_${Date.now()}`,
                     title: title,
-                    date: logic.fmt.iso(dObj),
+                    date: `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`,
                     time: cols[idx.tm] || '',
                     duration: dur,
                     type: type,
