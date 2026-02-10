@@ -3,19 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartStudent Pro v20.0 - Monthly Text</title>
+    <title>SmartStudent Pro v20.0</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="SmartStudent Pro">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SmartStudent">
+    <meta name="description" content="Smart calendar and planner for students with AI-powered study scheduling">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4f46e5">
+
+    <!-- Manifest (inline base64) -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU21hcnRTdHVkZW50IFBybyIsInNob3J0X25hbWUiOiJTbWFydFN0dWRlbnQiLCJkZXNjcmlwdGlvbiI6IlNtYXJ0IGNhbGVuZGFyIGFuZCBwbGFubmVyIGZvciBzdHVkZW50cyB3aXRoIEFJLXBvd2VyZWQgc3R1ZHkgc2NoZWR1bGluZyIsInN0YXJ0X3VybCI6Ii9pbmRleC5odG1sIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2YzZjRmNiIsInRoZW1lX2NvbG9yIjoiIzRmNDZlNSIsIm9yaWVudGF0aW9uIjoicG9ydHJhaXQtcHJpbWFyeSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCBmaWxsPSclMjM0ZjQ2ZTUnIHdpZHRoPScxMDAnIGhlaWdodD0nMTAwJyByeD0nMjAnLz48dGV4dCB4PSc1MCcgeT0nNzAnIGZvbnQtc2l6ZT0nNjAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9J3doaXRlJz7wn46TPC90ZXh0Pjwvc3ZnPiIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIiwicHVycG9zZSI6ImFueSBtYXNrYWJsZSJ9LHsic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLDxzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTAwIDEwMCc+PHJlY3QgZmlsbD0nJTIzNGY0NmU1JyB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzIwJy8+PHRleHQgeD0nNTAnIHk9JzcwJyBmb250LXNpemU9JzYwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSd3aGl0ZSc+8J+OkzwvdGV4dD48L3N2Zz4iLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCIsInB1cnBvc2UiOiJhbnkgbWFza2FibGUifV0sImNhdGVnb3JpZXMiOlsiZWR1Y2F0aW9uIiwicHJvZHVjdGl2aXR5Il19">
+
+    <!-- App Icon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234f46e5' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🎓</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234f46e5' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🎓</text></svg>">
     <style>
         :root {
-            /* Palette */
+            /* Enhanced Palette */
             --primary: #4f46e5;
+            --primary-hover: #4338ca;
             --primary-light: #eef2ff;
+            --primary-dark: #3730a3;
             --secondary: #6366f1;
-            --bg: #f3f4f6;
+            --bg: #f8fafc;
             --card-bg: #ffffff;
-            --text: #1f2937;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
-            
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+
             /* Tags */
             --tag-exam: #fef3c7; --tag-exam-text: #b45309;
             --tag-activity: #ccfbf1; --tag-activity-text: #0f766e;
@@ -24,136 +42,221 @@
             --tag-school: #fce7f3; --tag-school-text: #be185d;
 
             --radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
             --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; tap-highlight-color: transparent; }
-        body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
 
         /* --- Layout --- */
         .app-container { display: flex; height: 100%; width: 100%; position: relative; }
-        
-        .sidebar { width: 260px; background: var(--card-bg); padding: 20px; display: none; flex-direction: column; gap: 10px; border-left: 1px solid var(--border); z-index: 20; }
-        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--card-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-muted); cursor: pointer; padding: 8px 12px; border-radius: var(--radius); transition: 0.2s; font-size: 0.8rem; font-weight: 500; text-decoration: none; }
-        .nav-item.active { color: var(--primary); background: var(--primary-light); font-weight: 600; }
-        .nav-icon { font-size: 1.25rem; }
-        .sidebar .nav-item { flex-direction: row; justify-content: flex-start; font-size: 1rem; gap: 12px; }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; position: relative; }
-        
+        .sidebar { width: 280px; background: var(--card-bg); padding: 24px; display: none; flex-direction: column; gap: 8px; border-left: 1px solid var(--border); z-index: 20; box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.05); }
+        .logo { font-size: 1.6rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: var(--card-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); z-index: 100; padding-bottom: env(safe-area-inset-bottom); padding: 5px; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); backdrop-filter: blur(10px); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-muted); cursor: pointer; padding: 10px 6px; border-radius: 12px; transition: var(--transition); font-size: 0.65rem; font-weight: 500; text-decoration: none; min-width: 60px; flex: 1; position: relative; }
+        .nav-item:hover { background: var(--primary-light); color: var(--primary); transform: translateY(-2px); }
+        .nav-item.active { color: var(--primary); background: linear-gradient(135deg, var(--primary-light), #dbeafe); font-weight: 600; box-shadow: var(--shadow-sm); }
+        .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 40%; height: 3px; background: var(--primary); border-radius: 10px 10px 0 0; }
+        .nav-icon { font-size: 1.5rem; transition: var(--transition-fast); }
+        .nav-item:hover .nav-icon { transform: scale(1.1); }
+        .sidebar .nav-item { flex-direction: row; justify-content: flex-start; font-size: 1rem; gap: 14px; padding: 12px 16px; }
+        .sidebar .nav-item::after { display: none; }
+        .sidebar .nav-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 60%; background: var(--primary); border-radius: 10px 0 0 10px; }
+
+        .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; position: relative; }
+
         /* --- General UI --- */
-        h2 { font-size: 1.2rem; color: var(--text); margin: 0 0 15px 0; font-weight: 700; }
-        .card { background: var(--card-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        h2 { font-size: 1.5rem; color: var(--text); margin: 0 0 20px 0; font-weight: 800; letter-spacing: -0.02em; }
+        .card { background: var(--card-bg); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); transition: var(--transition); }
+        .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
 
         /* --- Header / Calendar Controls --- */
-        .header-bar { background: var(--card-bg); padding: 12px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .header-bar { background: linear-gradient(135deg, var(--card-bg) 0%, #fafbfc 100%); padding: 16px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--border); }
         .header-top { display: flex; justify-content: space-between; align-items: center; }
-        .header-controls { display: flex; align-items: center; gap: 8px; }
-        .header-title { font-size: 1.1rem; font-weight: bold; min-width: 140px; text-align: center; }
-        
-        .view-tabs { display: flex; background: var(--bg); padding: 4px; border-radius: 8px; }
-        .view-tab { flex: 1; text-align: center; padding: 6px; font-size: 0.85rem; border-radius: 6px; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
-        .view-tab.active { background: var(--card-bg); color: var(--primary); font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .header-controls { display: flex; align-items: center; gap: 10px; }
+        .header-title { font-size: 1.2rem; font-weight: 700; min-width: 150px; text-align: center; color: var(--text); letter-spacing: -0.01em; }
 
-        .btn-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--bg); border-radius: 50%; border: none; cursor: pointer; }
-        .btn-today { font-size: 0.8rem; padding: 4px 12px; border-radius: 20px; background: var(--primary-light); color: var(--primary); border: none; font-weight: bold; cursor: pointer; }
+        .view-tabs { display: flex; background: var(--bg); padding: 5px; border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05); }
+        .view-tab { flex: 1; text-align: center; padding: 8px 12px; font-size: 0.875rem; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: var(--transition); font-weight: 500; }
+        .view-tab:hover { color: var(--primary); background: rgba(79, 70, 229, 0.05); }
+        .view-tab.active { background: var(--card-bg); color: var(--primary); font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05); }
+
+        .btn-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--bg); border-radius: 50%; border: 1px solid var(--border); cursor: pointer; transition: var(--transition); color: var(--text); font-size: 1rem; }
+        .btn-icon:hover { background: var(--primary); color: white; transform: scale(1.1); box-shadow: var(--shadow); }
+        .btn-icon:active { transform: scale(0.95); }
+        .btn-today { font-size: 0.875rem; padding: 8px 16px; border-radius: 24px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); }
+        .btn-today:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+        .btn-today:active { transform: translateY(0); }
 
         /* --- Calendar Grids --- */
-        .cal-tag { font-size: 0.75rem; padding: 4px; border-radius: 4px; margin-bottom: 2px; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-right: 3px solid rgba(0,0,0,0.1); font-weight: 500; }
+        .cal-tag { font-size: 0.75rem; padding: 6px 8px; border-radius: 8px; margin-bottom: 3px; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-right: 3px solid rgba(0,0,0,0.15); font-weight: 600; transition: var(--transition-fast); box-shadow: var(--shadow-sm); }
+        .cal-tag:hover { transform: translateX(-2px); box-shadow: var(--shadow); }
         .ct-exam { background: var(--tag-exam); color: var(--tag-exam-text); }
         .ct-study { background: var(--tag-lesson); color: var(--tag-lesson-text); }
         .ct-activity { background: var(--tag-activity); color: var(--tag-activity-text); }
         .ct-trip { background: var(--tag-trip); color: var(--tag-trip-text); }
         .ct-school { background: var(--tag-school); color: var(--tag-school-text); }
 
+        /* Event tags with colors */
+        .evt-tag { font-size: 0.8rem; padding: 8px 12px; border-radius: 10px; margin-bottom: 6px; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 600; display: block; color: white; transition: var(--transition); box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        .evt-tag:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .evt-tag:active { transform: translateY(0); }
+        .t-exam { background: linear-gradient(135deg, #d97706, #b45309); }
+        .t-study { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .t-activity { background: linear-gradient(135deg, #14b8a6, #0f766e); }
+        .t-trip { background: linear-gradient(135deg, #a855f7, #7e22ce); }
+        .t-school { background: linear-gradient(135deg, #ec4899, #be185d); }
+        .t-assignment { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
         /* Month */
-        .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .month-header-cell { text-align: center; font-size: 0.8rem; font-weight: bold; color: var(--text-muted); padding: 5px 0; }
+        .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .month-header-cell { text-align: center; font-size: 0.875rem; font-weight: 700; color: var(--text); padding: 8px 0; background: var(--bg); border-radius: 8px; margin-bottom: 4px; }
         /* Updated Month Cell for Text Display */
-        .month-cell { 
-            background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; 
-            min-height: 90px; /* Taller for text */
-            padding: 4px; cursor: pointer; position: relative; display: flex; flex-direction: column; overflow: hidden;
+        .month-cell {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
+            min-height: 95px; /* Taller for text */
+            padding: 6px; cursor: pointer; position: relative; display: flex; flex-direction: column; overflow: hidden;
+            transition: var(--transition); box-shadow: var(--shadow-sm);
         }
-        .month-cell.today { border: 2px solid var(--primary); }
-        .month-cell.empty { background: transparent; border: none; }
-        .month-num { font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; }
-        
+        .month-cell:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--primary); }
+        .month-cell.today { border: 2px solid var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); background: linear-gradient(135deg, var(--card-bg) 0%, var(--primary-light) 100%); }
+        .month-cell.empty { background: transparent; border: none; box-shadow: none; }
+        .month-cell.empty:hover { transform: none; }
+        .month-num { font-size: 0.875rem; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+        .month-cell.today .month-num { color: var(--primary); }
+
         /* New Text Event in Month */
         .month-event-text {
-            font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px;
+            font-size: 0.7rem; padding: 4px 6px; border-radius: 6px; margin-bottom: 3px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            color: #fff; font-weight: 500; line-height: 1.2;
+            color: #fff; font-weight: 600; line-height: 1.3; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         /* Week */
-        .week-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .week-grid { display: grid; grid-template-columns: repeat(7, minmax(130px, 1fr)); gap: 8px; min-width: 900px; }
-        .day-col { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; min-height: 300px; display: flex; flex-direction: column; }
-        .day-head { background: var(--primary-light); color: var(--primary); padding: 8px; text-align: center; font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
-        .day-body { padding: 6px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .week-container { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; }
+        .week-grid { display: grid; grid-template-columns: repeat(7, minmax(140px, 1fr)); gap: 10px; min-width: 960px; }
+        .day-col { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; min-height: 320px; display: flex; flex-direction: column; box-shadow: var(--shadow); transition: var(--transition); }
+        .day-col:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+        .day-head { background: linear-gradient(135deg, var(--primary-light), #dbeafe); color: var(--primary); padding: 12px; text-align: center; font-weight: 700; font-size: 0.9rem; border-bottom: 2px solid var(--border); border-radius: 12px 12px 0 0; }
+        .day-body { padding: 8px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
 
         /* Day */
-        .day-list { display: flex; flex-direction: column; gap: 10px; }
-        .time-slot { display: flex; gap: 15px; padding: 12px; border-bottom: 1px solid var(--border); background: var(--card-bg); border-radius: 8px; align-items: center; }
-        .ts-time { font-weight: bold; color: var(--primary); width: 50px; font-size: 0.9rem; }
+        .day-list { display: flex; flex-direction: column; gap: 12px; }
+        .time-slot { display: flex; gap: 16px; padding: 16px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 12px; align-items: center; transition: var(--transition); box-shadow: var(--shadow-sm); }
+        .time-slot:hover { box-shadow: var(--shadow-lg); transform: translateX(-4px); border-color: var(--primary); }
+        .ts-time { font-weight: 700; color: var(--primary); width: 60px; font-size: 1rem; background: var(--primary-light); padding: 8px; border-radius: 8px; text-align: center; }
 
         /* Year */
-        .year-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .year-month { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .year-month:hover { border-color: var(--primary); background: var(--primary-light); }
+        .year-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .year-month { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: var(--transition); font-weight: 600; font-size: 1.1rem; box-shadow: var(--shadow); }
+        .year-month:hover { border-color: var(--primary); background: linear-gradient(135deg, var(--primary-light), #dbeafe); box-shadow: var(--shadow-lg); transform: translateY(-4px); }
 
         /* --- Dashboard --- */
-        .dash-item { display: flex; align-items: center; padding: 12px; background: var(--card-bg); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .dash-date { background: var(--bg); padding: 8px 12px; border-radius: 8px; text-align: center; margin-left: 15px; min-width: 60px; }
-        .dash-day { font-weight: bold; color: var(--primary); font-size: 0.9rem; }
-        .dash-num { font-size: 0.8rem; color: var(--text-muted); }
-        .dash-info h4 { margin: 0; font-size: 1rem; }
-        .dash-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 8px; margin-top: 4px; align-items: center; }
-        .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #eee; }
+        .dash-item { display: flex; align-items: center; padding: 16px; background: var(--card-bg); border-radius: 14px; margin-bottom: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); transition: var(--transition); cursor: pointer; }
+        .dash-item:hover { box-shadow: var(--shadow-lg); transform: translateX(-6px); border-color: var(--primary); }
+        .dash-date { background: linear-gradient(135deg, var(--primary-light), #dbeafe); padding: 12px 14px; border-radius: 12px; text-align: center; margin-left: 16px; min-width: 70px; box-shadow: var(--shadow-sm); }
+        .dash-day { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+        .dash-num { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+        .dash-info h4 { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text); }
+        .dash-meta { font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 10px; margin-top: 6px; align-items: center; }
+        .badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 8px; background: var(--bg); font-weight: 600; }
         .b-school { background: var(--tag-school); color: var(--tag-school-text); }
-        .b-personal { background: var(--primary-light); color: var(--primary); }
+        .b-personal { background: linear-gradient(135deg, var(--primary-light), #dbeafe); color: var(--primary); }
 
         /* --- Sync Panel --- */
-        .sync-panel { background: linear-gradient(to right, #f3e8ff, #e0e7ff); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #d8b4fe; }
-        .input-group-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .input-group-row select, .input-group-row input { flex: 1; margin:0; padding:10px; border:1px solid #ddd; border-radius:8px; height: 42px; background: white; }
+        .sync-panel { background: linear-gradient(135deg, #f3e8ff, #e0e7ff); padding: 20px; border-radius: 16px; margin-bottom: 24px; border: 2px solid #d8b4fe; box-shadow: var(--shadow-lg); }
+        .input-group-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .input-group-row select, .input-group-row input { flex: 1; margin:0; padding:12px 16px; border:2px solid #ddd; border-radius:12px; height: 48px; background: white; font-size: 0.95rem; font-weight: 500; transition: var(--transition); }
+        .input-group-row select:focus, .input-group-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
         
         /* --- Forms & Modals --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(2px); }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
-        
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; background: #fff; font-family: var(--font); }
-        
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 520px; border-radius: 28px 28px 0 0; padding: 28px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-xl); }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.95rem; color: var(--text); }
+        input, select { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; background: #fff; font-family: var(--font); transition: var(--transition); font-weight: 500; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        input:hover, select:hover { border-color: var(--primary); }
+
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 12px; display: flex; justify-content: center; align-items: center; gap: 10px; transition: var(--transition); box-shadow: var(--shadow-sm); }
+        .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .btn:active { transform: translateY(0); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
+        .btn-primary:hover { background: linear-gradient(135deg, var(--primary-hover), var(--primary)); }
+        .btn-ghost { background: transparent; color: var(--text-muted); border: 2px solid var(--border); box-shadow: none; }
+        .btn-ghost:hover { background: var(--bg); color: var(--text); border-color: var(--text-muted); }
         .btn-magic { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
-        
-        .fab { position: fixed; bottom: 80px; left: 20px; width: 56px; height: 56px; background: var(--text); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 150; transition: transform 0.2s; }
-        .fab:active { transform: scale(0.9); }
+        .btn-magic:hover { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+
+        .fab { position: fixed; bottom: 90px; left: 20px; width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; line-height: 0; box-shadow: var(--shadow-xl); cursor: pointer; z-index: 150; transition: var(--transition); border: 3px solid white; }
+        .fab:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4); }
+        .fab:active { transform: scale(0.95) rotate(90deg); }
 
         /* --- Alerts & Debug --- */
-        .alert-box { padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; display: flex; gap: 10px; align-items: flex-start; }
-        .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-        .alert-info { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; }
-        
-        #debugBox { display: none; margin-top: 10px; padding: 10px; background: #333; color: #0f0; font-family: monospace; font-size: 0.75rem; border-radius: 8px; white-space: pre-wrap; max-height: 200px; overflow: auto; direction: ltr; text-align: left; }
+        .alert-box { padding: 16px; border-radius: 12px; margin-bottom: 18px; font-size: 0.95rem; display: flex; gap: 12px; align-items: flex-start; font-weight: 500; box-shadow: var(--shadow); }
+        .alert-error { background: linear-gradient(135deg, #fef2f2, #fee2e2); color: #991b1b; border: 2px solid #fecaca; }
+        .alert-info { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border: 2px solid #93c5fd; }
 
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @media (min-width: 768px) {
-            .sidebar { display: flex; } .bottom-nav { display: none; }
-            .fab { left: 50%; margin-left: -400px; bottom: 40px; }
-            .modal-overlay { align-items: center; } .modal-content { border-radius: 24px; padding: 32px; }
-            .year-grid { grid-template-columns: repeat(4, 1fr); }
+        #debugBox { display: none; margin-top: 12px; padding: 14px; background: #1a1a1a; color: #00ff00; font-family: 'Courier New', monospace; font-size: 0.8rem; border-radius: 12px; white-space: pre-wrap; max-height: 220px; overflow: auto; direction: ltr; text-align: left; border: 2px solid #333; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Small phones */
+        @media (max-width: 380px) {
+            .bottom-nav { height: 75px; padding: 3px; }
+            .nav-item { font-size: 0.6rem; gap: 2px; padding: 8px 3px; min-width: 52px; }
+            .nav-icon { font-size: 1.3rem; }
+            .fab { width: 56px; height: 56px; font-size: 26px; bottom: 92px; }
+            h2 { font-size: 1.3rem; }
+        }
+
+        /* Desktop */
+        @media (min-width: 768px) {
+            .sidebar { display: flex; }
+            .bottom-nav { display: none; }
+            .fab { left: 20px; bottom: 40px; }
+            .modal-overlay { align-items: center; }
+            .modal-content { border-radius: 28px; padding: 36px; max-width: 560px; }
+            .year-grid { grid-template-columns: repeat(4, 1fr); }
+            .nav-item { font-size: 1rem; gap: 14px; }
+            .main-content { padding: 28px; }
+            h2 { font-size: 1.75rem; }
+            .month-grid { gap: 8px; }
+            .week-grid { gap: 12px; }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
         .hidden { display: none !important; }
     </style>
 </head>
@@ -164,15 +267,17 @@
         <div class="logo">🎓 SmartStudent</div>
         <a class="nav-item" onclick="app.navTo('dashboard')"><span class="nav-icon">📊</span> דאשבורד</a>
         <a class="nav-item" onclick="app.navTo('calendar')"><span class="nav-icon">📅</span> היומן שלי</a>
-        <a class="nav-item" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> לוח בית ספר</a>
+        <a class="nav-item" id="schoolNavSidebar" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> לוח בית ספר</a>
+        <a class="nav-item" onclick="ui.modals.openSettings()" style="border-top:1px solid var(--border);margin-top:auto;padding-top:10px"><span class="nav-icon">⚙️</span> הגדרות</a>
     </aside>
 
     <main class="main-content" id="mainContainer"></main>
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottomNav">
         <a class="nav-item" onclick="app.navTo('dashboard')"><span class="nav-icon">📊</span> דאשבורד</a>
         <a class="nav-item" onclick="app.navTo('calendar')"><span class="nav-icon">📅</span> יומן</a>
-        <a class="nav-item" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> ביה"ס</a>
+        <a class="nav-item" id="schoolNavBottom" onclick="app.navTo('school')"><span class="nav-icon">🏫</span> ביה"ס</a>
+        <a class="nav-item" onclick="ui.modals.openSettings()"><span class="nav-icon">⚙️</span> הגדרות</a>
     </nav>
 </div>
 
@@ -180,7 +285,7 @@
 
 <div class="modal-overlay" id="modalAdd">
     <div class="modal-content">
-        <h2>הוספת אירוע</h2>
+        <h2 id="modalAddTitle">הוספת אירוע</h2>
         <div id="conflictAlert" class="alert-box alert-error hidden">
             <span>⚠️</span>
             <div><strong>התנגשות בזמן!</strong> <span id="conflictText"></span><div id="conflictSuggestions" style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap;"></div></div>
@@ -188,9 +293,51 @@
         <form onsubmit="return false;">
             <div class="form-group"><label>כותרת</label><input type="text" id="evtTitle" required></div>
             <div class="form-group"><label>סוג</label><select id="evtType" onchange="ui.toggleExamFields()"><option value="activity">פעילות</option><option value="assignment">מטלה</option><option value="exam">מבחן (AI Planner)</option></select></div>
-            <div id="examExtraFields" class="hidden" style="background:#eff6ff;padding:10px;border-radius:8px;margin-bottom:15px;"><label>רמת קושי (AI)</label><select id="evtDifficulty"><option value="2">קל (2 ש')</option><option value="4" selected>בינוני (4 ש')</option><option value="7">קשה (7 ש')</option></select><small style="color:var(--primary);display:block;margin-top:5px;">💡 ה-AI יפזר את הלמידה (שעה ביום).</small></div>
-            <div class="form-group"><label>תאריך</label><input type="date" id="evtDate" required></div>
-            <div style="display:flex;gap:10px;"><div class="form-group" style="flex:1"><label>שעה</label><input type="time" id="evtTime" value="16:00" required></div><div class="form-group" style="flex:1"><label>משך</label><input type="number" id="evtDuration" value="1" step="0.5" required></div></div>
+            <div class="form-group"><label>תאריך</label><input type="date" id="evtDate" required style="width:100%;max-width:100%;box-sizing:border-box"></div>
+
+            <!-- AI Planner - עכשיו מעל שעה ומשך -->
+            <div id="examExtraFields" class="hidden" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);padding:14px;border-radius:12px;margin-bottom:15px;border:2px solid var(--primary);">
+                <label style="font-weight:700;color:var(--primary)">רמת קושי (AI)</label>
+                <select id="evtDifficulty" style="margin-top:8px;margin-bottom:12px">
+                    <option value="2">קל (2 ש')</option>
+                    <option value="4" selected>בינוני (4 ש')</option>
+                    <option value="7">קשה (7 ש')</option>
+                </select>
+
+                <label style="font-weight:700;color:var(--primary);margin-top:10px;display:block">משך לימוד ביום</label>
+                <select id="evtStudyDuration" style="margin-top:8px">
+                    <option value="0.5">חצי שעה (30 דק')</option>
+                    <option value="1" selected>שעה (60 דק')</option>
+                    <option value="1.5">שעה וחצי (90 דק')</option>
+                    <option value="2">שעתיים (120 דק')</option>
+                </select>
+                <small style="color:var(--primary);display:block;margin-top:8px;font-weight:600;">💡 ה-AI יפזר את הלמידה לפי הזמן שבחרת.</small>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;align-items:end;">
+                <div style="display:flex;flex-direction:column;">
+                    <label style="display:block;margin-bottom:8px;font-weight:700;font-size:0.95rem;">שעה</label>
+                    <input type="time" id="evtTime" value="16:00" required style="margin:0;height:50px;-webkit-appearance:none;appearance:none;padding:14px 16px">
+                </div>
+                <div style="display:flex;flex-direction:column;">
+                    <label style="display:block;margin-bottom:8px;font-weight:700;font-size:0.95rem;">משך (שעות)</label>
+                    <input type="number" id="evtDuration" value="1" step="0.5" required style="margin:0;height:50px;-webkit-appearance:none;appearance:none;padding:14px 16px">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>🔔 תזכורת</label>
+                <select id="evtNotificationBefore" style="margin:0">
+                    <option value="0">ללא תזכורת</option>
+                    <option value="15">15 דקות לפני</option>
+                    <option value="30">30 דקות לפני</option>
+                    <option value="60" selected>שעה לפני</option>
+                    <option value="120">שעתיים לפני</option>
+                    <option value="1440">יום לפני</option>
+                    <option value="2880">יומיים לפני</option>
+                </select>
+            </div>
+
             <button class="btn btn-primary" onclick="logic.saveEvent()">שמור</button>
             <button class="btn btn-ghost" onclick="ui.modals.closeAll()">ביטול</button>
         </form>
@@ -202,9 +349,41 @@
         <h2 id="viewTitle"></h2>
         <div style="margin-bottom:20px;color:var(--text-muted);line-height:1.6;"><div>📅 <span id="viewDate"></span></div><div>⏰ <span id="viewTime"></span></div><div>⏳ <span id="viewDuration"></span></div><div id="viewType" style="margin-top:5px"></div></div>
         <div id="viewDesc" style="background:var(--bg);padding:10px;border-radius:8px;margin-bottom:15px;display:none;"></div>
-        <div id="aiPlanActions" class="hidden" style="margin-bottom:15px;border-top:1px solid var(--border);padding-top:10px;"><button class="btn btn-magic" onclick="logic.ai.planFromView()">📅 תכנן למידה</button></div>
+        <div id="schoolNotificationSection" class="hidden" style="margin-bottom:15px;padding:15px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;border:2px solid #f59e0b;">
+            <label style="font-weight:700;color:#b45309;display:block;margin-bottom:8px">🔔 הגדר תזכורת</label>
+            <select id="viewSchoolNotification" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:12px;font-size:0.95rem;font-weight:500;margin-bottom:10px;">
+                <option value="0">ללא תזכורת</option>
+                <option value="15">15 דקות לפני</option>
+                <option value="30">30 דקות לפני</option>
+                <option value="60" selected>שעה לפני</option>
+                <option value="120">שעתיים לפני</option>
+                <option value="1440">יום לפני</option>
+                <option value="2880">יומיים לפני</option>
+            </select>
+            <button class="btn btn-primary" style="margin-top:0" onclick="logic.saveSchoolNotification()">💾 שמור תזכורת</button>
+        </div>
+        <div id="aiPlanActions" class="hidden" style="margin-bottom:15px;border-top:1px solid var(--border);padding-top:15px;">
+            <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);padding:14px;border-radius:12px;margin-bottom:12px;border:2px solid var(--primary);">
+                <label style="font-weight:700;color:var(--primary);display:block;margin-bottom:8px">כמה שעות סה"כ צריך ללמוד?</label>
+                <select id="viewDifficulty" style="width:100%;margin-bottom:12px;padding:12px;border:2px solid #ddd;border-radius:12px;font-size:0.95rem;font-weight:500;">
+                    <option value="2">2 שעות (קל)</option>
+                    <option value="4" selected>4 שעות (בינוני)</option>
+                    <option value="6">6 שעות (קשה)</option>
+                    <option value="8">8 שעות (מאוד קשה)</option>
+                </select>
+                <label style="font-weight:700;color:var(--primary);display:block;margin-bottom:8px">כמה שעות ללמוד ביום?</label>
+                <select id="viewStudyDuration" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:12px;font-size:0.95rem;font-weight:500;">
+                    <option value="0.5">חצי שעה (30 דק')</option>
+                    <option value="1" selected>שעה (60 דק')</option>
+                    <option value="1.5">שעה וחצי (90 דק')</option>
+                    <option value="2">שעתיים (120 דק')</option>
+                </select>
+            </div>
+            <button class="btn btn-magic" onclick="logic.ai.planFromView()">📅 תכנן למידה</button>
+        </div>
         <div id="aiDeletePlan" class="hidden" style="margin-bottom:15px;"><button class="btn btn-ghost" style="color:var(--warning)" onclick="logic.ai.deletePlanFromView()">🗑️ מחק תוכנית</button></div>
         <button class="btn btn-primary" onclick="ui.modals.closeAll()">סגור</button>
+        <button id="btnEdit" class="btn btn-ghost" onclick="">✏️ ערוך אירוע</button>
         <button id="btnDelete" class="btn btn-ghost" style="color:var(--danger)" onclick="">🗑️ מחק אירוע</button>
     </div>
 </div>
@@ -216,7 +395,37 @@
         <div id="aiBlocks" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;"></div>
         <button class="btn btn-magic" onclick="logic.ai.confirm()">✅ אשר ושמור</button>
         <button class="btn btn-ghost" onclick="logic.ai.retry()">🎲 נסה שעות אחרות</button>
-        <button class="btn btn-ghost" onclick="logic.ai.skip()">שמור ללא תכנון</button>
+        <button id="btnAiSkip" class="btn btn-ghost" onclick="logic.ai.skip()">ביטול</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalSettings">
+    <div class="modal-content">
+        <h2>⚙️ הגדרות</h2>
+
+        <div class="card" style="margin-bottom:20px">
+            <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                <div>
+                    <div style="font-weight:bold;margin-bottom:5px">🏫 הצג לוח בית ספר</div>
+                    <small style="color:var(--text-muted)">למי שלא תלמיד או לא צריך את לוח בית הספר</small>
+                </div>
+                <input type="checkbox" id="settingSchoolCalendar" onchange="ui.settings.toggleSchoolCalendar(this.checked)" style="width:auto;height:24px;cursor:pointer">
+            </label>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+            <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                <div>
+                    <div style="font-weight:bold;margin-bottom:5px">🔔 התראות</div>
+                    <small style="color:var(--text-muted)">תזכורות על אירועים קרובים</small>
+                </div>
+                <button class="btn-icon" onclick="PWA.testNotification()" style="background:var(--primary);color:white">בדוק</button>
+            </label>
+            <div style="margin-top:10px;padding:10px;background:var(--primary-light);border-radius:8px;font-size:0.85rem;line-height:1.4">
+                <strong>💡 טיפ:</strong> כדי לקבל התראות באנדרויד, פתח את האפליקציה לפחות פעם ביום. התראות יוצגו כשתפתח את האפליקציה אם פספסת אותן.
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="ui.modals.closeAll()">סגור</button>
     </div>
 </div>
 
@@ -226,17 +435,19 @@ const CONFIG = {
     sheets: {
         "שכבה י'": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP8oTf-RKjlz-mNdYr0GQEuC40O7zp-FAtj-ZAfm-rS-azOuCckXB0PyP3cOYzML3ovjuum79jYRuq/pub?output=csv"
     },
-    colors: { exam:'t-exam', study:'t-study', activity:'t-activity', trip:'t-trip', school:'t-school' }
+    colors: { exam:'t-exam', study:'t-study', activity:'t-activity', trip:'t-trip', school:'t-school', assignment:'t-assignment' }
 };
 
 /** STORE */
 const Store = {
     key: 'SmartStudent_v20',
     state: {
-        personal: [], school: [], view: 'dashboard', 
+        personal: [], school: [], view: 'dashboard',
         calView: 'week', schoolView: 'week',
         anchorDate: Date.now(), schoolAnchorDate: Date.now(),
-        sheetUrl: '', selectedSheetKey: '', lastSync: null
+        sheetUrl: '', selectedSheetKey: '', lastSync: null,
+        showSchoolCalendar: true,
+        schoolNotifications: {}
     },
     init() {
         try {
@@ -246,6 +457,7 @@ const Store = {
                 this.state = {...this.state, ...p};
                 if(!Array.isArray(this.state.personal)) this.state.personal=[];
                 if(!Array.isArray(this.state.school)) this.state.school=[];
+                if(!this.state.schoolNotifications) this.state.schoolNotifications={};
             } else this.seed();
         } catch(e){ this.seed(); }
     },
@@ -256,6 +468,14 @@ const Store = {
         this.save();
     },
     addEvent(e) { this.state.personal.push(e); this.save(); ui.render(); },
+    updateEvent(id, updatedData) {
+        const idx = this.state.personal.findIndex(e => e.id == id);
+        if (idx > -1) {
+            this.state.personal[idx] = { ...this.state.personal[idx], ...updatedData };
+            this.save();
+            ui.render();
+        }
+    },
     deleteEvent(id) {
         const evt = this.state.personal.find(e=>e.id==id);
         if(evt && evt.type==='exam') this.state.personal = this.state.personal.filter(e=>e.linkedExamId!=id);
@@ -266,14 +486,69 @@ const Store = {
 
 /** LOGIC */
 const logic = {
-    fmt: {
-        iso: d => d.toISOString().split('T')[0],
-        il: d => { const [y,m,day]=d.split('-'); return `${day}/${m}`; },
-        dayName: d => ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(d).getDay()],
-        relative: d => { const df=Math.ceil((new Date(d)-new Date().setHours(0,0,0,0))/864e5); return df===0?'היום':(df===1?'מחר':`עוד ${df} ימים`); }
+    // Israel timezone helper
+    getIsraelDate: (date) => {
+        // Convert any date to Israel timezone
+        const d = date ? new Date(date) : new Date();
+        // Create date in Israel timezone
+        const israelDate = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+        return israelDate;
     },
-    addDays: (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; },
-    getStartOfWeek: d => { const x=new Date(d); x.setDate(x.getDate()-x.getDay()); return x; },
+    getTodayIsrael: () => {
+        // Get today's date in Israel timezone, normalized to midnight
+        const israelNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+        return new Date(israelNow.getFullYear(), israelNow.getMonth(), israelNow.getDate());
+    },
+    dateFromString: (dateStr) => {
+        // Parse YYYY-MM-DD as local date (not UTC)
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    },
+    fmt: {
+        iso: d => {
+            // Handle both Date objects and date strings
+            if (typeof d === 'string') return d;
+            const israelDate = logic.getIsraelDate(d);
+            const y = israelDate.getFullYear();
+            const m = String(israelDate.getMonth() + 1).padStart(2, '0');
+            const day = String(israelDate.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        },
+        il: d => { const [y,m,day]=d.split('-'); return `${day}/${m}`; },
+        dayName: d => {
+            const date = logic.dateFromString(d);
+            return ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][date.getDay()];
+        },
+        relative: d => {
+            const today = logic.getTodayIsrael();
+            const targetDate = logic.dateFromString(d);
+            const df = Math.ceil((targetDate - today) / 864e5);
+            return df===0?'היום':(df===1?'מחר':`עוד ${df} ימים`);
+        }
+    },
+    addDays: (d,n) => {
+        // Handle both Date objects and date strings
+        const x = typeof d === 'string' ? logic.dateFromString(d) : new Date(d);
+        x.setDate(x.getDate()+n);
+        return x;
+    },
+    getStartOfWeek: d => {
+        // Create date from input - handle both Date objects and timestamps
+        const inputDate = d instanceof Date ? d : new Date(d);
+
+        // Get the current day of week (0=Sunday, 6=Saturday)
+        const currentDayOfWeek = inputDate.getDay();
+
+        // Calculate days to subtract to get to Sunday
+        const daysToSunday = currentDayOfWeek; // If Sunday (0), subtract 0. If Monday (1), subtract 1, etc.
+
+        // Create a new date at the start of the week (Sunday)
+        const startDate = new Date(inputDate);
+        startDate.setDate(startDate.getDate() - daysToSunday);
+
+        // Return date at midnight to ensure consistency
+        return new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    },
     toMin: t => { if(!t)return 0; const[h,m]=t.split(':').map(Number); return h*60+m; },
     minToStr: m => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`,
 
@@ -299,25 +574,62 @@ const logic = {
         return c;
     },
 
+    editingEventId: null,
+
     saveEvent() {
         const t=document.getElementById('evtTitle').value, d=document.getElementById('evtDate').value, tm=document.getElementById('evtTime').value;
         if(!t||!d||!tm) return;
         const dur=parseFloat(document.getElementById('evtDuration').value), tp=document.getElementById('evtType').value;
-        const newEvt = { id:Date.now(), title:t, date:d, time:tm, duration:dur, type:tp, isAuto:false, difficulty:document.getElementById('evtDifficulty').value };
-        const conf = logic.checkConflict(newEvt);
-        if(conf.collision) { ui.modals.showConflict(conf.event, d, dur); return; }
-        if(tp==='exam') { ui.modals.closeAll(); logic.ai.start(newEvt); return; }
-        Store.addEvent(newEvt); ui.modals.closeAll();
+        const notifyBefore=parseInt(document.getElementById('evtNotificationBefore').value);
+        const studyDur=parseFloat(document.getElementById('evtStudyDuration').value);
+
+        if(this.editingEventId) {
+            // Update existing event
+            const updatedData = { title:t, date:d, time:tm, duration:dur, type:tp, difficulty:document.getElementById('evtDifficulty').value, notificationBefore:notifyBefore, studyDuration:studyDur };
+            const conf = logic.checkConflict({ ...updatedData, id:this.editingEventId });
+            if(conf.collision) { ui.modals.showConflict(conf.event, d, dur); return; }
+            Store.updateEvent(this.editingEventId, updatedData);
+            this.editingEventId = null;
+            ui.modals.closeAll();
+        } else {
+            // Add new event
+            const newEvt = { id:Date.now(), title:t, date:d, time:tm, duration:dur, type:tp, isAuto:false, difficulty:document.getElementById('evtDifficulty').value, notificationBefore:notifyBefore, studyDuration:studyDur };
+            const conf = logic.checkConflict(newEvt);
+            if(conf.collision) { ui.modals.showConflict(conf.event, d, dur); return; }
+            if(tp==='exam') { ui.modals.closeAll(); logic.ai.start(newEvt); return; }
+            Store.addEvent(newEvt); ui.modals.closeAll();
+        }
+    },
+
+    currentSchoolEventId: null,
+
+    saveSchoolNotification() {
+        const notifyBefore = parseInt(document.getElementById('viewSchoolNotification').value);
+        if(this.currentSchoolEventId) {
+            Store.state.schoolNotifications[this.currentSchoolEventId] = notifyBefore;
+            Store.save();
+            PWA.scheduleNotifications();
+            alert('✅ תזכורת נשמרה!');
+            ui.modals.closeAll();
+            ui.render();
+        }
     },
 
     ai: {
-        targetExam: null, proposedBlocks: [],
-        start(exam, rnd=false) { this.targetExam=exam; const p=this.calc(exam, rnd); this.proposedBlocks=p.blocks; ui.modals.showAI(p.msg, p.blocks); },
+        targetExam: null, proposedBlocks: [], isSchoolExam: false,
+        start(exam, rnd=false) {
+            this.targetExam=exam;
+            this.isSchoolExam = exam.source === 'google_sheets';
+            const p=this.calc(exam, rnd);
+            this.proposedBlocks=p.blocks;
+            ui.modals.showAI(p.msg, p.blocks);
+        },
         calc(exam, rnd) {
-            let needed=parseInt(exam.difficulty)||4; const blocks=[], cands=[], dur=1.0;
+            let needed=parseInt(exam.difficulty)||4; const blocks=[], cands=[], dur=exam.studyDuration||1.0;
+            const today = logic.getTodayIsrael();
             for(let i=1; i<=7; i++) {
                 const d=logic.addDays(exam.date, -i), dStr=logic.fmt.iso(d);
-                if(d < new Date().setHours(0,0,0,0)) continue;
+                if(d < today) continue;
                 for(let t=16*60; t<=21*60; t+=30) {
                     const tm=logic.minToStr(t);
                     if(!logic.checkConflict({id:-99, date:dStr, time:tm, duration:dur}).collision) {
@@ -346,14 +658,56 @@ const logic = {
             return { blocks, msg: blocks.length>0 ? `פיזרתי את הלמידה בימים: <b>${days.join(', ')}</b>` : 'לא מצאתי מספיק זמן פנוי.' };
         },
         confirm() {
-            const idx=Store.state.personal.findIndex(e=>e.id===this.targetExam.id);
-            if(idx>-1) Store.state.personal[idx]=this.targetExam; else Store.state.personal.push(this.targetExam);
-            const blks=this.proposedBlocks.map(b=>({id:Date.now()+Math.random(), title:`למידה ל${this.targetExam.title}`, type:'study', date:b.date, time:b.time, duration:b.duration, isAuto:true, linkedExamId:this.targetExam.id}));
+            // For school exams, only save the study blocks (not the exam itself)
+            // For personal exams, save both the exam and study blocks
+            if(!this.isSchoolExam) {
+                const idx=Store.state.personal.findIndex(e=>e.id===this.targetExam.id);
+                if(idx>-1) Store.state.personal[idx]=this.targetExam; else Store.state.personal.push(this.targetExam);
+            }
+            const blks=this.proposedBlocks.map(b=>({id:Date.now()+Math.random(), title:`למידה ל${this.targetExam.title}`, type:'study', date:b.date, time:b.time, duration:b.duration, isAuto:true, linkedExamId:this.targetExam.id, notificationBefore:60}));
             Store.state.personal.push(...blks); Store.save(); ui.modals.closeAll(); ui.render(); alert('✅ נשמר!');
         },
-        retry(){ this.start(this.targetExam, true); }, skip(){ Store.addEvent(this.targetExam); ui.modals.closeAll(); },
-        planFromView(){ const t=document.getElementById('viewTitle').innerText, e=Store.state.personal.find(x=>x.title===t && x.type==='exam'); if(e){ ui.modals.closeAll(); this.start(e); } },
-        deletePlanFromView(){ const t=document.getElementById('viewTitle').innerText, e=Store.state.personal.find(x=>x.title===t); if(e && confirm('למחוק תוכנית?')){ Store.state.personal=Store.state.personal.filter(x=>x.linkedExamId!=e.id); Store.save(); ui.modals.closeAll(); ui.render(); } }
+        retry(){ this.start(this.targetExam, true); },
+        skip(){
+            // For school exams, just close without saving
+            // For personal exams, save the exam without study plan
+            if(!this.isSchoolExam) {
+                Store.addEvent(this.targetExam);
+            }
+            ui.modals.closeAll();
+        },
+        planFromView(){
+            const t=document.getElementById('viewTitle').innerText;
+            // Search in both personal and school events
+            let e=Store.state.personal.find(x=>x.title===t && x.type==='exam');
+            if(!e) e=Store.state.school.find(x=>x.title===t && x.type==='exam');
+            if(e){
+                // Read user-selected values from the modal (for school exams)
+                const diffSelect = document.getElementById('viewDifficulty');
+                const durSelect = document.getElementById('viewStudyDuration');
+                if(diffSelect) e.difficulty = diffSelect.value;
+                if(durSelect) e.studyDuration = parseFloat(durSelect.value);
+
+                // Fallback to defaults if not set
+                if(!e.difficulty) e.difficulty = '4';
+                if(!e.studyDuration) e.studyDuration = 1;
+
+                ui.modals.closeAll();
+                this.start(e);
+            }
+        },
+        deletePlanFromView(){
+            const t=document.getElementById('viewTitle').innerText;
+            // Search in both personal and school events to find the exam
+            let e=Store.state.personal.find(x=>x.title===t && x.type==='exam');
+            if(!e) e=Store.state.school.find(x=>x.title===t && x.type==='exam');
+            if(e && confirm('למחוק תוכנית?')){
+                Store.state.personal=Store.state.personal.filter(x=>x.linkedExamId!=e.id);
+                Store.save();
+                ui.modals.closeAll();
+                ui.render();
+            }
+        }
     },
 
     sync: {
@@ -449,7 +803,7 @@ const logic = {
                 return {
                     id: `sh_${i}_${Date.now()}`,
                     title: title,
-                    date: logic.fmt.iso(dObj),
+                    date: `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`,
                     time: cols[idx.tm] || '',
                     duration: dur,
                     type: type,
@@ -499,24 +853,82 @@ const ui = {
 
     views: {
         dash(con) {
-            const today=logic.fmt.iso(new Date());
-            const all=[...Store.state.personal, ...Store.state.school].filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+            const today=logic.getTodayIsrael();
+            const todayStr=logic.fmt.iso(today);
+            const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+            const all=[...Store.state.personal, ...schoolEvents].filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
+
             let h=`<h2>דאשבורד</h2><div style="margin-top:10px">`;
-            if(!all.length) h+=`<div class="card" style="text-align:center;padding:30px;color:#aaa">אין אירועים קרובים 🎉</div>`;
-            else all.forEach(e=>{
-                const cls = e.source==='google_sheets'?'b-school':'b-personal';
-                const tag = CONFIG.colors[e.type]||'t-school';
-                const safe = JSON.stringify(e).replace(/'/g,"&#39;");
-                h+=`<div class="dash-item" onclick='ui.modals.openView(${safe})'>
-                    <div class="dash-date"><div class="dash-day">${logic.fmt.dayName(e.date)}</div><div class="dash-num">${logic.fmt.il(e.date)}</div></div>
-                    <div class="dash-info"><h4>${e.title}</h4><div class="dash-meta"><span class="badge ${cls}">${e.source==='google_sheets'?'ביה"ס':'אישי'}</span> <span>${e.time||'יום שלם'}</span></div></div>
-                </div>`;
-            });
+
+            if(!all.length) {
+                h+=`<div class="card" style="text-align:center;padding:30px;color:#aaa">אין אירועים קרובים 🎉</div>`;
+            } else {
+                // Group events by weeks
+                const groups = {};
+                all.forEach(e=>{
+                    const eventDate = logic.dateFromString(e.date);
+                    const diffDays = Math.floor((eventDate - today) / (1000 * 60 * 60 * 24));
+
+                    let groupKey, groupLabel;
+                    if(diffDays === 0) {
+                        groupKey = 'today';
+                        groupLabel = '📅 היום';
+                    } else if(diffDays === 1) {
+                        groupKey = 'tomorrow';
+                        groupLabel = '🔜 מחר';
+                    } else if(diffDays <= 7) {
+                        groupKey = 'thisWeek';
+                        groupLabel = '📆 השבוע';
+                    } else if(diffDays <= 14) {
+                        groupKey = 'nextWeek';
+                        groupLabel = '📅 שבוע הבא';
+                    } else if(diffDays <= 30) {
+                        groupKey = 'thisMonth';
+                        groupLabel = '📋 החודש';
+                    } else {
+                        const monthName = eventDate.toLocaleDateString('he-IL', {month: 'long'});
+                        groupKey = `month_${eventDate.getMonth()}_${eventDate.getFullYear()}`;
+                        groupLabel = `📅 ${monthName}`;
+                    }
+
+                    if(!groups[groupKey]) {
+                        groups[groupKey] = {label: groupLabel, events: [], order: diffDays};
+                    }
+                    groups[groupKey].events.push(e);
+                });
+
+                // Sort groups by order
+                const sortedGroups = Object.values(groups).sort((a,b) => a.order - b.order);
+
+                // Render each group
+                sortedGroups.forEach(group => {
+                    h += `<div style="margin-top:20px;margin-bottom:10px">
+                        <div style="font-weight:700;font-size:1rem;color:var(--primary);display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                            ${group.label}
+                            <span style="background:var(--primary-light);color:var(--primary);font-size:0.75rem;padding:2px 8px;border-radius:12px;font-weight:600">${group.events.length}</span>
+                        </div>
+                    `;
+
+                    group.events.forEach(e=>{
+                        const cls = e.source==='google_sheets'?'b-school':'b-personal';
+                        const safe = JSON.stringify(e).replace(/'/g,"&#39;");
+                        h+=`<div class="dash-item" onclick='ui.modals.openView(${safe})'>
+                            <div class="dash-date"><div class="dash-day">${logic.fmt.dayName(e.date)}</div><div class="dash-num">${logic.fmt.il(e.date)}</div></div>
+                            <div class="dash-info"><h4>${e.title}</h4><div class="dash-meta"><span class="badge ${cls}">${e.source==='google_sheets'?'ביה"ס':'אישי'}</span> <span>${e.time||'יום שלם'}</span></div></div>
+                        </div>`;
+                    });
+
+                    h += `</div>`;
+                });
+            }
+
             con.innerHTML = h+'</div>';
         },
         cal(con, isSc) {
             const k = isSc?'schoolAnchorDate':'anchorDate', vk=isSc?'schoolView':'calView';
-            const anc=new Date(Store.state[k]), v=Store.state[vk], evs=isSc?Store.state.school:[...Store.state.personal,...Store.state.school];
+            const anc=new Date(Store.state[k]), v=Store.state[vk];
+            const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+            const evs=isSc?Store.state.school:[...Store.state.personal,...schoolEvents];
             
             // Header
             let h=`<h2>${isSc?'לוח בית ספר':'היומן שלי'}</h2>`;
@@ -546,7 +958,11 @@ const ui = {
                 const s=logic.getStartOfWeek(anc);
                 h+=`<div class="week-container"><div class="week-grid">`;
                 for(let i=0; i<7; i++) {
-                    const c=logic.addDays(s,i), dStr=logic.fmt.iso(c), dev=evs.filter(e=>e.date===dStr).sort((a,b)=>a.time.localeCompare(b.time));
+                    const c=logic.addDays(s,i);
+                    // Ensure we're working with the date in local timezone
+                    const localDate = new Date(c.getFullYear(), c.getMonth(), c.getDate());
+                    const dStr=logic.fmt.iso(localDate);
+                    const dev=evs.filter(e=>e.date===dStr).sort((a,b)=>a.time.localeCompare(b.time));
                     h+=`<div class="day-col"><div class="day-head">${logic.fmt.dayName(dStr)} ${logic.fmt.il(dStr)}</div><div class="day-body">`;
                     dev.forEach(e=>{ h+=`<div class="evt-tag ${CONFIG.colors[e.type]||'t-school'}" onclick='ui.modals.openView(${JSON.stringify(e).replace(/'/g,"&#39;")})'>${e.time} ${e.title}</div>`; });
                     h+=`</div></div>`;
@@ -555,11 +971,12 @@ const ui = {
             }
             else if(v==='month') {
                 const y=anc.getFullYear(), m=anc.getMonth(), dim=new Date(y,m+1,0).getDate(), pad=new Date(y,m,1).getDay();
+                const todayStr = logic.fmt.iso(logic.getTodayIsrael());
                 h+=`<div class="month-grid">`;
                 ['א','ב','ג','ד','ה','ו','ש'].forEach(x=>h+=`<div class="month-header-cell">${x}</div>`);
                 for(let i=0; i<pad; i++) h+=`<div class="month-cell empty"></div>`;
                 for(let d=1; d<=dim; d++) {
-                    const cd=new Date(y,m,d), dStr=logic.fmt.iso(cd), dev=evs.filter(e=>e.date===dStr), isT=dStr===logic.fmt.iso(new Date());
+                    const cd=new Date(y,m,d), dStr=logic.fmt.iso(cd), dev=evs.filter(e=>e.date===dStr), isT=dStr===todayStr;
                     h+=`<div class="month-cell ${isT?'today':''}" onclick="Store.state.${k}=${cd.getTime()};ui.nav.setView('day')"><div class="month-num">${d}</div>`;
                     
                     // --- Text Tags for Month View ---
@@ -584,16 +1001,71 @@ const ui = {
     },
 
     modals: {
-        openAdd() { document.getElementById('modalAdd').classList.add('active'); document.getElementById('evtDate').value=logic.fmt.iso(new Date()); document.getElementById('conflictAlert').classList.add('hidden'); },
+        openAdd() {
+            logic.editingEventId = null;
+            document.getElementById('modalAddTitle').innerText = 'הוספת אירוע';
+            document.getElementById('modalAdd').classList.add('active');
+            document.getElementById('evtDate').value=logic.fmt.iso(logic.getTodayIsrael());
+            document.getElementById('evtTitle').value='';
+            document.getElementById('evtTime').value='16:00';
+            document.getElementById('evtDuration').value='1';
+            document.getElementById('evtType').value='activity';
+            document.getElementById('evtDifficulty').value='4';
+            document.getElementById('evtStudyDuration').value='1';
+            document.getElementById('evtNotificationBefore').value='60';
+            ui.toggleExamFields();
+            document.getElementById('conflictAlert').classList.add('hidden');
+        },
+        openEdit(e) {
+            logic.editingEventId = e.id;
+            document.getElementById('modalAddTitle').innerText = 'עריכת אירוע';
+            document.getElementById('evtTitle').value = e.title;
+            document.getElementById('evtDate').value = e.date;
+            document.getElementById('evtTime').value = e.time;
+            document.getElementById('evtDuration').value = e.duration;
+            document.getElementById('evtType').value = e.type;
+            document.getElementById('evtDifficulty').value = e.difficulty || '4';
+            document.getElementById('evtStudyDuration').value = e.studyDuration || 1;
+            document.getElementById('evtNotificationBefore').value = e.notificationBefore || 60;
+            ui.toggleExamFields();
+            document.getElementById('conflictAlert').classList.add('hidden');
+            document.getElementById('modalAdd').classList.add('active');
+        },
         openView(e) {
             const m=document.getElementById('modalView'), isSc=e.source==='google_sheets';
             document.getElementById('viewTitle').innerText=e.title; document.getElementById('viewDate').innerText=logic.fmt.il(e.date);
             document.getElementById('viewTime').innerText=e.time||'--'; document.getElementById('viewDuration').innerText=e.duration+' שעות';
             document.getElementById('viewType').innerHTML=`<span class="evt-tag ${CONFIG.colors[e.type]||'t-school'}">${e.type}</span>`;
             const desc=document.getElementById('viewDesc'); if(e.description||e.audience){desc.style.display='block';desc.innerText=`${e.audience?`[${e.audience}] `:''}${e.description||''}`;}else desc.style.display='none';
-            const bd=document.getElementById('btnDelete'), ba=document.getElementById('aiPlanActions'), bad=document.getElementById('aiDeletePlan');
-            ba.classList.add('hidden'); bad.classList.add('hidden');
-            if(isSc) bd.style.display='none'; else { bd.style.display='block'; bd.onclick=()=>{if(confirm('למחוק?')) Store.deleteEvent(e.id);}; if(e.type==='exam'){ if(Store.state.personal.some(x=>x.linkedExamId===e.id)) bad.classList.remove('hidden'); else ba.classList.remove('hidden'); } }
+            const bd=document.getElementById('btnDelete'), be=document.getElementById('btnEdit'), ba=document.getElementById('aiPlanActions'), bad=document.getElementById('aiDeletePlan');
+            const schoolNotifSection=document.getElementById('schoolNotificationSection');
+            ba.classList.add('hidden'); bad.classList.add('hidden'); schoolNotifSection.classList.add('hidden');
+
+            if(isSc) {
+                bd.style.display='none';
+                be.style.display='none';
+
+                // Show notification section for school events
+                logic.currentSchoolEventId = e.id;
+                const currentNotif = Store.state.schoolNotifications[e.id] || 0;
+                document.getElementById('viewSchoolNotification').value = currentNotif;
+                schoolNotifSection.classList.remove('hidden');
+
+                // Show AI planner for school exams
+                if(e.type==='exam'){
+                    if(Store.state.personal.some(x=>x.linkedExamId===e.id)) bad.classList.remove('hidden');
+                    else ba.classList.remove('hidden');
+                }
+            } else {
+                bd.style.display='block';
+                be.style.display='block';
+                bd.onclick=()=>{if(confirm('למחוק?')) Store.deleteEvent(e.id);};
+                be.onclick=()=>{ui.modals.closeAll(); ui.modals.openEdit(e);};
+                if(e.type==='exam'){
+                    if(Store.state.personal.some(x=>x.linkedExamId===e.id)) bad.classList.remove('hidden');
+                    else ba.classList.remove('hidden');
+                }
+            }
             m.classList.add('active');
         },
         showConflict(e,d,dur) {
@@ -602,13 +1074,347 @@ const ui = {
             logic.findFreeSlots(d,dur).forEach(t=>{ const x=document.createElement('div'); x.className='evt-tag t-study'; x.innerText=t; x.onclick=()=>{document.getElementById('evtTime').value=t;document.getElementById('conflictAlert').classList.add('hidden');}; c.appendChild(x); });
             document.getElementById('conflictAlert').classList.remove('hidden');
         },
-        showAI(msg, blks) { document.getElementById('aiMsg').innerHTML=msg; const c=document.getElementById('aiBlocks'); c.innerHTML=''; blks.forEach(b=>{c.innerHTML+=`<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`;}); document.getElementById('modalAI').classList.add('active'); },
+        showAI(msg, blks) {
+            document.getElementById('aiMsg').innerHTML=msg;
+            const c=document.getElementById('aiBlocks');
+            c.innerHTML='';
+            blks.forEach(b=>{c.innerHTML+=`<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`;});
+            // Update skip button text based on exam type
+            const skipBtn = document.getElementById('btnAiSkip');
+            if(skipBtn) {
+                skipBtn.innerText = logic.ai.isSchoolExam ? 'ביטול' : 'שמור ללא תכנון';
+            }
+            document.getElementById('modalAI').classList.add('active');
+        },
+        openSettings() {
+            document.getElementById('settingSchoolCalendar').checked = Store.state.showSchoolCalendar;
+            document.getElementById('modalSettings').classList.add('active');
+        },
         closeAll() { document.querySelectorAll('.modal-overlay').forEach(e=>e.classList.remove('active')); }
     },
-    toggleExamFields() { const t=document.getElementById('evtType').value; document.getElementById('examExtraFields').classList.toggle('hidden', t!=='exam'); }
+    toggleExamFields() { const t=document.getElementById('evtType').value; document.getElementById('examExtraFields').classList.toggle('hidden', t!=='exam'); },
+
+    settings: {
+        toggleSchoolCalendar(show) {
+            Store.state.showSchoolCalendar = show;
+            Store.save();
+            this.updateUI();
+            ui.render(); // Refresh the current view
+        },
+        updateUI() {
+            const show = Store.state.showSchoolCalendar;
+            const sidebar = document.getElementById('schoolNavSidebar');
+            const bottom = document.getElementById('schoolNavBottom');
+
+            if(sidebar) sidebar.style.display = show ? 'flex' : 'none';
+            if(bottom) bottom.style.display = show ? 'flex' : 'none';
+
+            // If currently on school view and it's being hidden, go to dashboard
+            if(!show && Store.state.view === 'school') {
+                app.navTo('dashboard');
+            }
+        }
+    }
 };
 
-window.app={navTo:ui.nav.to}; Store.init(); ui.nav.to('dashboard');
+window.app={navTo:ui.nav.to}; Store.init(); ui.nav.to('dashboard'); ui.settings.updateUI();
+
+/** PWA & NOTIFICATIONS */
+const PWA = {
+    init() {
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            this.registerSW();
+        }
+
+        // Request notification permission on load
+        this.requestNotificationPermission();
+
+        // Check for missed notifications on app open
+        this.checkMissedNotifications();
+
+        // Schedule notifications for upcoming events
+        this.scheduleNotifications();
+
+        // Set up periodic check (every minute when app is active)
+        setInterval(() => this.checkPendingNotifications(), 60000);
+    },
+
+    async registerSW() {
+        try {
+            const swCode = `
+                self.addEventListener('install', (e) => {
+                    console.log('Service Worker: Installed');
+                    self.skipWaiting();
+                });
+
+                self.addEventListener('activate', (e) => {
+                    console.log('Service Worker: Activated');
+                    return self.clients.claim();
+                });
+
+                self.addEventListener('fetch', (e) => {
+                    e.respondWith(
+                        caches.match(e.request).then(response => response || fetch(e.request))
+                    );
+                });
+
+                self.addEventListener('notificationclick', (e) => {
+                    e.notification.close();
+                    e.waitUntil(clients.openWindow('/'));
+                });
+
+                // Periodic background sync for checking notifications
+                self.addEventListener('periodicsync', (e) => {
+                    if (e.tag === 'check-notifications') {
+                        e.waitUntil(checkAndShowNotifications());
+                    }
+                });
+
+                async function checkAndShowNotifications() {
+                    const clients = await self.clients.matchAll();
+                    if (clients.length > 0) {
+                        clients[0].postMessage({ type: 'CHECK_NOTIFICATIONS' });
+                    }
+                }
+            `;
+
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            const registration = await navigator.serviceWorker.register(swUrl);
+            console.log('✅ Service Worker registered:', registration);
+
+            // Store registration for notifications
+            this.swRegistration = registration;
+
+            // Try to register periodic sync (if supported)
+            if ('periodicSync' in registration) {
+                try {
+                    await registration.periodicSync.register('check-notifications', {
+                        minInterval: 15 * 60 * 1000 // 15 minutes minimum
+                    });
+                    console.log('✅ Periodic sync registered');
+                } catch (error) {
+                    console.log('Periodic sync not available:', error);
+                }
+            }
+
+            // Listen for messages from service worker
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'CHECK_NOTIFICATIONS') {
+                    this.checkPendingNotifications();
+                }
+            });
+        } catch (error) {
+            console.error('Service Worker registration failed:', error);
+        }
+    },
+
+    async requestNotificationPermission() {
+        if (!('Notification' in window)) {
+            console.log('This browser does not support notifications');
+            return;
+        }
+
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            console.log('Notification permission:', permission);
+        }
+    },
+
+    showNotification(title, options) {
+        if (Notification.permission === 'granted') {
+            if (this.swRegistration) {
+                this.swRegistration.showNotification(title, options);
+            } else if ('Notification' in window) {
+                new Notification(title, options);
+            }
+        }
+    },
+
+    saveScheduledNotifications(notifications) {
+        localStorage.setItem('scheduledNotifications', JSON.stringify(notifications));
+    },
+
+    getScheduledNotifications() {
+        const stored = localStorage.getItem('scheduledNotifications');
+        return stored ? JSON.parse(stored) : [];
+    },
+
+    checkMissedNotifications() {
+        const scheduled = this.getScheduledNotifications();
+        const now = Date.now();
+        const missed = scheduled.filter(n => n.time <= now && !n.shown);
+
+        missed.forEach(notification => {
+            this.showNotification(notification.title, notification.options);
+            // Mark as shown
+            notification.shown = true;
+        });
+
+        // Update storage, keeping only future notifications
+        const remaining = scheduled.filter(n => n.time > now || !n.shown);
+        this.saveScheduledNotifications(remaining);
+    },
+
+    checkPendingNotifications() {
+        const scheduled = this.getScheduledNotifications();
+        const now = Date.now();
+        const toShow = scheduled.filter(n => n.time <= now && !n.shown);
+
+        toShow.forEach(notification => {
+            this.showNotification(notification.title, notification.options);
+            notification.shown = true;
+        });
+
+        if (toShow.length > 0) {
+            // Update storage
+            const remaining = scheduled.filter(n => n.time > now || n.shown);
+            this.saveScheduledNotifications(remaining);
+        }
+    },
+
+    async testNotification() {
+        if (!('Notification' in window)) {
+            alert('הדפדפן שלך לא תומך בהתראות');
+            return;
+        }
+
+        if (Notification.permission === 'denied') {
+            alert('❌ הרשאות התראות נחסמו.\n\nעל אנדרויד:\n1. עבור להגדרות > אפליקציות\n2. מצא את הדפדפן\n3. הגדרות > התראות\n4. אפשר התראות');
+            return;
+        }
+
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('❌ נדרשת הרשאה להתראות כדי לקבל תזכורות');
+                return;
+            }
+        }
+
+        this.showNotification('🎉 התראות פעילות!', {
+            body: 'תקבל תזכורות על אירועים קרובים',
+            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+            badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+            vibrate: [200, 100, 200]
+        });
+
+        const scheduled = this.getScheduledNotifications();
+        alert(`✅ התראות פועלות!\n\n📅 יש ${scheduled.length} התראות מתוזמנות.\n\n💡 טיפ: פתח את האפליקציה כל יום כדי לקבל תזכורות שפספסת.`);
+    },
+
+    scheduleNotifications() {
+        const now = new Date();
+        const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+        const allEvents = [...Store.state.personal, ...schoolEvents];
+        const scheduledNotifications = [];
+
+        allEvents.forEach(event => {
+            const eventDate = new Date(event.date + 'T' + (event.time || '09:00'));
+            const timeDiff = eventDate - now;
+
+            // Schedule notifications for events in the next 7 days
+            if (timeDiff > 0 && timeDiff < 7 * 24 * 60 * 60 * 1000) {
+                // Use custom notification timing if set, otherwise skip
+                // For school events, check schoolNotifications object
+                let notifyMinutes = event.notificationBefore || 0;
+                if (event.source === 'google_sheets') {
+                    notifyMinutes = Store.state.schoolNotifications[event.id] || 0;
+                }
+
+                if (notifyMinutes > 0) {
+                    const notificationTime = timeDiff - (notifyMinutes * 60 * 1000);
+
+                    if (notificationTime > 0 && notificationTime < 7 * 24 * 60 * 60 * 1000) {
+                        // Determine notification message based on time
+                        let timeMessage;
+                        if (notifyMinutes < 60) {
+                            timeMessage = `בעוד ${notifyMinutes} דקות`;
+                        } else if (notifyMinutes === 60) {
+                            timeMessage = 'בעוד שעה';
+                        } else if (notifyMinutes === 120) {
+                            timeMessage = 'בעוד שעתיים';
+                        } else if (notifyMinutes === 1440) {
+                            timeMessage = 'מחר';
+                        } else if (notifyMinutes === 2880) {
+                            timeMessage = 'בעוד יומיים';
+                        } else {
+                            timeMessage = `בעוד ${Math.round(notifyMinutes / 60)} שעות`;
+                        }
+
+                        const notificationData = {
+                            id: 'event-' + event.id,
+                            time: now.getTime() + notificationTime,
+                            title: `תזכורת: ${timeMessage}! ⏰`,
+                            options: {
+                                body: `${event.title} - ${event.time || 'יום שלם'}`,
+                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+                                badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+                                tag: 'event-notification-' + event.id,
+                                requireInteraction: true,
+                                vibrate: [200, 100, 200, 100, 200]
+                            },
+                            shown: false
+                        };
+
+                        scheduledNotifications.push(notificationData);
+
+                        // Also use setTimeout for immediate notifications (when app is open)
+                        if (notificationTime < 24 * 60 * 60 * 1000) { // Only for next 24 hours
+                            setTimeout(() => {
+                                this.showNotification(notificationData.title, notificationData.options);
+                            }, notificationTime);
+                        }
+                    }
+                }
+            }
+        });
+
+        // Save to localStorage for persistent notifications
+        this.saveScheduledNotifications(scheduledNotifications);
+        console.log(`📅 Scheduled ${scheduledNotifications.length} notifications`);
+    }
+};
+
+// Override Store.addEvent to reschedule notifications
+const originalAddEvent = Store.addEvent;
+Store.addEvent = function(e) {
+    originalAddEvent.call(this, e);
+    PWA.scheduleNotifications();
+};
+
+// Initialize PWA
+PWA.init();
+
+// Show install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Show install banner after 3 seconds
+    setTimeout(() => {
+        if (confirm('💾 האם תרצה להתקין את SmartStudent כאפליקציה בטלפון שלך?')) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+            });
+        }
+    }, 3000);
+});
+
+// iOS install instructions
+if (window.navigator.standalone === false && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    setTimeout(() => {
+        alert('📲 להתקנה ב-iPhone: לחץ על כפתור השיתוף ⬆️ ובחר "Add to Home Screen"');
+    }, 5000);
+}
 </script>
 </body>
 </html>
