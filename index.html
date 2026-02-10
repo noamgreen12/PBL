@@ -293,7 +293,7 @@
         <form onsubmit="return false;">
             <div class="form-group"><label>כותרת</label><input type="text" id="evtTitle" required></div>
             <div class="form-group"><label>סוג</label><select id="evtType" onchange="ui.toggleExamFields()"><option value="activity">פעילות</option><option value="assignment">מטלה</option><option value="exam">מבחן (AI Planner)</option></select></div>
-            <div class="form-group"><label>תאריך</label><input type="date" id="evtDate" required style="max-width:100%"></div>
+            <div class="form-group"><label>תאריך</label><input type="date" id="evtDate" required style="width:100%;max-width:100%;box-sizing:border-box"></div>
 
             <!-- AI Planner - עכשיו מעל שעה ומשך -->
             <div id="examExtraFields" class="hidden" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);padding:14px;border-radius:12px;margin-bottom:15px;border:2px solid var(--primary);">
@@ -306,14 +306,14 @@
                 <small style="color:var(--primary);display:block;margin-top:8px;font-weight:600;">💡 ה-AI יפזר את הלמידה (שעה ביום).</small>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
-                <div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;align-items:end;">
+                <div style="display:flex;flex-direction:column;">
                     <label style="display:block;margin-bottom:8px;font-weight:700;font-size:0.95rem;">שעה</label>
-                    <input type="time" id="evtTime" value="16:00" required style="margin:0">
+                    <input type="time" id="evtTime" value="16:00" required style="margin:0;height:50px;-webkit-appearance:none;appearance:none;padding:14px 16px">
                 </div>
-                <div>
+                <div style="display:flex;flex-direction:column;">
                     <label style="display:block;margin-bottom:8px;font-weight:700;font-size:0.95rem;">משך (שעות)</label>
-                    <input type="number" id="evtDuration" value="1" step="0.5" required style="margin:0">
+                    <input type="number" id="evtDuration" value="1" step="0.5" required style="margin:0;height:50px;-webkit-appearance:none;appearance:none;padding:14px 16px">
                 </div>
             </div>
 
@@ -382,6 +382,9 @@
                 </div>
                 <button class="btn-icon" onclick="PWA.testNotification()" style="background:var(--primary);color:white">בדוק</button>
             </label>
+            <div style="margin-top:10px;padding:10px;background:var(--primary-light);border-radius:8px;font-size:0.85rem;line-height:1.4">
+                <strong>💡 טיפ:</strong> כדי לקבל התראות באנדרויד, פתח את האפליקציה לפחות פעם ביום. התראות יוצגו כשתפתח את האפליקציה אם פספסת אותן.
+            </div>
         </div>
         <button class="btn btn-primary" onclick="ui.modals.closeAll()">סגור</button>
     </div>
@@ -940,8 +943,14 @@ const PWA = {
         // Request notification permission on load
         this.requestNotificationPermission();
 
+        // Check for missed notifications on app open
+        this.checkMissedNotifications();
+
         // Schedule notifications for upcoming events
         this.scheduleNotifications();
+
+        // Set up periodic check (every minute when app is active)
+        setInterval(() => this.checkPendingNotifications(), 60000);
     },
 
     async registerSW() {
@@ -967,6 +976,20 @@ const PWA = {
                     e.notification.close();
                     e.waitUntil(clients.openWindow('/'));
                 });
+
+                // Periodic background sync for checking notifications
+                self.addEventListener('periodicsync', (e) => {
+                    if (e.tag === 'check-notifications') {
+                        e.waitUntil(checkAndShowNotifications());
+                    }
+                });
+
+                async function checkAndShowNotifications() {
+                    const clients = await self.clients.matchAll();
+                    if (clients.length > 0) {
+                        clients[0].postMessage({ type: 'CHECK_NOTIFICATIONS' });
+                    }
+                }
             `;
 
             const blob = new Blob([swCode], { type: 'application/javascript' });
@@ -976,6 +999,25 @@ const PWA = {
 
             // Store registration for notifications
             this.swRegistration = registration;
+
+            // Try to register periodic sync (if supported)
+            if ('periodicSync' in registration) {
+                try {
+                    await registration.periodicSync.register('check-notifications', {
+                        minInterval: 15 * 60 * 1000 // 15 minutes minimum
+                    });
+                    console.log('✅ Periodic sync registered');
+                } catch (error) {
+                    console.log('Periodic sync not available:', error);
+                }
+            }
+
+            // Listen for messages from service worker
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'CHECK_NOTIFICATIONS') {
+                    this.checkPendingNotifications();
+                }
+            });
         } catch (error) {
             console.error('Service Worker registration failed:', error);
         }
@@ -1003,6 +1045,48 @@ const PWA = {
         }
     },
 
+    saveScheduledNotifications(notifications) {
+        localStorage.setItem('scheduledNotifications', JSON.stringify(notifications));
+    },
+
+    getScheduledNotifications() {
+        const stored = localStorage.getItem('scheduledNotifications');
+        return stored ? JSON.parse(stored) : [];
+    },
+
+    checkMissedNotifications() {
+        const scheduled = this.getScheduledNotifications();
+        const now = Date.now();
+        const missed = scheduled.filter(n => n.time <= now && !n.shown);
+
+        missed.forEach(notification => {
+            this.showNotification(notification.title, notification.options);
+            // Mark as shown
+            notification.shown = true;
+        });
+
+        // Update storage, keeping only future notifications
+        const remaining = scheduled.filter(n => n.time > now || !n.shown);
+        this.saveScheduledNotifications(remaining);
+    },
+
+    checkPendingNotifications() {
+        const scheduled = this.getScheduledNotifications();
+        const now = Date.now();
+        const toShow = scheduled.filter(n => n.time <= now && !n.shown);
+
+        toShow.forEach(notification => {
+            this.showNotification(notification.title, notification.options);
+            notification.shown = true;
+        });
+
+        if (toShow.length > 0) {
+            // Update storage
+            const remaining = scheduled.filter(n => n.time > now || n.shown);
+            this.saveScheduledNotifications(remaining);
+        }
+    },
+
     async testNotification() {
         if (!('Notification' in window)) {
             alert('הדפדפן שלך לא תומך בהתראות');
@@ -1010,7 +1094,7 @@ const PWA = {
         }
 
         if (Notification.permission === 'denied') {
-            alert('❌ הרשאות התראות נחסמו. אנא אפשר התראות בהגדרות הדפדפן.');
+            alert('❌ הרשאות התראות נחסמו.\n\nעל אנדרויד:\n1. עבור להגדרות > אפליקציות\n2. מצא את הדפדפן\n3. הגדרות > התראות\n4. אפשר התראות');
             return;
         }
 
@@ -1028,13 +1112,16 @@ const PWA = {
             badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
             vibrate: [200, 100, 200]
         });
-        alert('✅ התראות פועלות! תקבל תזכורות על אירועים קרובים.');
+
+        const scheduled = this.getScheduledNotifications();
+        alert(`✅ התראות פועלות!\n\n📅 יש ${scheduled.length} התראות מתוזמנות.\n\n💡 טיפ: פתח את האפליקציה כל יום כדי לקבל תזכורות שפספסת.`);
     },
 
     scheduleNotifications() {
         const now = new Date();
         const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
         const allEvents = [...Store.state.personal, ...schoolEvents];
+        const scheduledNotifications = [];
 
         allEvents.forEach(event => {
             const eventDate = new Date(event.date + 'T' + (event.time || '09:00'));
@@ -1065,20 +1152,37 @@ const PWA = {
                             timeMessage = `בעוד ${Math.round(notifyMinutes / 60)} שעות`;
                         }
 
-                        setTimeout(() => {
-                            this.showNotification(`תזכורת: ${timeMessage}! ⏰`, {
+                        const notificationData = {
+                            id: 'event-' + event.id,
+                            time: now.getTime() + notificationTime,
+                            title: `תזכורת: ${timeMessage}! ⏰`,
+                            options: {
                                 body: `${event.title} - ${event.time || 'יום שלם'}`,
                                 icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
                                 badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
                                 tag: 'event-notification-' + event.id,
                                 requireInteraction: true,
                                 vibrate: [200, 100, 200, 100, 200]
-                            });
-                        }, notificationTime);
+                            },
+                            shown: false
+                        };
+
+                        scheduledNotifications.push(notificationData);
+
+                        // Also use setTimeout for immediate notifications (when app is open)
+                        if (notificationTime < 24 * 60 * 60 * 1000) { // Only for next 24 hours
+                            setTimeout(() => {
+                                this.showNotification(notificationData.title, notificationData.options);
+                            }, notificationTime);
+                        }
                     }
                 }
             }
         });
+
+        // Save to localStorage for persistent notifications
+        this.saveScheduledNotifications(scheduledNotifications);
+        console.log(`📅 Scheduled ${scheduledNotifications.length} notifications`);
     }
 };
 
