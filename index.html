@@ -317,6 +317,19 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label>🔔 תזכורת</label>
+                <select id="evtNotificationBefore" style="margin:0">
+                    <option value="0">ללא תזכורת</option>
+                    <option value="15">15 דקות לפני</option>
+                    <option value="30">30 דקות לפני</option>
+                    <option value="60" selected>שעה לפני</option>
+                    <option value="120">שעתיים לפני</option>
+                    <option value="1440">יום לפני</option>
+                    <option value="2880">יומיים לפני</option>
+                </select>
+            </div>
+
             <button class="btn btn-primary" onclick="logic.saveEvent()">שמור</button>
             <button class="btn btn-ghost" onclick="ui.modals.closeAll()">ביטול</button>
         </form>
@@ -351,58 +364,6 @@
     <div class="modal-content">
         <h2>⚙️ הגדרות</h2>
 
-        <!-- המגמות שלי - עכשיו למעלה! -->
-        <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg, #eff6ff, #dbeafe);border:2px solid var(--primary)">
-            <div style="font-weight:800;margin-bottom:12px;font-size:1.1rem;color:var(--primary)">📚 המגמות שלי</div>
-            <small style="color:var(--text);display:block;margin-bottom:12px;font-weight:600">בחר את המגמות שאתה לומד כדי לראות רק מבחנים רלוונטיים</small>
-            <div style="display:flex;flex-direction:column;gap:10px" id="tracksContainer">
-                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
-                    <input type="checkbox" class="track-checkbox" value="מדעים" style="width:20px;height:20px;cursor:pointer">
-                    <span style="font-weight:600;font-size:1rem">🔬 מדעים</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
-                    <input type="checkbox" class="track-checkbox" value="מחשבים" style="width:20px;height:20px;cursor:pointer">
-                    <span style="font-weight:600;font-size:1rem">💻 מחשבים</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
-                    <input type="checkbox" class="track-checkbox" value="אומניות" style="width:20px;height:20px;cursor:pointer">
-                    <span style="font-weight:600;font-size:1rem">🎨 אומניות</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
-                    <input type="checkbox" class="track-checkbox" value="ספורט" style="width:20px;height:20px;cursor:pointer">
-                    <span style="font-weight:600;font-size:1rem">⚽ ספורט</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border-radius:10px;cursor:pointer;border:2px solid var(--border);transition:var(--transition)">
-                    <input type="checkbox" class="track-checkbox" value="מוזיקה" style="width:20px;height:20px;cursor:pointer">
-                    <span style="font-weight:600;font-size:1rem">🎵 מוזיקה</span>
-                </label>
-            </div>
-        </div>
-
-        <!-- רמת לימודים -->
-        <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg, #fef3c7, #fde68a);border:2px solid #f59e0b">
-            <div style="font-weight:800;margin-bottom:12px;font-size:1.1rem;color:#b45309">🔢 רמת לימודים</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
-                <div>
-                    <label style="font-weight:700;margin-bottom:8px;display:block;color:#b45309">מתמטיקה</label>
-                    <select id="mathUnitsSelect" onchange="ui.settings.updateUnits('math', this.value)" style="padding:12px;border-radius:10px;border:2px solid #f59e0b;width:100%;font-weight:600;background:white">
-                        <option value="3">3 יחידות</option>
-                        <option value="4">4 יחידות</option>
-                        <option value="5">5 יחידות</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-weight:700;margin-bottom:8px;display:block;color:#b45309">אנגלית</label>
-                    <select id="englishUnitsSelect" onchange="ui.settings.updateUnits('english', this.value)" style="padding:12px;border-radius:10px;border:2px solid #f59e0b;width:100%;font-weight:600;background:white">
-                        <option value="3">3 יחידות</option>
-                        <option value="4">4 יחידות</option>
-                        <option value="5">5 יחידות</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- הצגת לוח בית ספר -->
         <div class="card" style="margin-bottom:20px">
             <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
                 <div>
@@ -413,7 +374,6 @@
             </label>
         </div>
 
-        <!-- התראות -->
         <div class="card" style="margin-bottom:20px">
             <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
                 <div>
@@ -444,10 +404,7 @@ const Store = {
         calView: 'week', schoolView: 'week',
         anchorDate: Date.now(), schoolAnchorDate: Date.now(),
         sheetUrl: '', selectedSheetKey: '', lastSync: null,
-        showSchoolCalendar: true,
-        selectedTracks: [], // מגמות שנבחרו
-        mathUnits: 3, // יחידות מתמטיקה (3/4/5)
-        englishUnits: 3 // יחידות אנגלית (3/4/5)
+        showSchoolCalendar: true
     },
     init() {
         try {
@@ -496,39 +453,6 @@ const logic = {
     toMin: t => { if(!t)return 0; const[h,m]=t.split(':').map(Number); return h*60+m; },
     minToStr: m => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`,
 
-    // Filter school events by selected tracks and units
-    filterSchoolEvents(events) {
-        if(!Store.state.selectedTracks || Store.state.selectedTracks.length === 0) {
-            return events; // אם לא נבחרו מגמות, להציג הכל
-        }
-
-        return events.filter(e => {
-            if(!e.audience) return true; // אירועים ללא קהל יוצג = אירועי כיתה כללי
-
-            const aud = e.audience.toLowerCase();
-
-            // בדיקה אם זה מבחן מתמטיקה או אנגלית עם יחידות
-            if(aud.includes('מתמטיקה') || aud.includes('math')) {
-                if(aud.includes('3') && Store.state.mathUnits !== 3) return false;
-                if(aud.includes('4') && Store.state.mathUnits !== 4) return false;
-                if(aud.includes('5') && Store.state.mathUnits !== 5) return false;
-            }
-
-            if(aud.includes('אנגלית') || aud.includes('english')) {
-                if(aud.includes('3') && Store.state.englishUnits !== 3) return false;
-                if(aud.includes('4') && Store.state.englishUnits !== 4) return false;
-                if(aud.includes('5') && Store.state.englishUnits !== 5) return false;
-            }
-
-            // בדיקה אם האירוע שייך לאחת המגמות שנבחרו
-            const isRelevant = Store.state.selectedTracks.some(track =>
-                aud.includes(track.toLowerCase())
-            );
-
-            return isRelevant;
-        });
-    },
-
     checkConflict(newEvt, excludeId=null) {
         const all = [...Store.state.personal, ...Store.state.school];
         const nS = logic.toMin(newEvt.time), nE = nS + (newEvt.duration*60);
@@ -557,10 +481,11 @@ const logic = {
         const t=document.getElementById('evtTitle').value, d=document.getElementById('evtDate').value, tm=document.getElementById('evtTime').value;
         if(!t||!d||!tm) return;
         const dur=parseFloat(document.getElementById('evtDuration').value), tp=document.getElementById('evtType').value;
+        const notifyBefore=parseInt(document.getElementById('evtNotificationBefore').value);
 
         if(this.editingEventId) {
             // Update existing event
-            const updatedData = { title:t, date:d, time:tm, duration:dur, type:tp, difficulty:document.getElementById('evtDifficulty').value };
+            const updatedData = { title:t, date:d, time:tm, duration:dur, type:tp, difficulty:document.getElementById('evtDifficulty').value, notificationBefore:notifyBefore };
             const conf = logic.checkConflict({ ...updatedData, id:this.editingEventId });
             if(conf.collision) { ui.modals.showConflict(conf.event, d, dur); return; }
             Store.updateEvent(this.editingEventId, updatedData);
@@ -568,7 +493,7 @@ const logic = {
             ui.modals.closeAll();
         } else {
             // Add new event
-            const newEvt = { id:Date.now(), title:t, date:d, time:tm, duration:dur, type:tp, isAuto:false, difficulty:document.getElementById('evtDifficulty').value };
+            const newEvt = { id:Date.now(), title:t, date:d, time:tm, duration:dur, type:tp, isAuto:false, difficulty:document.getElementById('evtDifficulty').value, notificationBefore:notifyBefore };
             const conf = logic.checkConflict(newEvt);
             if(conf.collision) { ui.modals.showConflict(conf.event, d, dur); return; }
             if(tp==='exam') { ui.modals.closeAll(); logic.ai.start(newEvt); return; }
@@ -614,7 +539,7 @@ const logic = {
         confirm() {
             const idx=Store.state.personal.findIndex(e=>e.id===this.targetExam.id);
             if(idx>-1) Store.state.personal[idx]=this.targetExam; else Store.state.personal.push(this.targetExam);
-            const blks=this.proposedBlocks.map(b=>({id:Date.now()+Math.random(), title:`למידה ל${this.targetExam.title}`, type:'study', date:b.date, time:b.time, duration:b.duration, isAuto:true, linkedExamId:this.targetExam.id}));
+            const blks=this.proposedBlocks.map(b=>({id:Date.now()+Math.random(), title:`למידה ל${this.targetExam.title}`, type:'study', date:b.date, time:b.time, duration:b.duration, isAuto:true, linkedExamId:this.targetExam.id, notificationBefore:60}));
             Store.state.personal.push(...blks); Store.save(); ui.modals.closeAll(); ui.render(); alert('✅ נשמר!');
         },
         retry(){ this.start(this.targetExam, true); }, skip(){ Store.addEvent(this.targetExam); ui.modals.closeAll(); },
@@ -768,8 +693,7 @@ const ui = {
             const today=new Date();
             today.setHours(0,0,0,0);
             const todayStr=logic.fmt.iso(today);
-            let schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
-            schoolEvents = logic.filterSchoolEvents(schoolEvents); // פילטר לפי מגמות ויחידות
+            const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
             const all=[...Store.state.personal, ...schoolEvents].filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
 
             let h=`<h2>דאשבורד</h2><div style="margin-top:10px">`;
@@ -841,9 +765,8 @@ const ui = {
         cal(con, isSc) {
             const k = isSc?'schoolAnchorDate':'anchorDate', vk=isSc?'schoolView':'calView';
             const anc=new Date(Store.state[k]), v=Store.state[vk];
-            let schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
-            schoolEvents = logic.filterSchoolEvents(schoolEvents); // פילטר לפי מגמות ויחידות
-            const evs=isSc?logic.filterSchoolEvents(Store.state.school):[...Store.state.personal,...schoolEvents];
+            const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
+            const evs=isSc?Store.state.school:[...Store.state.personal,...schoolEvents];
             
             // Header
             let h=`<h2>${isSc?'לוח בית ספר':'היומן שלי'}</h2>`;
@@ -873,7 +796,11 @@ const ui = {
                 const s=logic.getStartOfWeek(anc);
                 h+=`<div class="week-container"><div class="week-grid">`;
                 for(let i=0; i<7; i++) {
-                    const c=logic.addDays(s,i), dStr=logic.fmt.iso(c), dev=evs.filter(e=>e.date===dStr).sort((a,b)=>a.time.localeCompare(b.time));
+                    const c=logic.addDays(s,i);
+                    // Ensure we're working with the date in local timezone
+                    const localDate = new Date(c.getFullYear(), c.getMonth(), c.getDate());
+                    const dStr=logic.fmt.iso(localDate);
+                    const dev=evs.filter(e=>e.date===dStr).sort((a,b)=>a.time.localeCompare(b.time));
                     h+=`<div class="day-col"><div class="day-head">${logic.fmt.dayName(dStr)} ${logic.fmt.il(dStr)}</div><div class="day-body">`;
                     dev.forEach(e=>{ h+=`<div class="evt-tag ${CONFIG.colors[e.type]||'t-school'}" onclick='ui.modals.openView(${JSON.stringify(e).replace(/'/g,"&#39;")})'>${e.time} ${e.title}</div>`; });
                     h+=`</div></div>`;
@@ -921,6 +848,7 @@ const ui = {
             document.getElementById('evtDuration').value='1';
             document.getElementById('evtType').value='activity';
             document.getElementById('evtDifficulty').value='4';
+            document.getElementById('evtNotificationBefore').value='60';
             ui.toggleExamFields();
             document.getElementById('conflictAlert').classList.add('hidden');
         },
@@ -933,6 +861,7 @@ const ui = {
             document.getElementById('evtDuration').value = e.duration;
             document.getElementById('evtType').value = e.type;
             document.getElementById('evtDifficulty').value = e.difficulty || '4';
+            document.getElementById('evtNotificationBefore').value = e.notificationBefore || 60;
             ui.toggleExamFields();
             document.getElementById('conflictAlert').classList.add('hidden');
             document.getElementById('modalAdd').classList.add('active');
@@ -969,17 +898,6 @@ const ui = {
         showAI(msg, blks) { document.getElementById('aiMsg').innerHTML=msg; const c=document.getElementById('aiBlocks'); c.innerHTML=''; blks.forEach(b=>{c.innerHTML+=`<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`;}); document.getElementById('modalAI').classList.add('active'); },
         openSettings() {
             document.getElementById('settingSchoolCalendar').checked = Store.state.showSchoolCalendar;
-
-            // טען מגמות שנבחרו
-            document.querySelectorAll('.track-checkbox').forEach(cb => {
-                cb.checked = Store.state.selectedTracks.includes(cb.value);
-                cb.onchange = () => ui.settings.updateTracks();
-            });
-
-            // טען יחידות
-            document.getElementById('mathUnitsSelect').value = Store.state.mathUnits;
-            document.getElementById('englishUnitsSelect').value = Store.state.englishUnits;
-
             document.getElementById('modalSettings').classList.add('active');
         },
         closeAll() { document.querySelectorAll('.modal-overlay').forEach(e=>e.classList.remove('active')); }
@@ -992,26 +910,6 @@ const ui = {
             Store.save();
             this.updateUI();
             ui.render(); // Refresh the current view
-        },
-        updateTracks() {
-            const selected = [];
-            document.querySelectorAll('.track-checkbox:checked').forEach(cb => {
-                selected.push(cb.value);
-            });
-            Store.state.selectedTracks = selected;
-            Store.save();
-            ui.render(); // Refresh to show filtered events
-            PWA.scheduleNotifications(); // Update notifications
-        },
-        updateUnits(subject, value) {
-            if(subject === 'math') {
-                Store.state.mathUnits = parseInt(value);
-            } else if(subject === 'english') {
-                Store.state.englishUnits = parseInt(value);
-            }
-            Store.save();
-            ui.render(); // Refresh to show filtered events
-            PWA.scheduleNotifications(); // Update notifications
         },
         updateUI() {
             const show = Store.state.showSchoolCalendar;
@@ -1135,8 +1033,7 @@ const PWA = {
 
     scheduleNotifications() {
         const now = new Date();
-        let schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
-        schoolEvents = logic.filterSchoolEvents(schoolEvents); // פילטר לפי מגמות ויחידות
+        const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
         const allEvents = [...Store.state.personal, ...schoolEvents];
 
         allEvents.forEach(event => {
@@ -1145,35 +1042,40 @@ const PWA = {
 
             // Schedule notifications for events in the next 7 days
             if (timeDiff > 0 && timeDiff < 7 * 24 * 60 * 60 * 1000) {
+                // Use custom notification timing if set, otherwise skip
+                const notifyMinutes = event.notificationBefore || 0;
 
-                // 1 day before notification
-                const oneDayBefore = timeDiff - (24 * 60 * 60 * 1000);
-                if (oneDayBefore > 0 && oneDayBefore < 24 * 60 * 60 * 1000) {
-                    setTimeout(() => {
-                        this.showNotification('תזכורת: מחר יש לך אירוע! 📅', {
-                            body: `${event.title} - ${event.time || 'יום שלם'}`,
-                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
-                            badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
-                            tag: 'event-reminder-' + event.id,
-                            requireInteraction: true,
-                            vibrate: [200, 100, 200]
-                        });
-                    }, oneDayBefore);
-                }
+                if (notifyMinutes > 0) {
+                    const notificationTime = timeDiff - (notifyMinutes * 60 * 1000);
 
-                // 1 hour before notification
-                const oneHourBefore = timeDiff - (60 * 60 * 1000);
-                if (oneHourBefore > 0 && oneHourBefore < 24 * 60 * 60 * 1000) {
-                    setTimeout(() => {
-                        this.showNotification('תזכורת: בעוד שעה! ⏰', {
-                            body: `${event.title} - ${event.time || 'יום שלם'}`,
-                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
-                            badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
-                            tag: 'event-hour-' + event.id,
-                            requireInteraction: true,
-                            vibrate: [200, 100, 200, 100, 200]
-                        });
-                    }, oneHourBefore);
+                    if (notificationTime > 0 && notificationTime < 7 * 24 * 60 * 60 * 1000) {
+                        // Determine notification message based on time
+                        let timeMessage;
+                        if (notifyMinutes < 60) {
+                            timeMessage = `בעוד ${notifyMinutes} דקות`;
+                        } else if (notifyMinutes === 60) {
+                            timeMessage = 'בעוד שעה';
+                        } else if (notifyMinutes === 120) {
+                            timeMessage = 'בעוד שעתיים';
+                        } else if (notifyMinutes === 1440) {
+                            timeMessage = 'מחר';
+                        } else if (notifyMinutes === 2880) {
+                            timeMessage = 'בעוד יומיים';
+                        } else {
+                            timeMessage = `בעוד ${Math.round(notifyMinutes / 60)} שעות`;
+                        }
+
+                        setTimeout(() => {
+                            this.showNotification(`תזכורת: ${timeMessage}! ⏰`, {
+                                body: `${event.title} - ${event.time || 'יום שלם'}`,
+                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+                                badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎓</text></svg>',
+                                tag: 'event-notification-' + event.id,
+                                requireInteraction: true,
+                                vibrate: [200, 100, 200, 100, 200]
+                            });
+                        }, notificationTime);
+                    }
                 }
             }
         });
