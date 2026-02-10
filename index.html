@@ -453,14 +453,49 @@ const Store = {
 
 /** LOGIC */
 const logic = {
+    // Israel timezone helper
+    getIsraelDate: (date) => {
+        // Convert any date to Israel timezone
+        const d = date ? new Date(date) : new Date();
+        // Create date in Israel timezone
+        const israelDate = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+        return israelDate;
+    },
+    getTodayIsrael: () => {
+        // Get today's date in Israel timezone, normalized to midnight
+        const israelNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+        return new Date(israelNow.getFullYear(), israelNow.getMonth(), israelNow.getDate());
+    },
+    dateFromString: (dateStr) => {
+        // Parse YYYY-MM-DD as local date (not UTC)
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    },
     fmt: {
-        iso: d => d.toISOString().split('T')[0],
+        iso: d => {
+            // Handle both Date objects and date strings
+            if (typeof d === 'string') return d;
+            const israelDate = logic.getIsraelDate(d);
+            const y = israelDate.getFullYear();
+            const m = String(israelDate.getMonth() + 1).padStart(2, '0');
+            const day = String(israelDate.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        },
         il: d => { const [y,m,day]=d.split('-'); return `${day}/${m}`; },
-        dayName: d => ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(d).getDay()],
-        relative: d => { const df=Math.ceil((new Date(d)-new Date().setHours(0,0,0,0))/864e5); return df===0?'היום':(df===1?'מחר':`עוד ${df} ימים`); }
+        dayName: d => {
+            const date = logic.dateFromString(d);
+            return ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][date.getDay()];
+        },
+        relative: d => {
+            const today = logic.getTodayIsrael();
+            const targetDate = logic.dateFromString(d);
+            const df = Math.ceil((targetDate - today) / 864e5);
+            return df===0?'היום':(df===1?'מחר':`עוד ${df} ימים`);
+        }
     },
     addDays: (d,n) => {
-        const x=new Date(d);
+        // Handle both Date objects and date strings
+        const x = typeof d === 'string' ? logic.dateFromString(d) : new Date(d);
         x.setDate(x.getDate()+n);
         return x;
     },
@@ -534,13 +569,20 @@ const logic = {
     },
 
     ai: {
-        targetExam: null, proposedBlocks: [],
-        start(exam, rnd=false) { this.targetExam=exam; const p=this.calc(exam, rnd); this.proposedBlocks=p.blocks; ui.modals.showAI(p.msg, p.blocks); },
+        targetExam: null, proposedBlocks: [], isSchoolExam: false,
+        start(exam, rnd=false) {
+            this.targetExam=exam;
+            this.isSchoolExam = exam.source === 'google_sheets';
+            const p=this.calc(exam, rnd);
+            this.proposedBlocks=p.blocks;
+            ui.modals.showAI(p.msg, p.blocks);
+        },
         calc(exam, rnd) {
             let needed=parseInt(exam.difficulty)||4; const blocks=[], cands=[], dur=exam.studyDuration||1.0;
+            const today = logic.getTodayIsrael();
             for(let i=1; i<=7; i++) {
                 const d=logic.addDays(exam.date, -i), dStr=logic.fmt.iso(d);
-                if(d < new Date().setHours(0,0,0,0)) continue;
+                if(d < today) continue;
                 for(let t=16*60; t<=21*60; t+=30) {
                     const tm=logic.minToStr(t);
                     if(!logic.checkConflict({id:-99, date:dStr, time:tm, duration:dur}).collision) {
@@ -569,14 +611,41 @@ const logic = {
             return { blocks, msg: blocks.length>0 ? `פיזרתי את הלמידה בימים: <b>${days.join(', ')}</b>` : 'לא מצאתי מספיק זמן פנוי.' };
         },
         confirm() {
-            const idx=Store.state.personal.findIndex(e=>e.id===this.targetExam.id);
-            if(idx>-1) Store.state.personal[idx]=this.targetExam; else Store.state.personal.push(this.targetExam);
+            // For school exams, only save the study blocks (not the exam itself)
+            // For personal exams, save both the exam and study blocks
+            if(!this.isSchoolExam) {
+                const idx=Store.state.personal.findIndex(e=>e.id===this.targetExam.id);
+                if(idx>-1) Store.state.personal[idx]=this.targetExam; else Store.state.personal.push(this.targetExam);
+            }
             const blks=this.proposedBlocks.map(b=>({id:Date.now()+Math.random(), title:`למידה ל${this.targetExam.title}`, type:'study', date:b.date, time:b.time, duration:b.duration, isAuto:true, linkedExamId:this.targetExam.id, notificationBefore:60}));
             Store.state.personal.push(...blks); Store.save(); ui.modals.closeAll(); ui.render(); alert('✅ נשמר!');
         },
         retry(){ this.start(this.targetExam, true); }, skip(){ Store.addEvent(this.targetExam); ui.modals.closeAll(); },
-        planFromView(){ const t=document.getElementById('viewTitle').innerText, e=Store.state.personal.find(x=>x.title===t && x.type==='exam'); if(e){ ui.modals.closeAll(); this.start(e); } },
-        deletePlanFromView(){ const t=document.getElementById('viewTitle').innerText, e=Store.state.personal.find(x=>x.title===t); if(e && confirm('למחוק תוכנית?')){ Store.state.personal=Store.state.personal.filter(x=>x.linkedExamId!=e.id); Store.save(); ui.modals.closeAll(); ui.render(); } }
+        planFromView(){
+            const t=document.getElementById('viewTitle').innerText;
+            // Search in both personal and school events
+            let e=Store.state.personal.find(x=>x.title===t && x.type==='exam');
+            if(!e) e=Store.state.school.find(x=>x.title===t && x.type==='exam');
+            if(e){
+                // Add default values for school exams that don't have them
+                if(!e.difficulty) e.difficulty = '4';
+                if(!e.studyDuration) e.studyDuration = 1;
+                ui.modals.closeAll();
+                this.start(e);
+            }
+        },
+        deletePlanFromView(){
+            const t=document.getElementById('viewTitle').innerText;
+            // Search in both personal and school events to find the exam
+            let e=Store.state.personal.find(x=>x.title===t && x.type==='exam');
+            if(!e) e=Store.state.school.find(x=>x.title===t && x.type==='exam');
+            if(e && confirm('למחוק תוכנית?')){
+                Store.state.personal=Store.state.personal.filter(x=>x.linkedExamId!=e.id);
+                Store.save();
+                ui.modals.closeAll();
+                ui.render();
+            }
+        }
     },
 
     sync: {
@@ -722,8 +791,7 @@ const ui = {
 
     views: {
         dash(con) {
-            const today=new Date();
-            today.setHours(0,0,0,0);
+            const today=logic.getTodayIsrael();
             const todayStr=logic.fmt.iso(today);
             const schoolEvents = Store.state.showSchoolCalendar ? Store.state.school : [];
             const all=[...Store.state.personal, ...schoolEvents].filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
@@ -736,7 +804,7 @@ const ui = {
                 // Group events by weeks
                 const groups = {};
                 all.forEach(e=>{
-                    const eventDate = new Date(e.date);
+                    const eventDate = logic.dateFromString(e.date);
                     const diffDays = Math.floor((eventDate - today) / (1000 * 60 * 60 * 24));
 
                     let groupKey, groupLabel;
@@ -841,11 +909,12 @@ const ui = {
             }
             else if(v==='month') {
                 const y=anc.getFullYear(), m=anc.getMonth(), dim=new Date(y,m+1,0).getDate(), pad=new Date(y,m,1).getDay();
+                const todayStr = logic.fmt.iso(logic.getTodayIsrael());
                 h+=`<div class="month-grid">`;
                 ['א','ב','ג','ד','ה','ו','ש'].forEach(x=>h+=`<div class="month-header-cell">${x}</div>`);
                 for(let i=0; i<pad; i++) h+=`<div class="month-cell empty"></div>`;
                 for(let d=1; d<=dim; d++) {
-                    const cd=new Date(y,m,d), dStr=logic.fmt.iso(cd), dev=evs.filter(e=>e.date===dStr), isT=dStr===logic.fmt.iso(new Date());
+                    const cd=new Date(y,m,d), dStr=logic.fmt.iso(cd), dev=evs.filter(e=>e.date===dStr), isT=dStr===todayStr;
                     h+=`<div class="month-cell ${isT?'today':''}" onclick="Store.state.${k}=${cd.getTime()};ui.nav.setView('day')"><div class="month-num">${d}</div>`;
                     
                     // --- Text Tags for Month View ---
@@ -874,7 +943,7 @@ const ui = {
             logic.editingEventId = null;
             document.getElementById('modalAddTitle').innerText = 'הוספת אירוע';
             document.getElementById('modalAdd').classList.add('active');
-            document.getElementById('evtDate').value=logic.fmt.iso(new Date());
+            document.getElementById('evtDate').value=logic.fmt.iso(logic.getTodayIsrael());
             document.getElementById('evtTitle').value='';
             document.getElementById('evtTime').value='16:00';
             document.getElementById('evtDuration').value='1';
@@ -911,6 +980,11 @@ const ui = {
             if(isSc) {
                 bd.style.display='none';
                 be.style.display='none';
+                // Show AI planner for school exams
+                if(e.type==='exam'){
+                    if(Store.state.personal.some(x=>x.linkedExamId===e.id)) bad.classList.remove('hidden');
+                    else ba.classList.remove('hidden');
+                }
             } else {
                 bd.style.display='block';
                 be.style.display='block';
