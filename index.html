@@ -349,7 +349,38 @@
         <h2 id="viewTitle"></h2>
         <div style="margin-bottom:20px;color:var(--text-muted);line-height:1.6;"><div>📅 <span id="viewDate"></span></div><div>⏰ <span id="viewTime"></span></div><div>⏳ <span id="viewDuration"></span></div><div id="viewType" style="margin-top:5px"></div></div>
         <div id="viewDesc" style="background:var(--bg);padding:10px;border-radius:8px;margin-bottom:15px;display:none;"></div>
-        <div id="aiPlanActions" class="hidden" style="margin-bottom:15px;border-top:1px solid var(--border);padding-top:10px;"><button class="btn btn-magic" onclick="logic.ai.planFromView()">📅 תכנן למידה</button></div>
+        <div id="schoolNotificationSection" class="hidden" style="margin-bottom:15px;padding:15px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;border:2px solid #f59e0b;">
+            <label style="font-weight:700;color:#b45309;display:block;margin-bottom:8px">🔔 הגדר תזכורת</label>
+            <select id="viewSchoolNotification" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:12px;font-size:0.95rem;font-weight:500;margin-bottom:10px;">
+                <option value="0">ללא תזכורת</option>
+                <option value="15">15 דקות לפני</option>
+                <option value="30">30 דקות לפני</option>
+                <option value="60" selected>שעה לפני</option>
+                <option value="120">שעתיים לפני</option>
+                <option value="1440">יום לפני</option>
+                <option value="2880">יומיים לפני</option>
+            </select>
+            <button class="btn btn-primary" style="margin-top:0" onclick="logic.saveSchoolNotification()">💾 שמור תזכורת</button>
+        </div>
+        <div id="aiPlanActions" class="hidden" style="margin-bottom:15px;border-top:1px solid var(--border);padding-top:15px;">
+            <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);padding:14px;border-radius:12px;margin-bottom:12px;border:2px solid var(--primary);">
+                <label style="font-weight:700;color:var(--primary);display:block;margin-bottom:8px">כמה שעות סה"כ צריך ללמוד?</label>
+                <select id="viewDifficulty" style="width:100%;margin-bottom:12px;padding:12px;border:2px solid #ddd;border-radius:12px;font-size:0.95rem;font-weight:500;">
+                    <option value="2">2 שעות (קל)</option>
+                    <option value="4" selected>4 שעות (בינוני)</option>
+                    <option value="6">6 שעות (קשה)</option>
+                    <option value="8">8 שעות (מאוד קשה)</option>
+                </select>
+                <label style="font-weight:700;color:var(--primary);display:block;margin-bottom:8px">כמה שעות ללמוד ביום?</label>
+                <select id="viewStudyDuration" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:12px;font-size:0.95rem;font-weight:500;">
+                    <option value="0.5">חצי שעה (30 דק')</option>
+                    <option value="1" selected>שעה (60 דק')</option>
+                    <option value="1.5">שעה וחצי (90 דק')</option>
+                    <option value="2">שעתיים (120 דק')</option>
+                </select>
+            </div>
+            <button class="btn btn-magic" onclick="logic.ai.planFromView()">📅 תכנן למידה</button>
+        </div>
         <div id="aiDeletePlan" class="hidden" style="margin-bottom:15px;"><button class="btn btn-ghost" style="color:var(--warning)" onclick="logic.ai.deletePlanFromView()">🗑️ מחק תוכנית</button></div>
         <button class="btn btn-primary" onclick="ui.modals.closeAll()">סגור</button>
         <button id="btnEdit" class="btn btn-ghost" onclick="">✏️ ערוך אירוע</button>
@@ -364,7 +395,7 @@
         <div id="aiBlocks" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;"></div>
         <button class="btn btn-magic" onclick="logic.ai.confirm()">✅ אשר ושמור</button>
         <button class="btn btn-ghost" onclick="logic.ai.retry()">🎲 נסה שעות אחרות</button>
-        <button class="btn btn-ghost" onclick="logic.ai.skip()">שמור ללא תכנון</button>
+        <button id="btnAiSkip" class="btn btn-ghost" onclick="logic.ai.skip()">ביטול</button>
     </div>
 </div>
 
@@ -415,7 +446,8 @@ const Store = {
         calView: 'week', schoolView: 'week',
         anchorDate: Date.now(), schoolAnchorDate: Date.now(),
         sheetUrl: '', selectedSheetKey: '', lastSync: null,
-        showSchoolCalendar: true
+        showSchoolCalendar: true,
+        schoolNotifications: {}
     },
     init() {
         try {
@@ -425,6 +457,7 @@ const Store = {
                 this.state = {...this.state, ...p};
                 if(!Array.isArray(this.state.personal)) this.state.personal=[];
                 if(!Array.isArray(this.state.school)) this.state.school=[];
+                if(!this.state.schoolNotifications) this.state.schoolNotifications={};
             } else this.seed();
         } catch(e){ this.seed(); }
     },
@@ -568,6 +601,20 @@ const logic = {
         }
     },
 
+    currentSchoolEventId: null,
+
+    saveSchoolNotification() {
+        const notifyBefore = parseInt(document.getElementById('viewSchoolNotification').value);
+        if(this.currentSchoolEventId) {
+            Store.state.schoolNotifications[this.currentSchoolEventId] = notifyBefore;
+            Store.save();
+            PWA.scheduleNotifications();
+            alert('✅ תזכורת נשמרה!');
+            ui.modals.closeAll();
+            ui.render();
+        }
+    },
+
     ai: {
         targetExam: null, proposedBlocks: [], isSchoolExam: false,
         start(exam, rnd=false) {
@@ -620,16 +667,31 @@ const logic = {
             const blks=this.proposedBlocks.map(b=>({id:Date.now()+Math.random(), title:`למידה ל${this.targetExam.title}`, type:'study', date:b.date, time:b.time, duration:b.duration, isAuto:true, linkedExamId:this.targetExam.id, notificationBefore:60}));
             Store.state.personal.push(...blks); Store.save(); ui.modals.closeAll(); ui.render(); alert('✅ נשמר!');
         },
-        retry(){ this.start(this.targetExam, true); }, skip(){ Store.addEvent(this.targetExam); ui.modals.closeAll(); },
+        retry(){ this.start(this.targetExam, true); },
+        skip(){
+            // For school exams, just close without saving
+            // For personal exams, save the exam without study plan
+            if(!this.isSchoolExam) {
+                Store.addEvent(this.targetExam);
+            }
+            ui.modals.closeAll();
+        },
         planFromView(){
             const t=document.getElementById('viewTitle').innerText;
             // Search in both personal and school events
             let e=Store.state.personal.find(x=>x.title===t && x.type==='exam');
             if(!e) e=Store.state.school.find(x=>x.title===t && x.type==='exam');
             if(e){
-                // Add default values for school exams that don't have them
+                // Read user-selected values from the modal (for school exams)
+                const diffSelect = document.getElementById('viewDifficulty');
+                const durSelect = document.getElementById('viewStudyDuration');
+                if(diffSelect) e.difficulty = diffSelect.value;
+                if(durSelect) e.studyDuration = parseFloat(durSelect.value);
+
+                // Fallback to defaults if not set
                 if(!e.difficulty) e.difficulty = '4';
                 if(!e.studyDuration) e.studyDuration = 1;
+
                 ui.modals.closeAll();
                 this.start(e);
             }
@@ -976,10 +1038,19 @@ const ui = {
             document.getElementById('viewType').innerHTML=`<span class="evt-tag ${CONFIG.colors[e.type]||'t-school'}">${e.type}</span>`;
             const desc=document.getElementById('viewDesc'); if(e.description||e.audience){desc.style.display='block';desc.innerText=`${e.audience?`[${e.audience}] `:''}${e.description||''}`;}else desc.style.display='none';
             const bd=document.getElementById('btnDelete'), be=document.getElementById('btnEdit'), ba=document.getElementById('aiPlanActions'), bad=document.getElementById('aiDeletePlan');
-            ba.classList.add('hidden'); bad.classList.add('hidden');
+            const schoolNotifSection=document.getElementById('schoolNotificationSection');
+            ba.classList.add('hidden'); bad.classList.add('hidden'); schoolNotifSection.classList.add('hidden');
+
             if(isSc) {
                 bd.style.display='none';
                 be.style.display='none';
+
+                // Show notification section for school events
+                logic.currentSchoolEventId = e.id;
+                const currentNotif = Store.state.schoolNotifications[e.id] || 0;
+                document.getElementById('viewSchoolNotification').value = currentNotif;
+                schoolNotifSection.classList.remove('hidden');
+
                 // Show AI planner for school exams
                 if(e.type==='exam'){
                     if(Store.state.personal.some(x=>x.linkedExamId===e.id)) bad.classList.remove('hidden');
@@ -1003,7 +1074,18 @@ const ui = {
             logic.findFreeSlots(d,dur).forEach(t=>{ const x=document.createElement('div'); x.className='evt-tag t-study'; x.innerText=t; x.onclick=()=>{document.getElementById('evtTime').value=t;document.getElementById('conflictAlert').classList.add('hidden');}; c.appendChild(x); });
             document.getElementById('conflictAlert').classList.remove('hidden');
         },
-        showAI(msg, blks) { document.getElementById('aiMsg').innerHTML=msg; const c=document.getElementById('aiBlocks'); c.innerHTML=''; blks.forEach(b=>{c.innerHTML+=`<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`;}); document.getElementById('modalAI').classList.add('active'); },
+        showAI(msg, blks) {
+            document.getElementById('aiMsg').innerHTML=msg;
+            const c=document.getElementById('aiBlocks');
+            c.innerHTML='';
+            blks.forEach(b=>{c.innerHTML+=`<div class="evt-tag t-study">📅 ${logic.fmt.il(b.date)} ⏰ ${b.time}</div>`;});
+            // Update skip button text based on exam type
+            const skipBtn = document.getElementById('btnAiSkip');
+            if(skipBtn) {
+                skipBtn.innerText = logic.ai.isSchoolExam ? 'ביטול' : 'שמור ללא תכנון';
+            }
+            document.getElementById('modalAI').classList.add('active');
+        },
         openSettings() {
             document.getElementById('settingSchoolCalendar').checked = Store.state.showSchoolCalendar;
             document.getElementById('modalSettings').classList.add('active');
@@ -1235,7 +1317,11 @@ const PWA = {
             // Schedule notifications for events in the next 7 days
             if (timeDiff > 0 && timeDiff < 7 * 24 * 60 * 60 * 1000) {
                 // Use custom notification timing if set, otherwise skip
-                const notifyMinutes = event.notificationBefore || 0;
+                // For school events, check schoolNotifications object
+                let notifyMinutes = event.notificationBefore || 0;
+                if (event.source === 'google_sheets') {
+                    notifyMinutes = Store.state.schoolNotifications[event.id] || 0;
+                }
 
                 if (notifyMinutes > 0) {
                     const notificationTime = timeDiff - (notifyMinutes * 60 * 1000);
